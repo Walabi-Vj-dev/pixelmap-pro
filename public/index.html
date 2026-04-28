@@ -1636,7 +1636,16 @@ async function startMercadoPago(){
   if(!CU){alert('Debes iniciar sesion primero');return}
   if(!SB_SESSION){alert('Sesion no disponible. Vuelve a iniciar sesion.');return}
 
-  var btn=event.target; btn.disabled=true; btn.textContent='Procesando...'
+  var btn = event.target
+  btn.disabled=true; btn.textContent='Procesando...'
+
+  // Abrir ventana ANTES del fetch — unico momento que browsers permiten window.open
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+  var mpWindow = null
+  if(!isMobile){
+    mpWindow = window.open('', '_blank')
+    if(mpWindow) mpWindow.document.write('<html><body style="background:#009ee3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif"><p style="color:#fff;font-size:20px">Conectando con MercadoPago...</p></body></html>')
+  }
 
   try {
     var res = await fetch('/api/create-payment',{
@@ -1649,19 +1658,27 @@ async function startMercadoPago(){
     var data = await res.json()
 
     if(res.ok && data.init_point){
-      // Redirect to MercadoPago checkout
-      window.open(data.init_point, '_blank')
       closePricing()
-      // Hide block overlay while user completes payment
       var ov = document.getElementById('block-overlay')
       if(ov) ov.style.display = 'none'
-      alert('Se abrio MercadoPago en una nueva pestaña. Luego de pagar, tu plan se actualizara automaticamente en unos minutos.')
+
+      if(isMobile){
+        // Mobile: redirigir en la misma pestaña (window.open bloqueado en iOS/Android)
+        window.location.href = data.init_point
+      } else {
+        // Desktop: usar la ventana que ya abrimos antes del fetch
+        if(mpWindow) mpWindow.location.href = data.init_point
+        else window.open(data.init_point, '_blank')
+        btn.disabled=false; btn.textContent='MercadoPago'
+      }
     } else {
+      if(mpWindow) mpWindow.close()
       alert('Error: '+(data.error||'No se pudo crear el pago. Intenta de nuevo.'))
+      btn.disabled=false; btn.textContent='MercadoPago'
     }
   } catch(e) {
+    if(mpWindow) mpWindow.close()
     alert('Error de conexion: '+e.message)
-  } finally {
     btn.disabled=false; btn.textContent='MercadoPago'
   }
 }
