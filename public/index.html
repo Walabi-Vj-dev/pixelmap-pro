@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PixelMap Pro</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#00d4ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PixelMap Pro">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#07080b;--s1:#0f1117;--s2:#161a24;--s3:#1c2130;
+  --b1:#232838;--b2:#2d3447;
+  --cyan:#00d4ff;--gold:#f5a623;--green:#00e676;--red:#ff4444;--purple:#b085f5;
+  --txt:#eceef4;--txt2:#7a8599;--txt3:#3d4558;
+  --r:8px;--r2:12px;--topbar:48px;--sidebar:268px;--bottomnav:60px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--txt);font-family:"JetBrains Mono",monospace;font-size:13px;display:flex;flex-direction:column}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+input,select,textarea{background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);color:var(--txt);font-family:inherit;font-size:13px;outline:none;transition:border-color .15s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan)}
+button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+#s-login{align-items:center;justify-content:center;background:var(--bg);overflow-y:auto;padding:20px 16px;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,212,255,0.08),transparent)}
+.login-wrap{width:100%;max-width:420px}
+.login-card{background:var(--s1);border:1px solid var(--b2);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.lc-head{padding:28px 28px 20px;border-bottom:1px solid var(--b1);text-align:center}
+.lc-logo{font-family:"Syne",sans-serif;font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:4px}
+.lc-logo span{color:var(--cyan)}
+.lc-sub{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:3px;margin-bottom:14px}
+.lang-row{display:flex;justify-content:center;gap:6px;margin-bottom:12px}
+.lang-btn{background:transparent;border:1px solid var(--b1);border-radius:6px;color:var(--txt3);font-family:inherit;font-size:9px;padding:4px 10px;text-transform:uppercase;letter-spacing:1px;transition:all .15s;min-height:30px;cursor:pointer}
+.lang-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,0.07)}
+.ig-btn{display:inline-flex;align-items:center;gap:6px;color:var(--txt3);font-size:10px;text-decoration:none;padding:5px 12px;border-radius:20px;border:1px solid var(--b1);transition:all .2s}
+.ig-btn svg{width:13px;height:13px;fill:currentColor;flex-shrink:0}
+.lc-tabs{display:flex;border-bottom:1px solid var(--b1)}
+.lc-tab{flex:1;padding:12px;background:transparent;border:none;color:var(--txt3);font-family:inherit;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;border-bottom:2px solid transparent;transition:all .2s;min-height:44px;cursor:pointer}
+.lc-tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,212,255,0.04)}
+.lc-body{padding:24px 28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;font-size:14px}
+.lc-btn{width:100%;padding:14px;background:var(--cyan);color:#000;border:none;border-radius:var(--r);font-family:inherit;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;transition:opacity .2s;min-height:48px;cursor:pointer}
+.lc-btn:hover{opacity:.88}
+.lc-err{color:var(--red);font-size:11px;margin-top:10px;padding:8px 12px;background:rgba(255,68,68,0.08);border-radius:var(--r);border:1px solid rgba(255,68,68,0.2);display:none}
+.lc-err.show{display:block}
+.reg-info{margin-top:14px;padding:12px;background:var(--s2);border-radius:var(--r);border:1px solid var(--b1);font-size:11px;color:var(--txt2);line-height:1.6;display:none}
+.reg-info.show{display:block}
+.topbar{display:flex;align-items:center;gap:8px;padding:0 14px;height:var(--topbar);background:var(--s1);border-bottom:1px solid var(--b1);flex-shrink:0;z-index:100}
+.tb-logo{font-family:"Syne",sans-serif;font-size:15px;font-weight:900;white-space:nowrap;letter-spacing:-.5px}
+.tb-logo span{color:var(--cyan)}
+.tb-sep{width:1px;height:16px;background:var(--b1);flex-shrink:0}
+.tb-user{font-size:10px;color:var(--txt2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.badge{font-size:8px;padding:3px 8px;border-radius:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.badge-free{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.25)}
+.badge-blocked{background:rgba(255,68,68,0.1);color:var(--red);border:1px solid rgba(255,68,68,0.25)}
+.badge-pro{background:rgba(245,166,35,0.1);color:var(--gold);border:1px solid rgba(245,166,35,0.25)}
+.badge-superop{background:rgba(176,133,245,0.15);color:var(--purple);border:1px solid rgba(176,133,245,0.35)}
+.tb-lang{display:flex;gap:2px}
+.tl-btn{background:transparent;border:1px solid var(--b1);border-radius:4px;color:var(--txt3);font-family:inherit;font-size:9px;padding:3px 6px;transition:all .15s;min-height:26px;cursor:pointer}
+.tl-btn.active{border-color:var(--cyan);color:var(--cyan)}
+.tb-upgrade{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.3);border-radius:var(--r);color:var(--gold);padding:4px 10px;font-family:inherit;font-size:10px;font-weight:700;min-height:30px;white-space:nowrap;flex-shrink:0;cursor:pointer}
+.tb-logout{background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);padding:4px 10px;font-family:inherit;font-size:10px;min-height:30px;white-space:nowrap;flex-shrink:0;cursor:pointer}
+.tb-menu{display:none;width:36px;height:36px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);font-size:18px;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+.scr-tabs-bar{display:none;height:36px;background:var(--s1);border-bottom:1px solid var(--b1);align-items:center;padding:0 8px;overflow-x:auto;flex-shrink:0}
+.scr-tabs-bar.visible{display:flex}
+.scr-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:36px;border:none;background:transparent;color:var(--txt3);font-family:inherit;font-size:11px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.scr-tab.active{color:var(--txt);border-bottom-color:var(--cyan);background:rgba(0,212,255,0.05)}
+.scr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.scr-close{background:none;border:none;color:var(--txt3);cursor:pointer;font-size:12px;padding:0 0 0 4px;line-height:1}
+.scr-close:hover{color:var(--red)}
+.main-area{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:49;opacity:0;transition:opacity .3s}
+.sb-overlay.on{opacity:1}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s ease;z-index:50}
+.sb-tabs{display:flex;border-bottom:1px solid var(--b1);flex-shrink:0;overflow-x:auto}
+.sb-tabs::-webkit-scrollbar{height:0}
+.sb-tab{flex:1;min-width:0;padding:6px 1px;background:transparent;border:none;color:var(--txt3);font-family:inherit;font-size:7px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;min-height:38px;cursor:pointer;overflow:hidden;text-overflow:ellipsis}
+.sb-tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,212,255,0.04)}
+.sb-pane{display:none;flex:1;overflow-y:auto;padding:10px;flex-direction:column;gap:8px}
+.sb-pane.active{display:flex}
+.cp{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden}
+.cp-h{padding:8px 12px;border-bottom:1px solid var(--b1);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;min-height:36px;transition:color .15s}
+.cp-h:hover{color:var(--txt2)}
+.cp-h .arr{transition:transform .2s;font-size:9px;opacity:.5}
+.cp.closed .cp-h .arr{transform:rotate(-90deg)}
+.cp-b{padding:10px 12px}
+.cp.closed .cp-b{display:none}
+.fg{display:grid;grid-template-columns:80px 1fr;gap:6px;margin-bottom:8px;align-items:center}
+.fg:last-child{margin-bottom:0}
+.fg label{font-size:11px;color:var(--txt2);line-height:1.3}
+.fg input,.fg select{padding:7px 9px;width:100%}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.fg2>div>label{font-size:9px;color:var(--txt3);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.fg2 input,.fg2 select{width:100%;padding:7px 9px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{background:var(--s3);border-radius:var(--r);padding:9px;text-align:center}
+.sv{font-size:15px;font-weight:700;font-family:"Syne",sans-serif;color:var(--cyan);line-height:1.2}
+.sv.warn{color:var(--gold)}.sv.ok{color:var(--green)}.sv.err{color:var(--red)}
+.sl{font-size:8px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px;margin-top:3px}
+.pr{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--b1);flex-direction:column}
+.pr:last-child{border-bottom:none}
+.pr-top{display:flex;align-items:center;gap:8px;width:100%}
+.pn{width:22px;height:22px;border-radius:50%;font-weight:700;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#000}
+.pi{flex:1;min-width:0}
+.pl{font-size:11px;color:var(--txt)}
+.ps{font-size:9px;color:var(--txt3);margin-top:1px}
+.pbw{height:3px;background:var(--b1);border-radius:2px;margin-top:5px;overflow:hidden}
+.pb{height:100%;border-radius:2px;transition:width .4s}
+.pr-label{display:flex;align-items:center;gap:6px;width:100%;padding-left:30px}
+.pr-label input{flex:1;padding:5px 8px;font-size:11px;border-radius:4px}
+.exp-row{display:flex;gap:6px}
+.eb{flex:1;padding:9px 4px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);font-family:inherit;font-size:10px;text-transform:uppercase;letter-spacing:.8px;transition:all .2s;min-height:40px;cursor:pointer}
+.eb:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
+.eb:disabled{opacity:.3;cursor:not-allowed}
+.free-note{font-size:10px;color:var(--gold);padding:8px 10px;background:rgba(245,166,35,0.06);border:1px solid rgba(245,166,35,0.2);border-radius:var(--r);line-height:1.5;display:none}
+.logo-upload{display:flex;align-items:center;justify-content:center;width:100%;padding:12px;border:1px dashed var(--b2);border-radius:var(--r);color:var(--txt2);font-size:11px;cursor:pointer;transition:all .2s;min-height:48px}
+.logo-upload:hover{border-color:var(--cyan);color:var(--cyan)}
+.ubanner{background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.2);border-radius:var(--r);padding:12px;text-align:center}
+.ubanner-t{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px}
+.ubanner-s{font-size:10px;color:var(--txt3);margin-bottom:10px;line-height:1.5}
+.ubanner-btn{background:var(--gold);color:#000;border:none;border-radius:var(--r);padding:7px 16px;font-family:inherit;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;min-height:36px;cursor:pointer}
+.scr-item{padding:10px 12px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .15s;position:relative}
+.scr-item:hover,.scr-item.active{background:var(--s3)}
+.scr-item-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0}
+.scr-item-name{font-size:12px;font-weight:700;color:var(--txt);margin-bottom:2px}
+.scr-item-info{font-size:10px;color:var(--txt2)}
+.scr-item-actions{display:flex;gap:4px;margin-top:5px}
+.scr-action{background:transparent;border:1px solid var(--b1);border-radius:3px;color:var(--txt2);padding:2px 7px;font-family:inherit;font-size:9px;cursor:pointer;min-height:22px}
+.scr-action:hover{color:var(--cyan);border-color:var(--cyan)}
+.scr-action.del:hover{color:var(--red);border-color:var(--red)}
+.soon-box{background:rgba(176,133,245,0.04);border:1px dashed rgba(176,133,245,0.25);border-radius:var(--r2);padding:16px;text-align:center}
+.soon-badge{display:inline-block;background:rgba(176,133,245,0.12);color:var(--purple);font-size:8px;font-weight:700;padding:3px 10px;border-radius:20px;border:1px solid rgba(176,133,245,0.3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.soon-chip{background:rgba(176,133,245,0.08);border:1px solid rgba(176,133,245,0.2);color:var(--purple);font-size:10px;padding:4px 10px;border-radius:20px;display:inline-block;margin:3px}
+#pane-ai{padding:0;gap:0}
+.ai-wrap{display:flex;flex-direction:column;flex:1;min-height:0}
+.ai-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.ai-msg{display:flex;flex-direction:column;gap:3px}
+.ai-bubble{padding:10px 13px;font-size:12px;line-height:1.6;max-width:96%}
+.ai-msg.user .ai-bubble{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.18);align-self:flex-end;border-radius:12px 12px 3px 12px;color:var(--txt)}
+.ai-msg.bot .ai-bubble{background:rgba(176,133,245,0.07);border:1px solid rgba(176,133,245,0.18);align-self:flex-start;border-radius:12px 12px 12px 3px;color:var(--txt)}
+.ai-who{font-size:9px;padding:0 4px;text-transform:uppercase;letter-spacing:1px}
+.ai-msg.user .ai-who{text-align:right;color:rgba(0,212,255,0.45)}
+.ai-msg.bot .ai-who{color:rgba(176,133,245,0.45)}
+.ai-typing{display:none;padding:8px 12px;gap:5px;align-items:center;font-size:10px;color:var(--txt3)}
+.ai-typing.on{display:flex}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--purple);animation:blink 1.2s infinite}
+.dot:nth-child(2){animation-delay:.3s}.dot:nth-child(3){animation-delay:.6s}
+@keyframes blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+.ai-sugs{display:flex;flex-wrap:wrap;gap:5px;padding:0 12px 8px}
+.ai-sug{background:rgba(176,133,245,0.07);border:1px solid rgba(176,133,245,0.18);border-radius:14px;color:var(--purple);font-size:10px;padding:5px 10px;cursor:pointer;min-height:30px}
+.ai-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--b1);flex-shrink:0}
+.ai-input{flex:1;padding:9px 11px;resize:none;height:40px;border-radius:var(--r);font-size:13px}
+.ai-send{background:var(--purple);border:none;border-radius:var(--r);color:#fff;padding:0 14px;font-size:16px;min-width:44px;min-height:40px;cursor:pointer}
+.map-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.map-header{display:flex;justify-content:space-between;align-items:center;padding:7px 16px;background:var(--s1);border-bottom:1px solid var(--b1);flex-shrink:0;gap:12px}
+.mh-left{min-width:0}
+.mh-title{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mh-sub{font-size:10px;color:var(--txt2);margin-top:1px}
+.mh-right{text-align:right;flex-shrink:0}
+.mh-res{font-size:12px;font-weight:700;color:var(--cyan)}
+.mh-det{font-size:10px;color:var(--txt3);margin-top:1px}
+.toolbar{display:flex;align-items:center;padding:6px 14px;gap:10px;background:var(--s1);border-bottom:1px solid var(--b1);flex-shrink:0;flex-wrap:wrap}
+.tl-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);white-space:nowrap}
+.tl-sel{padding:6px 8px;font-size:11px;min-height:34px}
+.zoom-grp{margin-left:auto;display:flex;gap:5px;align-items:center}
+.zb{width:30px;height:30px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;cursor:pointer}
+.zv{font-size:10px;color:var(--txt2);min-width:36px;text-align:center}
+.canvas-wrap{flex:1;overflow:auto;background:var(--bg)}
+#pixelgrid{padding:16px;width:fit-content;display:block}
+.infobar{padding:4px 16px;background:var(--s1);border-top:1px solid var(--b1);font-size:10px;color:var(--txt2);flex-shrink:0;min-height:26px;display:flex;align-items:center;overflow:hidden}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--bottomnav);background:var(--s1);border-top:1px solid var(--b1);z-index:100}
+.bn-inner{display:flex;height:100%}
+.bn-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:none;color:var(--txt3);font-family:inherit;font-size:8px;text-transform:uppercase;letter-spacing:.5px;border-top:2px solid transparent;transition:color .15s;padding:6px 2px;cursor:pointer}
+.bn-btn.active{color:var(--cyan);border-top-color:var(--cyan)}
+.bn-icon{font-size:19px;line-height:1}
+#tt{position:fixed;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:10px 13px;font-size:11px;pointer-events:none;z-index:9999;display:none;min-width:175px;box-shadow:0 4px 20px rgba(0,0,0,.7)}
+.tt-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:3px}
+.tt-k{color:var(--txt3)}.tt-v{color:var(--txt)}
+#modal-pricing{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px}
+#modal-pricing.open{display:flex}
+.mp-inner{background:var(--s1);border:1px solid var(--b2);border-radius:18px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px 24px 32px}
+.mp-title{font-family:"Syne",sans-serif;font-size:22px;font-weight:800;text-align:center;margin-bottom:6px}
+.mp-sub{font-size:11px;color:var(--txt2);text-align:center;margin-bottom:20px}
+.plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.plan-card{background:var(--s2);border:1px solid var(--b1);border-radius:14px;padding:20px;position:relative;margin-top:14px}
+.plan-card.rec{border-color:rgba(0,212,255,.35)}
+.plan-rec{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--cyan);color:#000;font-size:9px;font-weight:700;padding:3px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
+.plan-name{font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.plan-price{font-family:"Syne",sans-serif;font-size:28px;font-weight:800;margin-bottom:2px}
+.plan-per{font-size:10px;color:var(--txt3);margin-bottom:16px}
+.plan-feats{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.pf{display:flex;align-items:flex-start;gap:8px;font-size:12px}
+.fo{color:var(--green);flex-shrink:0}.fx{color:var(--b2);flex-shrink:0}
+.pay-label{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.pay-btns{display:flex;flex-direction:column;gap:7px}
+.pay-btn{width:100%;padding:12px;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;cursor:pointer}
+.curr-plan{text-align:center;padding:12px;background:var(--s3);border-radius:var(--r);font-size:12px;color:var(--txt3);border:1px solid var(--b1)}
+.mp-close{display:block;margin:20px auto 0;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);padding:10px 24px;font-family:inherit;font-size:12px;min-height:44px;cursor:pointer}
+#block-overlay{position:fixed;inset:0;background:rgba(7,8,11,.96);z-index:9500;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+#block-overlay.on{display:flex}
+.bo-card{max-width:440px;width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:20px;padding:40px 28px}
+.bo-icon{font-size:60px;margin-bottom:16px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.bo-title{font-family:"Syne",sans-serif;font-size:24px;font-weight:800;margin-bottom:10px}
+.bo-desc{font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:24px}
+.bo-price{background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.22);border-radius:12px;padding:20px;margin-bottom:24px}
+.bo-amount{font-family:"Syne",sans-serif;font-size:40px;font-weight:800;color:var(--cyan);line-height:1}
+.bo-per{font-size:11px;color:var(--txt3);margin-top:4px;margin-bottom:12px}
+.bo-feats{text-align:left;display:flex;flex-direction:column;gap:5px}
+.bo-feat{font-size:11px;color:var(--txt2)}
+.bo-cta{width:100%;padding:16px;background:var(--cyan);color:#000;border:none;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;min-height:50px;cursor:pointer}
+.bo-logout{background:transparent;border:none;color:var(--txt3);font-family:inherit;font-size:12px;text-decoration:underline;padding:8px;cursor:pointer}
+@media(max-width:639px){
+  .tb-user{display:none}.tb-sep{display:none}
+  .tl-btn{font-size:8px;padding:2px 5px}
+  .tb-menu{display:flex}
+  .sidebar{position:fixed;top:var(--topbar);left:0;width:min(300px,85vw);height:calc(100% - var(--topbar) - var(--bottomnav));transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.5)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay{display:block;position:fixed;top:var(--topbar);left:0;right:0;bottom:var(--bottomnav)}
+  .bottom-nav{display:block}
+  .map-area{height:calc(100vh - var(--topbar) - var(--bottomnav));flex:none;width:100%}
+  #modal-pricing{padding:0;align-items:flex-end}
+  .mp-inner{border-radius:20px 20px 0 0;max-width:100%;max-height:88vh}
+  .plans-grid{grid-template-columns:1fr}
+  #tt{display:none!important}
+}
+@media(min-width:640px) and (max-width:1023px){
+  .tb-menu{display:flex}
+  .sidebar{position:fixed;top:var(--topbar);left:0;height:calc(100% - var(--topbar));transform:translateX(-100%);box-shadow:4px 0 24px rgba(0,0,0,.4)}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay{display:block;position:fixed;top:var(--topbar);left:0;right:0;bottom:0}
+}
+@media(min-width:1024px){
+  .sidebar{position:relative;transform:none!important;height:auto}
+  .sb-overlay{display:none!important}
+  .tb-menu{display:none!important}
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<div id="s-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="lc-head">
+        <div class="lc-logo">Pixel<span>Map</span> Pro</div>
+        <div class="lc-sub">Configurador de Pantallas LED</div>
+        <div class="lang-row">
+          <button class="lang-btn active" onclick="setLang('es')">ES</button>
+          <button class="lang-btn" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" onclick="setLang('pt')">PT</button>
+        </div>
+        <a href="https://www.instagram.com/walabi_vj/" target="_blank" class="ig-btn">
+          <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          @walabi_vj
+        </a>
+      </div>
+      <div class="lc-tabs">
+        <button class="lc-tab active" id="tab-login" onclick="switchTab('login')">Iniciar Sesión</button>
+        <button class="lc-tab" id="tab-register" onclick="switchTab('register')">Crear Cuenta</button>
+      </div>
+      <div class="lc-body">
+        <div class="field"><label id="lbl-email">Email</label><input type="email" id="l-email" placeholder="tu@empresa.com"></div>
+        <div class="field"><label id="lbl-pass">Contraseña</label><input type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+        <div class="lc-err" id="l-err"></div>
+        <button class="lc-btn" onclick="doAuth()" id="btn-auth">Iniciar Sesión</button>
+        <div class="reg-info" id="reg-info">✓ Las cuentas nuevas tienen 2 exportaciones PNG completas gratuitas.</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:var(--txt3)">PixelMap Pro v3.0 · Hecho con ❤ en Argentina 🇦🇷</div>
+  </div>
+</div>
+
+<div id="s-app" class="screen">
+  <div class="topbar">
+    <button class="tb-menu" id="tb-menu" onclick="toggleSidebar()">☰</button>
+    <div class="tb-logo">Pixel<span>Map</span> Pro</div>
+    <div class="tb-sep"></div>
+    <div class="tb-user" id="tb-user"></div>
+    <span class="badge" id="tb-badge"></span>
+    <div class="tb-lang">
+      <button class="tl-btn active" onclick="setLang('es')">ES</button>
+      <button class="tl-btn" onclick="setLang('en')">EN</button>
+      <button class="tl-btn" onclick="setLang('pt')">PT</button>
+    </div>
+    <button class="tb-upgrade" id="tb-upgrade" onclick="openPricing()" style="display:none">Upgrade Pro</button>
+    <button class="tb-logout" onclick="doLogout()">Salir</button>
+  </div>
+  <div class="scr-tabs-bar" id="scr-tabs-bar">
+    <div id="scr-tabs-inner" style="display:flex;align-items:center;flex:1;overflow-x:auto"></div>
+    <button onclick="addScreen()" style="padding:0 12px;height:36px;background:transparent;border:none;color:var(--txt3);font-size:18px;cursor:pointer;flex-shrink:0">＋</button>
+  </div>
+  <div class="main-area">
+    <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+      <div class="sb-tabs">
+        <button class="sb-tab" id="sbt-screens" onclick="sbTab('screens')" style="color:var(--cyan)">🖥</button>
+        <button class="sb-tab active" id="sbt-cfg" onclick="sbTab('cfg')">Config</button>
+        <button class="sb-tab" id="sbt-prj" onclick="sbTab('prj')">Proyecto</button>
+        <button class="sb-tab" id="sbt-pts" onclick="sbTab('pts')">Puertos</button>
+        <button class="sb-tab" id="sbt-exp" onclick="sbTab('exp')" id="t-saves-export">Exportar</button>
+        <button class="sb-tab" id="sbt-proc" onclick="sbTab('proc')" style="color:var(--gold)">⚡</button>
+        <button class="sb-tab" id="sbt-ai" onclick="sbTab('ai')" style="color:var(--purple)">AI</button>
+        <button class="sb-tab" id="sbt-saves" onclick="sbTab('saves')" style="color:var(--gold)">💾</button>
+        <button class="sb-tab" id="sbt-soon" onclick="sbTab('soon')" style="color:var(--purple)">★</button>
+      </div>
+
+      <div class="sb-pane" id="pane-screens">
+        <div class="cp" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+          <div class="cp-h" style="cursor:default"><span>Pantallas del proyecto</span><span id="screens-count" style="color:var(--cyan);font-size:10px"></span></div>
+          <div id="screens-list" style="flex:1;overflow-y:auto"></div>
+          <button onclick="addScreen()" style="margin:8px;padding:9px;background:rgba(0,212,255,0.06);border:1px dashed rgba(0,212,255,0.25);border-radius:var(--r);color:var(--cyan);font-family:inherit;font-size:11px;cursor:pointer">＋ Agregar pantalla</button>
+        </div>
+        <div id="screens-summary" style="padding:10px 12px;border-top:1px solid var(--b1);font-size:10px;color:var(--txt2);line-height:2"></div>
+      </div>
+
+      <div class="sb-pane active" id="pane-cfg">
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-screen">Pantalla</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div class="fg"><label id="lbl-pitch">Pitch</label>
+              <select id="cf-pitch" onchange="compute();markUnsaved()">
+                <option value="2.5">P2.5</option><option value="3">P3</option><option value="3.9">P3.9</option>
+                <option value="4">P4</option><option value="4.8">P4.8</option><option value="5" selected>P5</option>
+                <option value="6">P6</option><option value="6.25">P6.25</option><option value="8">P8</option><option value="10">P10</option>
+              </select>
+            </div>
+            <div class="fg"><label id="lbl-w">Ancho (m)</label><input type="number" id="cf-w" value="4" min="0.5" max="50" step="0.1" onchange="compute();markUnsaved()"></div>
+            <div class="fg"><label id="lbl-h">Alto (m)</label><input type="number" id="cf-h" value="3" min="0.5" max="30" step="0.1" onchange="compute();markUnsaved()"></div>
+            <div class="fg2">
+              <div><label id="lbl-mw">Ancho mod</label><input type="number" id="cf-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+              <div><label id="lbl-mh">Alto mod</label><input type="number" id="cf-mh" value="100" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+            </div>
+            <div style="font-size:10px;color:var(--txt3);text-align:center;margin-bottom:6px" id="mod-info"></div>
+            <div class="fg"><label id="lbl-ppp">Px/Puerto</label><input type="number" id="cf-ppp" value="650000" min="50000" step="50000" onchange="compute();markUnsaved()"></div>
+            <div class="fg2">
+              <div><label id="lbl-ports">Puertos</label>
+                <select id="cf-ports" onchange="compute();markUnsaved()">
+                  <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                  <option value="5">5</option><option value="6">6</option><option value="8" selected>8</option>
+                  <option value="10">10</option><option value="12">12</option><option value="16">16</option>
+                </select>
+              </div>
+              <div><label id="lbl-dir">Cableado</label>
+                <select id="cf-dir" onchange="compute();markUnsaved()">
+                  <option value="h-snake">H. Serpentina</option>
+                  <option value="h-line">H. Lineas</option>
+                  <option value="v-snake">V. Serpentina</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size:10px;padding:4px 0" id="port-rec"></div>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-stats">Estadísticas</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div class="stat-grid">
+              <div class="stat"><div class="sv" id="st-res">-</div><div class="sl">Resolucion</div></div>
+              <div class="stat"><div class="sv" id="st-panels">-</div><div class="sl">Paneles</div></div>
+              <div class="stat"><div class="sv" id="st-px">-</div><div class="sl">Px/Panel</div></div>
+              <div class="stat"><div class="sv" id="st-load">-</div><div class="sl">Cables/Puertos</div></div>
+            </div>
+          </div>
+        </div>
+        <div id="upgrade-banner" class="ubanner" style="display:none">
+          <div class="ubanner-t" id="t-ub-title">Desbloquear todo</div>
+          <div class="ubanner-s" id="t-ub-sub">Exportaciones ilimitadas, logo, CSV, JSON y mas.</div>
+          <button class="ubanner-btn" onclick="openPricing()">Ver planes Pro</button>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-prj">
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-projdata">Datos del proyecto</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div class="fg"><label id="lbl-screenname">Nombre pantalla</label><input type="text" id="p-screen-name" placeholder="Main Stage..." oninput="updateScreenName()"></div>
+            <div class="fg"><label id="lbl-title">Título proyecto</label><input type="text" id="p-title" placeholder="Mi pantalla LED" oninput="markUnsaved()"></div>
+            <div class="fg"><label id="lbl-client">Cliente</label><input type="text" id="p-client" placeholder="Empresa S.A." oninput="markUnsaved()"></div>
+            <div class="fg"><label id="lbl-loc">Ubicación</label><input type="text" id="p-loc" placeholder="Buenos Aires" oninput="markUnsaved()"></div>
+            <div class="fg"><label id="lbl-date">Fecha</label><input type="date" id="p-date" onchange="markUnsaved()"></div>
+            <div class="fg"><label id="lbl-notes">Notas</label><input type="text" id="p-notes" placeholder="Observaciones..." oninput="markUnsaved()"></div>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-logo">Logo empresa</span><span class="arr">▾</span></div>
+          <div class="cp-b" id="logo-panel"></div>
+        </div>
+        <button onclick="saveProject()" id="btn-quick-save" style="width:100%;padding:10px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px">Guardar proyecto</button>
+        <div id="save-status" style="font-size:10px;text-align:center;color:var(--green);display:none;padding:4px">Guardado</div>
+      </div>
+
+      <div class="sb-pane" id="pane-pts">
+        <div class="cp">
+          <div class="cp-h"><span id="t-portmap">Mapa de puertos</span></div>
+          <div class="cp-b" id="ports-list"></div>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-exp">
+        <div class="free-note" id="free-note"></div>
+        <div class="cp">
+          <div class="cp-h"><span id="t-bn-exp">Exportar</span></div>
+          <div class="cp-b">
+            <div class="exp-row" style="margin-bottom:8px">
+              <button class="eb" onclick="exportPNG()">PNG</button>
+              <button class="eb" id="btn-csv" onclick="exportCSV()" disabled>CSV</button>
+              <button class="eb" id="btn-json" onclick="exportJSON()" disabled>JSON</button>
+            </div>
+            <div style="font-size:10px;color:var(--txt3);line-height:1.5">PNG gratis · CSV y JSON requieren plan Pro</div>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-summary">Resumen</span><span class="arr">▾</span></div>
+          <div class="cp-b" id="recap-box" style="font-size:11px;color:var(--txt2);line-height:2"></div>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-proc">
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-proc-select">Seleccionar procesador</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div class="fg"><label id="lbl-brand">Marca</label>
+              <select id="proc-brand" onchange="onProcBrandChange()">
+                <option value="">Elegir marca</option>
+                <option value="novastar">Novastar</option>
+                <option value="colorlight">Colorlight</option>
+                <option value="linsn">Linsn</option>
+                <option value="custom">Personalizado</option>
+              </select>
+            </div>
+            <div class="fg" id="proc-model-row" style="display:none"><label id="lbl-model">Modelo</label><select id="proc-model" onchange="onProcModelChange()"></select></div>
+            <div id="proc-info-box" style="display:none;margin-top:8px;padding:8px 10px;background:var(--s3);border-radius:var(--r);border:1px solid var(--b1);font-size:10px;color:var(--txt2);line-height:1.8"></div>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h"><span id="t-proc-view">Vista del procesador</span></div>
+          <div class="cp-b" style="padding:0"><div id="proc-view" style="padding:10px 12px"></div></div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span id="t-proc-state">Estado</span><span class="arr">▾</span></div>
+          <div class="cp-b" id="proc-load-body"></div>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-ai">
+        <div class="ai-wrap">
+          <div class="ai-msgs" id="ai-msgs"></div>
+          <div class="ai-typing" id="ai-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Pensando...</span></div>
+          <div class="ai-sugs" id="ai-sugs"></div>
+          <div style="font-size:10px;color:var(--txt3);padding:0 12px 6px" id="t-ai-hint">Preguntame sobre tu configuracion LED</div>
+          <div class="ai-input-row">
+            <textarea class="ai-input" id="ai-input" placeholder="Preguntame algo..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"></textarea>
+            <button class="ai-send" onclick="sendAI()">&#10148;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-saves">
+        <div class="cp">
+          <div class="cp-h" style="cursor:default"><span id="t-saves-title">Proyectos guardados</span><span id="projects-count" style="font-size:9px;color:var(--txt3)"></span></div>
+          <div class="cp-b" style="padding:0"><div id="projects-list" style="max-height:340px;overflow-y:auto"></div></div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:2px">
+          <button onclick="saveProject()" style="flex:1;padding:9px;background:var(--gold);color:#000;border:none;border-radius:var(--r);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase" id="t-saves-save">Guardar</button>
+          <button onclick="exportAllProjects()" style="flex:1;padding:9px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--txt2);font-family:inherit;font-size:10px;cursor:pointer">Exportar</button>
+          <label style="flex:1;padding:9px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);color:var(--txt2);font-family:inherit;font-size:10px;cursor:pointer;text-align:center" id="t-saves-import">Importar<input type="file" accept=".json" onchange="importProjects(this)" style="display:none"></label>
+        </div>
+      </div>
+
+      <div class="sb-pane" id="pane-soon">
+        <div class="soon-box">
+          <div class="soon-badge" id="t-soon-badge">Próximamente</div>
+          <div style="font-size:32px;margin-bottom:10px">&#127911;</div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:6px">Soporte Tecnico Personalizado</div>
+          <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:12px">Asistencia en tiempo real para la configuracion de tu pantalla LED y programacion en Resolume.</div>
+          <div>
+            <span class="soon-chip">&#128249; Videollamada en vivo</span>
+            <span class="soon-chip">&#128421; Soporte remoto</span>
+            <span class="soon-chip">&#9201; Cobrado por tiempo</span>
+            <span class="soon-chip">&#127758; Cualquier pais</span>
+            <span class="soon-chip">&#127917; Config. Resolume</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-area">
+      <div class="map-header">
+        <div class="mh-left">
+          <div class="mh-title" id="mh-title">Sin titulo</div>
+          <div class="mh-sub" id="mh-sub"></div>
+        </div>
+        <div class="mh-right">
+          <div class="mh-res" id="mh-res">-</div>
+          <div class="mh-det" id="mh-det"></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="tl-label" id="t-viewlabel">Vista</span>
+        <select class="tl-sel" id="view-mode" onchange="renderMap()">
+          <option value="num">Numero panel</option>
+          <option value="port">Por puerto</option>
+          <option value="range">Rango px</option>
+        </select>
+        <div class="zoom-grp">
+          <button class="zb" onclick="zoom(-20)">-</button>
+          <span class="zv" id="zv">100%</span>
+          <button class="zb" onclick="zoom(20)">+</button>
+          <button class="zb" onclick="zoom(0)">&#8635;</button>
+        </div>
+      </div>
+      <div class="canvas-wrap"><div id="pixelgrid"></div></div>
+      <div class="infobar" id="infobar" id="t-infobar-default">Configura una pantalla para comenzar</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="bn-inner">
+      <button class="bn-btn" id="bn-screens" onclick="bnTab('screens')" style="color:var(--cyan)"><span class="bn-icon" style="font-size:15px">&#128187;</span><span style="font-size:7px">Pant.</span></button>
+      <button class="bn-btn active" id="bn-cfg" onclick="bnTab('cfg')"><span class="bn-icon">&#9881;</span><span id="t-bn-cfg">Config</span></button>
+      <button class="bn-btn" id="bn-prj" onclick="bnTab('prj')"><span class="bn-icon">&#128203;</span><span id="t-bn-prj">Proyecto</span></button>
+      <button class="bn-btn" id="bn-pts" onclick="bnTab('pts')"><span class="bn-icon">&#9889;</span><span id="t-bn-pts">Puertos</span></button>
+      <button class="bn-btn" id="bn-exp" onclick="bnTab('exp')"><span class="bn-icon">&#8595;</span><span>Exportar</span></button>
+      <button class="bn-btn" id="bn-ai" onclick="bnTab('ai')" style="color:var(--purple)"><span class="bn-icon">&#10022;</span><span>AI</span></button>
+    </div>
+  </nav>
+</div>
+
+<div id="modal-pricing">
+  <div class="mp-inner">
+    <div class="mp-title" id="t-mp-title">Elegi tu plan</div>
+    <div class="mp-sub">Acceso completo por U$S 4.99/mes · Cancela cuando quieras.</div>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">Gratis</div>
+        <div class="plan-per" id="t-free-per">siempre (2 exportaciones)</div>
+        <div class="plan-feats">
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pf1">2 exportaciones PNG completas</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pf2">Generador completo de pixel maps</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pf3">Hasta 8 puertos</span></div>
+          <div class="pf"><span class="fx">&#215;</span><span id="t-pf4" style="color:var(--txt3)">CSV / JSON bloqueado</span></div>
+          <div class="pf"><span class="fx">&#215;</span><span id="t-pf5" style="color:var(--txt3)">Logo en PNG bloqueado</span></div>
+        </div>
+        <div class="curr-plan" id="t-curr-plan">Plan actual</div>
+      </div>
+      <div class="plan-card rec">
+        <div class="plan-rec" id="t-recommended">Recomendado</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price" style="color:var(--cyan)">U$S 4.99</div>
+        <div class="plan-per" id="t-pro-per">por mes</div>
+        <div class="plan-feats">
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pp1">Exportaciones PNG ilimitadas</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pp2">Logo de empresa en PNG</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pp3">Exportar CSV y JSON</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pp4">Hasta 16 puertos</span></div>
+          <div class="pf"><span class="fo">&#10003;</span><span id="t-pp5">Chat IA sin limites</span></div>
+        </div>
+        <div class="pay-label" id="t-pay-with">Paga con</div>
+        <div class="pay-btns">
+          <button class="pay-btn" style="background:#635bff" onclick="alert('Stripe proximamente - usa MercadoPago por ahora')">Tarjeta (proximamente)</button>
+          <button class="pay-btn" style="background:#0070ba" onclick="alert('PayPal proximamente - usa MercadoPago por ahora')">PayPal (proximamente)</button>
+          <button class="pay-btn" style="background:#009ee3" onclick="startMercadoPago()">MercadoPago</button>
+        </div>
+        <div style="font-size:9px;color:var(--txt3);text-align:center;margin-top:8px" id="t-pay-sec">Pago seguro - Cancela cuando quieras</div>
+      </div>
+    </div>
+    <div style="background:rgba(176,133,245,0.04);border:1px dashed rgba(176,133,245,0.25);border-radius:14px;padding:20px;margin-bottom:16px">
+      <div class="soon-badge" style="margin-bottom:8px">Proximamente</div>
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--txt);margin-bottom:5px">Soporte Tecnico Personalizado</div>
+      <div style="font-size:11px;color:var(--txt2);line-height:1.6">Config. de pantallas y Resolume por videollamada o soporte remoto. Cobrado por tiempo.</div>
+    </div>
+    <button class="mp-close" id="t-mp-close" onclick="closePricing()">Cerrar</button>
+  </div>
+</div>
+
+<div id="block-overlay">
+  <div class="bo-card">
+    <div class="bo-icon">&#128274;</div>
+    <div class="bo-title" id="t-bo-title">Periodo de prueba finalizado</div>
+    <div class="bo-desc" id="t-bo-desc">Usaste tus 2 exportaciones gratuitas. Subscribite a Pro para continuar.</div>
+    <div class="bo-price">
+      <div class="bo-amount">U$S 4.99</div>
+      <div class="bo-per" id="t-bo-per">por mes - cancela cuando quieras</div>
+      <div class="bo-feats">
+        <div class="bo-feat">Exportaciones ilimitadas</div>
+        <div class="bo-feat">PNG con logo - CSV - JSON</div>
+        <div class="bo-feat">Hasta 16 puertos</div>
+      </div>
+    </div>
+    <button class="bo-cta" id="t-bo-cta" onclick="openPricing()">Ver planes de suscripcion</button>
+    <button class="bo-logout" id="t-bo-logout" onclick="doLogout()">Cerrar sesion</button>
+  </div>
+</div>
+
+<div id="tt"></div>
+
+<script>
+// SUPABASE CLIENT
+const SUPABASE_URL = 'https://psgwqrduggekuuorrfqk.supabase.co'
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZ3dxcmR1Z2dla3V1b3JyZnFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTg2NDAsImV4cCI6MjA5Mjg5NDY0MH0.YhbhPaBJITVuHw7V89iAu2n2E41gzHtJh8C8cXtWk-E'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+let SB_SESSION = null  // Supabase session with JWT token
+const PORT_COLORS = ['#00d4ff','#f5a623','#00e676','#ff4444','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800','#4caf50','#e91e63','#9c27b0','#03a9f4','#8bc34a','#ff5722','#607d8b']
+const SCREEN_COLORS = ['#00d4ff','#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800']
+const FREE_LIMIT = 2
+let CU = null, LOGO = null, ZL = 100, S = {}, LOGIN_TAB = 'login', AI_HISTORY = []
+let SCREENS = [], CURRENT_SCREEN = 0, CURRENT_PROC = null
+
+// HELPERS
+function getLocalUsers(){try{return JSON.parse(localStorage.getItem('pmp_users')||'{}')}catch(e){return{}}}
+function saveLocalUser(e,p,pl){try{const u=getLocalUsers();u[e]={pass:p,plan:pl||'free',name:e.split('@')[0]};localStorage.setItem('pmp_users',JSON.stringify(u))}catch(e){}}
+function getTrialCount(e){try{return parseInt(localStorage.getItem('trial_'+e)||'0')}catch(e){return 0}}
+function incTrial(e){
+  try{localStorage.setItem('trial_'+e,String(getTrialCount(e)+1))}catch(ex){}
+  // Also update in Supabase if logged in with session
+  if(SB_SESSION){
+    fetch('/api/auth?action=use-trial',{method:'POST',
+      headers:{'Authorization':'Bearer '+SB_SESSION.access_token,'Content-Type':'application/json'},
+      body:JSON.stringify({action:'use-trial'})
+    }).catch(function(){})
+  }
+}
+function isBlocked(){return CU&&CU.plan==='free'&&getTrialCount(CU.email)>=FREE_LIMIT}
+function trialLeft(){return Math.max(0,FREE_LIMIT-getTrialCount(CU?CU.email:''))}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+// TRANSLATIONS
+var T = {
+  es:{
+    tabLogin:'Iniciar Sesion', tabReg:'Crear Cuenta', authBtn:'Iniciar Sesion', regBtn:'Crear Cuenta',
+    regInfo:'Las cuentas nuevas tienen 2 exportaciones PNG completas gratuitas.',
+    errFields:'Completa todos los campos.', errShort:'Minimo 6 caracteres.',
+    errExists:'Ya existe una cuenta con ese email.', errWrong:'Usuario o contrasena incorrectos.',
+    tbLogout:'Salir', tbUpgrade:'Upgrade Pro',
+    sbtCfg:'Cfg', sbtPrj:'Proy.', sbtPts:'Puert.', sbtExp:'Exp.',
+    tScreen:'Pantalla', tPitch:'Pitch', tWidth:'Ancho (m)', tHeight:'Alto (m)',
+    tModW:'Ancho mod', tModH:'Alto mod', tPPP:'Px/Puerto', tPorts:'Puertos', tWiring:'Cableado',
+    wHSnake:'H. Serpentina', wHLine:'H. Lineas', wVSnake:'V. Serpentina',
+    tStats:'Estadisticas', tResolution:'Resolucion', tPanels:'Paneles', tPxPanel:'Px/Panel', tCables:'Cables/Ptos',
+    tProjData:'Datos del proyecto', tScreenName:'Nombre pantalla', tTitle:'Titulo proyecto',
+    tClient:'Cliente', tLocation:'Ubicacion', tDate:'Fecha', tNotes:'Notas',
+    tLogo:'Logo empresa', tSave:'Guardar proyecto',
+    tPortMap:'Mapa de puertos', tPortHint:'Edita el nombre de cada cable/puerto:',
+    tExport:'Exportar', tExportHint:'PNG gratis - CSV y JSON requieren plan Pro', tSummary:'Resumen',
+    tProc:'Seleccionar procesador', tBrand:'Marca', tModel:'Modelo', tProcView:'Vista del procesador', tProcState:'Estado',
+    tSoonBadge:'Proximamente', tSoonTitle:'Soporte Tecnico Personalizado',
+    tSoonDesc:'Asistencia en tiempo real para la configuracion de tu pantalla LED y programacion en Resolume.',
+    tAiHint:'Preguntame sobre tu configuracion LED',
+    tViewLabel:'Vista', vmNum:'Numero panel', vmPort:'Por puerto', vmRange:'Rango px',
+    ubTitle:'Desbloquear todo', ubSub:'Exportaciones ilimitadas, logo, CSV, JSON y mas.', ubBtn:'Ver planes Pro',
+    mpTitle:'Elegi tu plan', mpSub:'Acceso completo por U$S 4.99/mes - Cancela cuando quieras.',
+    mpClose:'Cerrar', tPayWith:'Paga con', tPaySec:'Pago seguro - Cancela cuando quieras',
+    tFreePer:'siempre (2 exportaciones)', tProPer:'por mes', tRec:'Recomendado',
+    tCurrPlan:'Plan actual',
+    pf1:'2 exportaciones PNG completas', pf2:'Generador completo de pixel maps',
+    pf3:'Hasta 8 puertos', pf4:'CSV / JSON bloqueado', pf5:'Logo en PNG bloqueado',
+    pp1:'Exportaciones PNG ilimitadas', pp2:'Logo de empresa en PNG',
+    pp3:'Exportar CSV y JSON', pp4:'Hasta 16 puertos', pp5:'Chat IA sin limites',
+    boTitle:'Periodo de prueba finalizado',
+    boDesc:'Usaste tus 2 exportaciones gratuitas. Subscribite a Pro para continuar.',
+    boPer:'por mes - cancela cuando quieras',
+    boCta:'Ver planes de suscripcion', boLogout:'Cerrar sesion',
+    tSavesTitle:'Guardar', tSavesExport:'Exportar', tSavesImport:'Importar',
+    bnCfg:'Config', bnPrj:'Proyecto', bnPts:'Puertos', bnExp:'Exportar',
+    aiSugs:['Cuantos paneles necesito?','Como calcular la resolucion?','Que pitch me conviene?','Explicame los puertos','Como reducir la carga?']
+  },
+  en:{
+    tabLogin:'Sign In', tabReg:'Create Account', authBtn:'Sign In', regBtn:'Create Account',
+    regInfo:'New accounts get 2 complete free PNG exports.',
+    errFields:'Please fill in all fields.', errShort:'Minimum 6 characters.',
+    errExists:'An account with this email already exists.', errWrong:'Incorrect email or password.',
+    tbLogout:'Logout', tbUpgrade:'Upgrade Pro',
+    sbtCfg:'Cfg', sbtPrj:'Proj.', sbtPts:'Ports', sbtExp:'Exp.',
+    tScreen:'Screen', tPitch:'Pitch', tWidth:'Width (m)', tHeight:'Height (m)',
+    tModW:'Mod width', tModH:'Mod height', tPPP:'Px/Port', tPorts:'Ports', tWiring:'Wiring',
+    wHSnake:'H. Serpentine', wHLine:'H. Lines', wVSnake:'V. Serpentine',
+    tStats:'Statistics', tResolution:'Resolution', tPanels:'Panels', tPxPanel:'Px/Panel', tCables:'Cables/Ports',
+    tProjData:'Project data', tScreenName:'Screen name', tTitle:'Project title',
+    tClient:'Client', tLocation:'Location', tDate:'Date', tNotes:'Notes',
+    tLogo:'Company logo', tSave:'Save project',
+    tPortMap:'Port map', tPortHint:'Edit the name of each cable/port:',
+    tExport:'Export', tExportHint:'PNG free - CSV and JSON require Pro plan', tSummary:'Summary',
+    tProc:'Select processor', tBrand:'Brand', tModel:'Model', tProcView:'Processor view', tProcState:'Status',
+    tSoonBadge:'Coming Soon', tSoonTitle:'Personalized Technical Support',
+    tSoonDesc:'Real-time assistance for LED screen configuration and Resolume programming.',
+    tAiHint:'Ask me about your LED configuration',
+    tViewLabel:'View', vmNum:'Panel number', vmPort:'By port', vmRange:'Px range',
+    ubTitle:'Unlock everything', ubSub:'Unlimited exports, logo, CSV, JSON and more.', ubBtn:'View Pro plans',
+    mpTitle:'Choose your plan', mpSub:'Full access for U$S 4.99/month - Cancel anytime.',
+    mpClose:'Close', tPayWith:'Pay with', tPaySec:'Secure payment - Cancel anytime',
+    tFreePer:'forever (2 exports)', tProPer:'per month', tRec:'Recommended',
+    tCurrPlan:'Current plan',
+    pf1:'2 complete PNG exports', pf2:'Full pixel map generator',
+    pf3:'Up to 8 ports', pf4:'CSV / JSON locked', pf5:'PNG logo locked',
+    pp1:'Unlimited PNG exports', pp2:'Company logo in PNG',
+    pp3:'Export CSV and JSON', pp4:'Up to 16 ports', pp5:'Unlimited AI chat',
+    boTitle:'Trial period ended',
+    boDesc:'You used your 2 free exports. Subscribe to Pro to continue.',
+    boPer:'per month - cancel anytime',
+    boCta:'View subscription plans', boLogout:'Sign out',
+    tSavesTitle:'Save', tSavesExport:'Export', tSavesImport:'Import',
+    bnCfg:'Config', bnPrj:'Project', bnPts:'Ports', bnExp:'Export',
+    aiSugs:['How many panels do I need?','How to calculate resolution?','Which pitch is best?','Explain port mapping','How to reduce processor load?']
+  },
+  pt:{
+    tabLogin:'Entrar', tabReg:'Criar Conta', authBtn:'Entrar', regBtn:'Criar Conta',
+    regInfo:'Contas novas tem 2 exportacoes PNG completas gratuitas.',
+    errFields:'Preencha todos os campos.', errShort:'Minimo 6 caracteres.',
+    errExists:'Ja existe uma conta com este email.', errWrong:'Email ou senha incorretos.',
+    tbLogout:'Sair', tbUpgrade:'Upgrade Pro',
+    sbtCfg:'Cfg', sbtPrj:'Proj.', sbtPts:'Portas', sbtExp:'Exp.',
+    tScreen:'Tela', tPitch:'Pitch', tWidth:'Largura (m)', tHeight:'Altura (m)',
+    tModW:'Larg. mod', tModH:'Alt. mod', tPPP:'Px/Porta', tPorts:'Portas', tWiring:'Cabeamento',
+    wHSnake:'H. Serpentina', wHLine:'H. Linhas', wVSnake:'V. Serpentina',
+    tStats:'Estatisticas', tResolution:'Resolucao', tPanels:'Paineis', tPxPanel:'Px/Painel', tCables:'Cabos/Portas',
+    tProjData:'Dados do projeto', tScreenName:'Nome da tela', tTitle:'Titulo do projeto',
+    tClient:'Cliente', tLocation:'Localizacao', tDate:'Data', tNotes:'Notas',
+    tLogo:'Logo da empresa', tSave:'Salvar projeto',
+    tPortMap:'Mapa de portas', tPortHint:'Edite o nome de cada cabo/porta:',
+    tExport:'Exportar', tExportHint:'PNG gratis - CSV e JSON requerem plano Pro', tSummary:'Resumo',
+    tProc:'Selecionar processador', tBrand:'Marca', tModel:'Modelo', tProcView:'Vista do processador', tProcState:'Status',
+    tSoonBadge:'Em breve', tSoonTitle:'Suporte Tecnico Personalizado',
+    tSoonDesc:'Assistencia em tempo real para configuracao de telas LED e programacao no Resolume.',
+    tAiHint:'Pergunte sobre sua configuracao LED',
+    tViewLabel:'Visualizacao', vmNum:'Numero painel', vmPort:'Por porta', vmRange:'Intervalo px',
+    ubTitle:'Desbloquear tudo', ubSub:'Exportacoes ilimitadas, logo, CSV, JSON e mais.', ubBtn:'Ver planos Pro',
+    mpTitle:'Escolha seu plano', mpSub:'Acesso completo por U$S 4.99/mes - Cancele quando quiser.',
+    mpClose:'Fechar', tPayWith:'Pague com', tPaySec:'Pagamento seguro - Cancele quando quiser',
+    tFreePer:'sempre (2 exportacoes)', tProPer:'por mes', tRec:'Recomendado',
+    tCurrPlan:'Plano atual',
+    pf1:'2 exportacoes PNG completas', pf2:'Gerador completo de pixel maps',
+    pf3:'Ate 8 portas', pf4:'CSV / JSON bloqueado', pf5:'Logo no PNG bloqueado',
+    pp1:'Exportacoes PNG ilimitadas', pp2:'Logo da empresa no PNG',
+    pp3:'Exportar CSV e JSON', pp4:'Ate 16 portas', pp5:'Chat IA ilimitado',
+    boTitle:'Periodo de teste encerrado',
+    boDesc:'Voce usou suas 2 exportacoes gratuitas. Assine o Pro para continuar.',
+    boPer:'por mes - cancele quando quiser',
+    boCta:'Ver planos de assinatura', boLogout:'Sair',
+    tSavesTitle:'Salvar', tSavesExport:'Exportar', tSavesImport:'Importar',
+    bnCfg:'Config', bnPrj:'Projeto', bnPts:'Portas', bnExp:'Exportar',
+    aiSugs:['Quantos paineis preciso?','Como calcular a resolucao?','Qual pitch e melhor?','Explique o mapeamento','Como reduzir a carga?']
+  }
+}
+var LANG = 'es'
+
+function setLang(l){
+  LANG = l
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
+  document.querySelectorAll('.tl-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
+  applyT()
+}
+
+function applyT(){
+  var t = T[LANG] || T.es
+  function s(id,v){var el=document.getElementById(id);if(el&&v!==undefined)el.textContent=v}
+
+  // Login
+  s('tab-login',t.tabLogin); s('tab-register',t.tabReg)
+  s('btn-auth', LOGIN_TAB==='login'?t.authBtn:t.regBtn)
+  s('reg-info', t.regInfo)
+  s('lbl-email','Email'); s('lbl-pass',LANG==='pt'?'Senha':LANG==='en'?'Password':'Contraseña')
+
+  // Topbar
+  s('tb-upgrade',t.tbUpgrade)
+  var tlo=document.querySelector('#s-app .tb-logout'); if(tlo) tlo.textContent=t.tbLogout
+
+  // Sidebar tabs
+  s('sbt-cfg',t.sbtCfg); s('sbt-prj',t.sbtPrj); s('sbt-pts',t.sbtPts); s('sbt-exp',t.sbtExp)
+
+  // Config section titles
+  s('t-screen',t.tScreen); s('t-stats',t.tStats)
+
+  // Config labels
+  s('lbl-pitch',t.tPitch)
+  s('lbl-w',t.tWidth); s('lbl-h',t.tHeight)
+  s('lbl-mw',t.tModW+' (cm)'); s('lbl-mh',t.tModH+' (cm)')
+  s('lbl-ppp',t.tPPP)
+  s('lbl-ports',t.tPorts); s('lbl-dir',t.tWiring)
+
+  // Wiring options
+  var dOpts=document.getElementById('cf-dir')
+  if(dOpts){dOpts.options[0].text=t.wHSnake;dOpts.options[1].text=t.wHLine;dOpts.options[2].text=t.wVSnake}
+  // View mode
+  var vOpts=document.getElementById('view-mode')
+  if(vOpts){vOpts.options[0].text=t.vmNum;vOpts.options[1].text=t.vmPort;vOpts.options[2].text=t.vmRange}
+  s('t-viewlabel',t.tViewLabel)
+
+  // Stats labels - target the .sl after each .sv
+  var slabs=document.querySelectorAll('.stat .sl')
+  if(slabs[0])slabs[0].textContent=t.tResolution
+  if(slabs[1])slabs[1].textContent=t.tPanels
+  if(slabs[2])slabs[2].textContent=t.tPxPanel
+  if(slabs[3])slabs[3].textContent=t.tCables
+
+  // Upgrade banner
+  s('t-ub-title',t.ubTitle); s('t-ub-sub',t.ubSub)
+  var ubb=document.querySelector('.ubanner-btn'); if(ubb) ubb.textContent=t.ubBtn
+
+  // Project pane
+  s('t-projdata',t.tProjData)
+  s('lbl-screenname',t.tScreenName)
+  s('lbl-title',t.tTitle); s('lbl-client',t.tClient)
+  s('lbl-loc',t.tLocation); s('lbl-date',t.tDate); s('lbl-notes',t.tNotes)
+  s('t-logo',t.tLogo)
+  s('btn-quick-save',t.tSave)
+
+  // Ports pane
+  s('t-portmap',t.tPortMap)
+
+  // Export pane
+  s('t-export',t.tExport); s('t-export-hint',t.tExportHint)
+  s('t-summary',t.tSummary)
+
+  // Processor pane
+  s('t-proc-select',t.tProc); s('lbl-brand',t.tBrand); s('lbl-model',t.tModel)
+  s('t-proc-view',t.tProcView); s('t-proc-state',t.tProcState)
+
+  // Soon pane
+  s('t-soon-badge',t.tSoonBadge)
+
+  // AI hint
+  s('t-ai-hint',t.tAiHint)
+
+  // Saved projects pane
+  s('t-saves-title',t.tProjData)
+  s('t-saves-save',t.tSavesTitle); s('t-saves-export',t.tSavesExport); s('t-saves-import',t.tSavesImport)
+
+  // Pricing modal
+  s('t-mp-title',t.mpTitle); s('t-mp-sub',t.mpSub); s('t-mp-close',t.mpClose)
+  s('t-free-per',t.tFreePer); s('t-pro-per',t.tProPer)
+  s('t-recommended',t.tRec); s('t-pay-with',t.tPayWith); s('t-pay-sec',t.tPaySec)
+  s('t-curr-plan',t.tCurrPlan)
+  s('t-pf1',t.pf1);s('t-pf2',t.pf2);s('t-pf3',t.pf3);s('t-pf4',t.pf4);s('t-pf5',t.pf5)
+  s('t-pp1',t.pp1);s('t-pp2',t.pp2);s('t-pp3',t.pp3);s('t-pp4',t.pp4);s('t-pp5',t.pp5)
+
+  // Block overlay
+  s('t-bo-title',t.boTitle); s('t-bo-desc',t.boDesc)
+  s('t-bo-per',t.boPer); s('t-bo-cta',t.boCta); s('t-bo-logout',t.boLogout)
+
+  // Bottom nav
+  s('t-bn-cfg',t.bnCfg); s('t-bn-prj',t.bnPrj)
+  s('t-bn-pts',t.bnPts); s('t-bn-exp',t.bnExp)
+
+  // Placeholders
+  var ep=document.getElementById('l-email'); if(ep) ep.placeholder=LANG==='en'?'your@company.com':LANG==='pt'?'seu@empresa.com':'tu@empresa.com'
+  var pp=document.getElementById('l-pass'); if(pp) pp.placeholder='••••••••'
+  var pt=document.getElementById('p-title'); if(pt) pt.placeholder=LANG==='en'?'My LED screen':LANG==='pt'?'Minha tela LED':'Mi pantalla LED'
+  var pc=document.getElementById('p-client'); if(pc) pc.placeholder=LANG==='en'?'Company Inc.':LANG==='pt'?'Empresa SA':'Empresa S.A.'
+  var pl=document.getElementById('p-loc'); if(pl) pl.placeholder=LANG==='en'?'New York':LANG==='pt'?'Sao Paulo':'Buenos Aires'
+  var pn2=document.getElementById('p-notes'); if(pn2) pn2.placeholder=LANG==='en'?'Notes...':LANG==='pt'?'Observacoes...':'Observaciones...'
+  var ai=document.getElementById('ai-input'); if(ai) ai.placeholder=LANG==='en'?'Ask me something...':LANG==='pt'?'Me pergunte algo...':'Preguntame algo...'
+  var sn=document.getElementById('p-screen-name'); if(sn) sn.placeholder=LANG==='en'?'Main Stage, Side L...':LANG==='pt'?'Tela Principal...':'Main Stage, Side L...'
+
+  // AI suggestions
+  var sugs=document.getElementById('ai-sugs')
+  if(sugs){sugs.innerHTML='';t.aiSugs.forEach(function(s2){var b=document.createElement('button');b.className='ai-sug';b.textContent=s2;b.onclick=function(){document.getElementById('ai-input').value=s2;sendAI()};sugs.appendChild(b)})}
+}
+
+// AUTH
+function switchTab(t){
+  LOGIN_TAB = t
+  document.getElementById('tab-login').classList.toggle('active', t==='login')
+  document.getElementById('tab-register').classList.toggle('active', t==='register')
+  document.getElementById('btn-auth').textContent = t==='login' ? (T[LANG]||T.es).authBtn : (T[LANG]||T.es).regBtn
+  document.getElementById('reg-info').className = 'reg-info' + (t==='register' ? ' show' : '')
+  document.getElementById('l-err').classList.remove('show')
+}
+
+async function doAuth(){
+  var email = document.getElementById('l-email').value.trim()
+  var pass  = document.getElementById('l-pass').value
+  var err   = document.getElementById('l-err')
+  var btn   = document.getElementById('btn-auth')
+  if(!email||!pass){err.textContent=(T[LANG]||T.es).errFields;err.classList.add('show');return}
+  if(pass.length<6&&LOGIN_TAB==='register'){err.textContent=(T[LANG]||T.es).errShort;err.classList.add('show');return}
+
+  btn.disabled=true; btn.textContent='...'
+  err.classList.remove('show')
+
+  try {
+    var result
+    if(LOGIN_TAB==='register'){
+      result = await sb.auth.signUp({email:email,password:pass})
+    } else {
+      result = await sb.auth.signInWithPassword({email:email,password:pass})
+    }
+
+    if(result.error){
+      var msg = result.error.message
+      if(msg.includes('Invalid login')) msg=(T[LANG]||T.es).errWrong
+      else if(msg.includes('already registered')) msg=(T[LANG]||T.es).errExists
+      else if(msg.includes('Password')) msg=(T[LANG]||T.es).errShort
+      err.textContent=msg; err.classList.add('show')
+      btn.disabled=false; btn.textContent=(T[LANG]||T.es)[LOGIN_TAB==='login'?'authBtn':'regBtn']
+      return
+    }
+
+    if(LOGIN_TAB==='register' && !result.data.session){
+      // Email confirmation required
+      err.style.color='var(--green)'
+      err.textContent='Cuenta creada. Revisa tu email para confirmar (o inicia sesion directamente).'
+      err.classList.add('show')
+      btn.disabled=false; btn.textContent=(T[LANG]||T.es).authBtn
+      return
+    }
+
+    SB_SESSION = result.data.session
+    // Fetch profile from our API
+    await loadUserProfile()
+
+  } catch(e) {
+    err.textContent='Error de conexion: '+e.message
+    err.classList.add('show')
+    btn.disabled=false; btn.textContent=(T[LANG]||T.es)[LOGIN_TAB==='login'?'authBtn':'regBtn']
+  }
+}
+
+async function loadUserProfile(){
+  try {
+    var res = await fetch('/api/auth?action=get-profile', {
+      headers: { 'Authorization': 'Bearer '+SB_SESSION.access_token }
+    })
+    var profile = await res.json()
+    if(res.ok && profile.email){
+      CU = profile
+      showApp()
+    } else {
+      // Fallback: use session data directly
+      CU = {
+        email: SB_SESSION.user.email,
+        name: SB_SESSION.user.email.split('@')[0],
+        plan: SB_SESSION.user.email === 'walabi@pixelmappro.com' ? 'superop' : 'free',
+        trial_exports: 0
+      }
+      showApp()
+    }
+  } catch(e) {
+    // Offline fallback
+    CU = {
+      email: SB_SESSION.user.email,
+      name: SB_SESSION.user.email.split('@')[0],
+      plan: SB_SESSION.user.email === 'walabi@pixelmappro.com' ? 'superop' : 'free',
+      trial_exports: 0
+    }
+    showApp()
+  }
+}
+
+async function doLogout(){
+  await sb.auth.signOut()
+  SB_SESSION = null
+  CU=null;LOGO=null;AI_HISTORY=[];SCREENS=[];CURRENT_SCREEN=0;CURRENT_PROC=null
+  removeBlockOverlay()
+  document.getElementById('s-app').classList.remove('active')
+  document.getElementById('s-login').classList.add('active')
+  document.getElementById('l-pass').value=''
+  document.getElementById('l-err').classList.remove('show')
+  document.getElementById('l-err').style.color='var(--red)'
+  closeSidebar()
+}
+
+function showApp(){
+  document.getElementById('s-login').classList.remove('active')
+  document.getElementById('s-app').classList.add('active')
+  var isPro=CU.plan==='pro'||CU.plan==='superop'
+  var blocked=!isPro&&isBlocked()
+  document.getElementById('tb-user').textContent=CU.name+' - '+CU.email
+  var b=document.getElementById('tb-badge')
+  if(CU.plan==='superop'){b.textContent='ADMIN';b.className='badge badge-superop'}
+  else if(isPro){b.textContent='PRO';b.className='badge badge-pro'}
+  else{
+    var r=trialLeft()
+    b.textContent=r>0?('FREE ('+r+' uso'+(r>1?'s':'')+')'):'FREE BLOQUEADO'
+    b.className='badge '+(r>0?'badge-free':'badge-blocked')
+  }
+  document.getElementById('tb-upgrade').style.display=isPro?'none':'inline-block'
+  document.getElementById('upgrade-banner').style.display=isPro?'none':'block'
+  document.getElementById('btn-csv').disabled=!isPro
+  document.getElementById('btn-json').disabled=!isPro
+  document.getElementById('btn-csv').textContent=isPro?'CSV':'CSV Pro'
+  document.getElementById('btn-json').textContent=isPro?'JSON':'JSON Pro'
+  document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
+  renderFreeNote()
+  renderLogoPan()
+  initScreens()
+  if(blocked) setTimeout(showBlockOverlay,300)
+}
+
+// SIDEBAR
+function sbTab(name){
+  document.querySelectorAll('.sb-tab').forEach(function(t){t.classList.remove('active')})
+  document.querySelectorAll('.sb-pane').forEach(function(p){p.classList.remove('active')})
+  var tab=document.getElementById('sbt-'+name), pane=document.getElementById('pane-'+name)
+  if(tab) tab.classList.add('active')
+  if(pane) pane.classList.add('active')
+  document.querySelectorAll('.bn-btn').forEach(function(b){b.classList.remove('active')})
+  var bn=document.getElementById('bn-'+name); if(bn) bn.classList.add('active')
+  if(name==='saves') renderProjectsList()
+  if(name==='proc') renderProcView()
+  if(name==='screens') renderScreensList()
+}
+function togglePanel(h){h.closest('.cp').classList.toggle('closed')}
+function toggleSidebar(){
+  var sb=document.getElementById('sidebar'),ov=document.getElementById('sb-overlay')
+  if(sb.classList.contains('open')){closeSidebar()}
+  else{sb.classList.add('open');ov.classList.add('on');document.body.style.overflow='hidden'}
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('sb-overlay').classList.remove('on')
+  document.body.style.overflow=''
+}
+function bnTab(name){
+  sbTab(name)
+  if(window.innerWidth<1024){
+    var sb=document.getElementById('sidebar'),ov=document.getElementById('sb-overlay')
+    sb.classList.add('open');ov.classList.add('on')
+  }
+}
+window.addEventListener('resize',function(){if(window.innerWidth>=1024)closeSidebar()})
+
+// MULTI-SCREEN
+function makeScreen(num){
+  return{id:Date.now()+Math.random(),name:'Pantalla '+num,color:SCREEN_COLORS[(num-1)%SCREEN_COLORS.length],
+    pitch:'5',w:'4',h:'3',mw:'50',mh:'100',ppp:'650000',ports:'8',dir:'h-snake',
+    title:'',client:'',location:'',date:new Date().toISOString().slice(0,10),notes:'',logo:null,portLabels:{},S:{}}
+}
+function saveCurrentScreenState(){
+  if(!SCREENS.length) return
+  var sc=SCREENS[CURRENT_SCREEN]; if(!sc) return
+  var nm=document.getElementById('p-screen-name'); if(nm&&nm.value.trim()) sc.name=nm.value.trim()
+  sc.pitch=document.getElementById('cf-pitch').value
+  sc.w=document.getElementById('cf-w').value; sc.h=document.getElementById('cf-h').value
+  sc.mw=document.getElementById('cf-mw').value; sc.mh=document.getElementById('cf-mh').value
+  sc.ppp=document.getElementById('cf-ppp').value; sc.ports=document.getElementById('cf-ports').value
+  sc.dir=document.getElementById('cf-dir').value; sc.title=document.getElementById('p-title').value
+  sc.client=document.getElementById('p-client').value; sc.location=document.getElementById('p-loc').value
+  sc.date=document.getElementById('p-date').value; sc.notes=document.getElementById('p-notes').value
+  sc.logo=LOGO; sc.S=Object.assign({},S)
+}
+function loadScreenState(idx){
+  var sc=SCREENS[idx]; if(!sc) return
+  CURRENT_SCREEN=idx; LOGO=sc.logo||null
+  var nm=document.getElementById('p-screen-name'); if(nm) nm.value=sc.name||''
+  document.getElementById('cf-pitch').value=sc.pitch||'5'
+  document.getElementById('cf-w').value=sc.w||'4'; document.getElementById('cf-h').value=sc.h||'3'
+  document.getElementById('cf-mw').value=sc.mw||'50'; document.getElementById('cf-mh').value=sc.mh||'100'
+  document.getElementById('cf-ppp').value=sc.ppp||'650000'
+  document.getElementById('cf-ports').value=sc.ports||'8'; document.getElementById('cf-dir').value=sc.dir||'h-snake'
+  document.getElementById('p-title').value=sc.title||''; document.getElementById('p-client').value=sc.client||''
+  document.getElementById('p-loc').value=sc.location||''; document.getElementById('p-date').value=sc.date||new Date().toISOString().slice(0,10)
+  document.getElementById('p-notes').value=sc.notes||''
+  renderLogoPan(); compute()
+}
+function addScreen(){saveCurrentScreenState();var sc=makeScreen(SCREENS.length+1);SCREENS.push(sc);switchScreen(SCREENS.length-1)}
+function switchScreen(idx){saveCurrentScreenState();loadScreenState(idx);renderScreenTabs();renderScreensList();updateScreensBar();sbTab('cfg')}
+function removeScreen(idx){
+  if(SCREENS.length<=1){alert('El proyecto debe tener al menos una pantalla.');return}
+  if(!confirm('Eliminar "'+SCREENS[idx].name+'"?')) return
+  SCREENS.splice(idx,1)
+  var newIdx=Math.max(0,Math.min(CURRENT_SCREEN,SCREENS.length-1))
+  CURRENT_SCREEN=-1; switchScreen(newIdx)
+}
+function duplicateScreen(idx){
+  saveCurrentScreenState()
+  var copy=JSON.parse(JSON.stringify(SCREENS[idx]))
+  copy.id=Date.now()+Math.random(); copy.name=SCREENS[idx].name+' (copia)'
+  copy.color=SCREEN_COLORS[SCREENS.length%SCREEN_COLORS.length]; copy.S={}
+  SCREENS.splice(idx+1,0,copy); switchScreen(idx+1)
+}
+function renameScreen(idx){
+  var n=prompt('Nombre:',SCREENS[idx].name)
+  if(n&&n.trim()){SCREENS[idx].name=n.trim();renderScreenTabs();renderScreensList()}
+}
+function updateScreenName(){
+  if(!SCREENS.length) return
+  var sc=SCREENS[CURRENT_SCREEN]; if(!sc) return
+  var nm=document.getElementById('p-screen-name')
+  if(nm&&nm.value.trim()){sc.name=nm.value.trim();renderScreenTabs();renderScreensList()}
+  markUnsaved()
+}
+function renderScreenTabs(){
+  var bar=document.getElementById('scr-tabs-inner'); if(!bar) return
+  bar.innerHTML=''
+  SCREENS.forEach(function(sc,i){
+    var btn=document.createElement('button'); btn.className='scr-tab'+(i===CURRENT_SCREEN?' active':'')
+    btn.innerHTML='<div class="scr-dot" style="background:'+sc.color+'"></div><span>'+escH(sc.name)+'</span>'+(SCREENS.length>1?'<button class="scr-close" onclick="event.stopPropagation();removeScreen('+i+')" title="Eliminar">x</button>':'')
+    btn.onclick=function(){switchScreen(i)}; bar.appendChild(btn)
+  })
+}
+function updateScreensBar(){
+  var bar=document.getElementById('scr-tabs-bar'); if(!bar) return
+  bar.classList.toggle('visible',SCREENS.length>1)
+}
+function renderScreensList(){
+  var list=document.getElementById('screens-list'),cnt=document.getElementById('screens-count'),sum=document.getElementById('screens-summary')
+  if(!list) return
+  if(cnt) cnt.textContent=SCREENS.length
+  list.innerHTML=''; var tC=0,tP=0,tM=0
+  SCREENS.forEach(function(sc,i){
+    var st=sc.S||{}; var info=[sc.w&&sc.h?sc.w+'x'+sc.h+'m':null,sc.pitch?'P'+sc.pitch:null].filter(Boolean).join(' - ')
+    tC+=st.pn||0; tP+=st.tot||0; tM+=parseFloat(st.mpx)||0
+    var div=document.createElement('div'); div.className='scr-item'+(i===CURRENT_SCREEN?' active':'')
+    div.innerHTML='<div class="scr-item-bar" style="background:'+sc.color+'"></div>'+
+      '<div class="scr-item-name">'+escH(sc.name)+'</div>'+
+      '<div class="scr-item-info">'+escH(info)+'</div>'+
+      '<div class="scr-item-info">'+(st.rw&&st.rh?st.rw+'x'+st.rh+' px':'')+' - '+(st.pn||0)+' cables</div>'+
+      '<div class="scr-item-actions">'+
+        '<button class="scr-action" onclick="event.stopPropagation();switchScreen('+i+')">Editar</button>'+
+        '<button class="scr-action" onclick="event.stopPropagation();renameScreen('+i+')">Renombrar</button>'+
+        '<button class="scr-action" onclick="event.stopPropagation();duplicateScreen('+i+')">Copiar</button>'+
+        (SCREENS.length>1?'<button class="scr-action del" onclick="event.stopPropagation();removeScreen('+i+')">Eliminar</button>':'')+
+      '</div>'
+    div.onclick=function(e){if(e.target.tagName==='BUTTON')return;switchScreen(i)}
+    list.appendChild(div)
+  })
+  if(sum) sum.innerHTML='Pantallas: <strong>'+SCREENS.length+'</strong><br>Cables totales: <strong>'+tC+'</strong><br>Paneles totales: <strong>'+tP+'</strong><br>Total: <strong>'+tM.toFixed(2)+' MP</strong>'
+}
+function initScreens(){
+  if(!SCREENS.length){SCREENS=[makeScreen(1)];CURRENT_SCREEN=0}
+  loadScreenState(0); renderScreenTabs(); renderScreensList(); updateScreensBar()
+}
+
+// PORT LABELS
+function getPortLabel(portNum){
+  if(!SCREENS.length) return 'P'+portNum
+  var sc=SCREENS[CURRENT_SCREEN]; return (sc&&sc.portLabels&&sc.portLabels[portNum])||('P'+portNum)
+}
+function setPortLabel(portNum,label){
+  if(!SCREENS.length) return
+  var sc=SCREENS[CURRENT_SCREEN]; if(!sc.portLabels) sc.portLabels={}
+  sc.portLabels[portNum]=label.trim()||('P'+portNum); renderMap()
+}
+
+// COMPUTE
+function compute(){
+  var W=parseFloat(document.getElementById('cf-w').value)||4
+  var H=parseFloat(document.getElementById('cf-h').value)||3
+  var pit=parseFloat(document.getElementById('cf-pitch').value)||5
+  var mw=parseFloat(document.getElementById('cf-mw').value)||50
+  var mh=parseFloat(document.getElementById('cf-mh').value)||100
+  var ppp=parseInt(document.getElementById('cf-ppp').value)||650000
+  var maxP=parseInt(document.getElementById('cf-ports').value)||8
+  var dir=document.getElementById('cf-dir').value
+  var mpw=Math.round((mw*10)/pit), mph=Math.round((mh*10)/pit), ppp2=mpw*mph
+  var cols=Math.round((W*100)/mw), rows=Math.round((H*100)/mh), tot=cols*rows
+  var rw=cols*mpw, rh=rows*mph, tpx=ppp2*tot, mpx=(tpx/1e6).toFixed(2)
+  var ppmax=Math.max(1,Math.floor(ppp/ppp2)), pn=Math.ceil(tot/ppmax)
+  var base=Math.floor(tot/pn), rem=tot%pn
+  var sizes=Array.from({length:pn},function(_,i){return base+(i<rem?1:0)})
+  var starts=[]; var acc=0; sizes.forEach(function(sz){starts.push(acc);acc+=sz})
+  var mi=document.getElementById('mod-info'); if(mi) mi.textContent=mpw+'x'+mph+' px por modulo'
+  var recEl=document.getElementById('port-rec')
+  if(recEl){
+    var ok=maxP>=pn
+    var bal=base+(rem>0?' o '+(base+1):'')+' paneles/cable'
+    recEl.textContent=ok?('OK: '+pn+' cable'+(pn>1?'s':'')+' de '+maxP+' puertos - '+bal+' (balanceado)'):('ATENCION: Necesitas minimo '+pn+' cables (tienes '+maxP+' puertos)')
+    recEl.style.color=ok?'var(--green)':'var(--red)'
+  }
+  var po=[]
+  for(var r=0;r<rows;r++) for(var c=0;c<cols;c++){
+    var idx; if(dir==='h-snake')idx=r%2===0?r*cols+c:r*cols+(cols-1-c)
+    else if(dir==='h-line')idx=r*cols+c; else idx=c%2===0?c*rows+r:c*rows+(rows-1-r)
+    po.push({gridIdx:r*cols+c,panelNum:idx,row:r,col:c})
+  }
+  var sorted=po.slice().sort(function(a,b){return a.panelNum-b.panelNum})
+  var pi=new Array(tot)
+  sorted.forEach(function(p,i){
+    var portIdx=0
+    for(var k=0;k<pn;k++){if(i>=starts[k]&&(k===pn-1||i<starts[k+1])){portIdx=k;break}}
+    pi[p.panelNum]={panelNum:p.panelNum+1,portIdx:portIdx,portNum:portIdx+1,pxStart:i*ppp2,pxEnd:i*ppp2+ppp2-1,row:p.row+1,col:p.col+1}
+  })
+  var ps=sizes.map(function(cnt,i){return{portNum:i+1,panelCount:cnt,totalPx:cnt*ppp2,usagePct:Math.round((cnt*ppp2/ppp)*100),color:PORT_COLORS[i%PORT_COLORS.length]}})
+  S={W:W,H:H,pit:pit,mw:mw,mh:mh,ppp:ppp,maxP:maxP,dir:dir,cols:cols,rows:rows,tot:tot,mpw:mpw,mph:mph,ppp2:ppp2,rw:rw,rh:rh,tpx:tpx,mpx:mpx,ppport:base,pn:pn,pi:pi,ps:ps,po:po}
+  var stR=document.getElementById('st-res'); if(stR){stR.textContent=rw+'x'+rh;stR.className='sv'+(tpx>8e6?' err':tpx>4e6?' warn':'')}
+  var stP=document.getElementById('st-panels'); if(stP) stP.textContent=tot
+  var stPx=document.getElementById('st-px'); if(stPx){stPx.textContent=(base*ppp2).toLocaleString();stPx.className='sv ok'}
+  var stL=document.getElementById('st-load'); if(stL){stL.textContent=pn+'/'+maxP;stL.className='sv '+(pn>maxP?'err':pn===maxP?'warn':'ok')}
+  var title=document.getElementById('p-title').value||'Sin titulo'
+  var client=document.getElementById('p-client').value
+  var mhT=document.getElementById('mh-title'),mhS=document.getElementById('mh-sub'),mhR=document.getElementById('mh-res'),mhD=document.getElementById('mh-det')
+  if(mhT){var sc2=SCREENS[CURRENT_SCREEN];var pfx=SCREENS.length>1&&sc2?sc2.name+' - ':'';mhT.textContent=pfx+title;mhT.style.color=SCREENS.length>1&&sc2?sc2.color:'var(--txt)'}
+  if(mhS) mhS.textContent=client?'Cliente: '+client:''
+  if(mhR) mhR.textContent=rw+'x'+rh+' px'
+  if(mhD) mhD.textContent='P'+pit+' - '+W+'x'+H+'m - '+cols+'x'+rows+' modulos - '+tot+' paneles'
+  var rb=document.getElementById('recap-box')
+  if(rb) rb.innerHTML='P'+pit+' - Modulo '+mw+'x'+mh+'cm ('+mpw+'x'+mph+' px)<br>'+W+'x'+H+' m - '+cols+'x'+rows+' modulos<br>Res: '+rw+'x'+rh+'<br>'+tot+' paneles - '+pn+'/'+maxP+' puertos<br>'+mpx+' MP<br>Cableado: '+({'h-snake':'Serp. Horizontal','h-line':'Lineas Horizontal','v-snake':'Serp. Vertical'}[dir]||dir)
+  if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
+  renderPorts(); renderMap(); renderProcView()
+}
+
+// PORTS
+function renderPorts(){
+  if(!S.pn) return
+  var list=document.getElementById('ports-list'); if(!list) return
+  list.innerHTML=''
+  var ok=S.maxP>=S.pn
+  var rec=document.createElement('div')
+  rec.style.cssText='padding:8px 10px;border-radius:6px;font-size:11px;margin-bottom:8px;line-height:1.5;background:'+(ok?'rgba(0,230,118,0.07)':'rgba(255,68,68,0.07)')+';border:1px solid '+(ok?'rgba(0,230,118,0.25)':'rgba(255,68,68,0.25)')+';color:'+(ok?'var(--green)':'var(--red)')
+  rec.textContent=ok?('OK: '+S.pn+' cable'+(S.pn>1?'s':'')+' de '+S.maxP+' puertos disponibles'):('ATENCION: Necesitas '+S.pn+' cables - superas los '+S.maxP+' puertos')
+  list.appendChild(rec)
+  var hint=document.createElement('div'); hint.style.cssText='font-size:10px;color:var(--txt3);padding:0 2px 6px'
+  hint.textContent='Edita el nombre de cada cable/puerto:'; list.appendChild(hint)
+  S.ps.forEach(function(p){
+    var over=p.totalPx>S.ppp, lbl=getPortLabel(p.portNum)
+    var div=document.createElement('div'); div.className='pr'
+    var topRow=document.createElement('div'); topRow.className='pr-top'
+    topRow.innerHTML='<div class="pn" style="background:'+p.color+'">'+p.portNum+'</div>'+
+      '<div class="pi"><div class="pl">'+escH(lbl)+(over?' SOBRECARGA':'')+' </div>'+
+      '<div class="ps">'+p.panelCount+' paneles - '+p.totalPx.toLocaleString()+' px ('+p.usagePct+'%)</div>'+
+      '<div class="pbw"><div class="pb" style="width:'+Math.min(p.usagePct,100)+'%;background:'+(over?'var(--red)':p.color)+'"></div></div></div>'
+    div.appendChild(topRow)
+    var labelRow=document.createElement('div'); labelRow.className='pr-label'
+    var dot=document.createElement('div'); dot.style.cssText='width:10px;height:10px;border-radius:50%;background:'+p.color+';flex-shrink:0'
+    var inp=document.createElement('input'); inp.type='text'; inp.value=lbl==='P'+p.portNum?'':lbl
+    inp.placeholder='Ej: SC1-Puerto A, Out1...'
+    inp.style.cssText='flex:1;padding:5px 8px;font-size:11px;border-radius:4px'
+    var pNum=p.portNum
+    inp.oninput=function(){setPortLabel(pNum,inp.value||('P'+pNum))}
+    inp.onblur=function(){if(!inp.value.trim()){inp.value='';setPortLabel(pNum,'P'+pNum)}}
+    labelRow.appendChild(dot); labelRow.appendChild(inp); div.appendChild(labelRow); list.appendChild(div)
+  })
+}
+
+// MAP (Canvas)
+function renderMap(){
+  if(!S.cols||!S.pi) return
+  var mode=document.getElementById('view-mode').value
+  var wrap=document.querySelector('.canvas-wrap')
+  var availW=(wrap.clientWidth||600)-32, availH=(wrap.clientHeight||400)-32
+  var z=ZL/100, fitW=Math.floor(availW/S.cols), fitH=Math.floor(availH/S.rows)
+  var ar=S.mh/S.mw
+  var cw=Math.max(8,Math.min(fitW,Math.floor(fitH/ar),80)); cw=Math.max(8,Math.floor(cw*z))
+  var ch=Math.max(4,Math.floor(cw*ar))
+  var tW=S.cols*cw, tH=S.rows*ch
+  var grid=document.getElementById('pixelgrid')
+  var cv=document.getElementById('map-canvas')
+  if(!cv){grid.innerHTML='';cv=document.createElement('canvas');cv.id='map-canvas';cv.style.cursor='crosshair';cv.style.display='block';grid.appendChild(cv)}
+  cv.width=tW; cv.height=tH
+  var ctx=cv.getContext('2d'); ctx.clearRect(0,0,tW,tH)
+  S.po.forEach(function(item){
+    var p=S.pi[item.panelNum]; if(!p) return
+    var col=PORT_COLORS[p.portIdx%PORT_COLORS.length], hex=col.replace('#','')
+    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+    var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols), x=c*cw, y=r*ch
+    ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'; ctx.fillRect(x,y,cw-1,ch-1)
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.6)'; ctx.lineWidth=1; ctx.strokeRect(x,y,cw-1,ch-1)
+    if(cw>=16&&ch>=10){
+      var lbl=mode==='num'?p.panelNum:mode==='port'?p.portNum:p.pxStart
+      var fs=Math.max(6,Math.min(10,cw*0.28,ch*0.5))
+      ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.font='bold '+fs+'px monospace'
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(lbl,x+cw/2,y+ch*0.42)
+      if(cw>=32&&ch>=18){ctx.fillStyle='rgba('+R+','+G+','+B+',0.8)';ctx.font=(fs*0.75)+'px monospace';ctx.fillText('P'+p.portNum,x+cw/2,y+ch*0.72)}
+    }
+  })
+  ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=0.5
+  for(var c=0;c<=S.cols;c++){ctx.beginPath();ctx.moveTo(c*cw,0);ctx.lineTo(c*cw,tH);ctx.stroke()}
+  for(var r=0;r<=S.rows;r++){ctx.beginPath();ctx.moveTo(0,r*ch);ctx.lineTo(tW,r*ch);ctx.stroke()}
+  if(cw>=12&&ch>=8){
+    var pp={}
+    S.po.forEach(function(item){var p=S.pi[item.panelNum];if(!p)return;if(!pp[p.portIdx])pp[p.portIdx]=[];pp[p.portIdx].push({x:item.gridIdx%S.cols*cw+cw/2,y:Math.floor(item.gridIdx/S.cols)*ch+ch/2,seq:p.pxStart})})
+    Object.keys(pp).forEach(function(portIdx){
+      pp[portIdx].sort(function(a,b){return a.seq-b.seq})
+      var panels=pp[portIdx]; if(!panels.length) return
+      var col=PORT_COLORS[parseInt(portIdx)%PORT_COLORS.length], hex=col.replace('#','')
+      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+      ctx.strokeStyle='rgba('+R+','+G+','+B+',0.85)'; ctx.lineWidth=Math.max(1.5,cw*0.06)
+      ctx.setLineDash([cw*0.25,cw*0.12]); ctx.lineCap='round'; ctx.lineJoin='round'
+      ctx.beginPath(); ctx.moveTo(panels[0].x,panels[0].y)
+      for(var i=1;i<panels.length;i++) ctx.lineTo(panels[i].x,panels[i].y)
+      ctx.stroke(); ctx.setLineDash([])
+      if(cw>=20){for(var i=0;i<panels.length-1;i++){var ax=panels[i].x,ay=panels[i].y,bx=panels[i+1].x,by=panels[i+1].y,mx=(ax+bx)/2,my=(ay+by)/2,angle=Math.atan2(by-ay,bx-ax),aw=Math.max(4,cw*0.18);ctx.fillStyle='rgba('+R+','+G+','+B+',0.9)';ctx.save();ctx.translate(mx,my);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(aw,0);ctx.lineTo(-aw*0.6,-aw*0.5);ctx.lineTo(-aw*0.6,aw*0.5);ctx.closePath();ctx.fill();ctx.restore()}}
+      var first=panels[0],last=panels[panels.length-1],portLabel=getPortLabel(parseInt(portIdx)+1)
+      var bH=Math.max(10,ch*0.28),fs=Math.max(6,bH*0.68)
+      ctx.font='bold '+fs+'px monospace'
+      var bW=Math.max(22,Math.max(cw*0.38,ctx.measureText('IN').width+10))
+      var inX=first.x-cw/2+1,inY=first.y-ch/2+1
+      ctx.fillStyle='rgba('+R+','+G+','+B+',1)'; roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
+      ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('IN',inX+bW/2,inY+bH/2)
+      if(portLabel!==('P'+(parseInt(portIdx)+1))&&cw>=20){
+        ctx.font='bold '+Math.max(5,fs*0.85)+'px monospace'
+        var lW=ctx.measureText(portLabel).width+8,lY=inY+bH+2
+        ctx.fillStyle='rgba(0,0,0,0.72)'; roundRect(ctx,inX,lY,lW,bH,3); ctx.fill()
+        ctx.strokeStyle='rgba('+R+','+G+','+B+',0.85)'; ctx.lineWidth=1; roundRect(ctx,inX,lY,lW,bH,3); ctx.stroke()
+        ctx.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(portLabel,inX+lW/2,lY+bH/2)
+      }
+      ctx.font='bold '+fs+'px monospace'
+      var outX=last.x+cw/2-bW-1,outY=last.y+ch/2-bH-1
+      ctx.fillStyle='rgba(0,0,0,0.75)'; roundRect(ctx,outX,outY,bW,bH,3); ctx.fill()
+      ctx.strokeStyle='rgba('+R+','+G+','+B+',0.9)'; ctx.lineWidth=1; roundRect(ctx,outX,outY,bW,bH,3); ctx.stroke()
+      ctx.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OUT',outX+bW/2,outY+bH/2)
+    })
+  }
+  cv.onmousemove=function(e){
+    if(window.innerWidth<640) return
+    var rect=cv.getBoundingClientRect(),c=Math.floor((e.clientX-rect.left)/cw),r=Math.floor((e.clientY-rect.top)/ch)
+    if(c<0||c>=S.cols||r<0||r>=S.rows) return
+    var gi=r*S.cols+c, pN=S.po[gi]&&S.po[gi].panelNum, p=S.pi[pN]; if(!p) return
+    var col2=PORT_COLORS[p.portIdx%PORT_COLORS.length], lbl2=getPortLabel(p.portNum)
+    var tt=document.getElementById('tt')
+    tt.innerHTML='<div class="tt-row"><span class="tt-k">Panel</span><span class="tt-v">'+p.panelNum+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Puerto</span><span class="tt-v" style="color:'+col2+'">'+lbl2+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Fila</span><span class="tt-v">'+p.row+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Col</span><span class="tt-v">'+p.col+'</span></div>'+
+      '<div class="tt-row"><span class="tt-k">Px inicio</span><span class="tt-v">'+p.pxStart.toLocaleString()+'</span></div>'
+    tt.style.display='block'; tt.style.borderColor=col2
+    tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-10)+'px'
+  }
+  cv.onmouseleave=function(){document.getElementById('tt').style.display='none'}
+  var info=document.getElementById('infobar')
+  if(info) info.textContent=S.rw+'x'+S.rh+' px - '+S.tot+' paneles - '+S.pn+' cable'+(S.pn>1?'s':'')+' de '+S.maxP+' puertos - P'+S.pit+' - '+S.mw+'x'+S.mh+'cm'
+  document.getElementById('zv').textContent=ZL+'%'
+}
+function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
+function zoom(delta){if(delta===0)ZL=100;else ZL=Math.max(20,Math.min(500,ZL+delta));renderMap()}
+
+// LOGO
+function renderLogoPan(){
+  var isPro=CU&&(CU.plan==='pro'||CU.plan==='superop')
+  var el=document.getElementById('logo-panel'); if(!el) return
+  if(!isPro){el.innerHTML='<div style="text-align:center;padding:6px"><p style="font-size:11px;color:var(--txt3);margin-bottom:8px">Solo disponible en plan Pro.</p><button class="ubanner-btn" onclick="openPricing()">Ver planes Pro</button></div>';return}
+  if(LOGO){el.innerHTML='<div style="text-align:center"><img src="'+LOGO+'" style="max-height:60px;max-width:180px;object-fit:contain;display:block;margin:0 auto 10px"><button style="background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);padding:5px 12px;font-family:inherit;font-size:11px;cursor:pointer" onclick="LOGO=null;renderLogoPan()">Quitar logo</button></div>'}
+  else{el.innerHTML='<label class="logo-upload" for="logo-file-input">Subir logo (PNG/SVG)</label><input type="file" id="logo-file-input" accept="image/*,image/svg+xml" style="display:none" onchange="handleLogo(this)"><div style="font-size:10px;color:var(--txt3);text-align:center;margin-top:6px">PNG o SVG - max 2MB</div>'}
+}
+function handleLogo(inp){if(!inp.files||!inp.files[0])return;if(inp.files[0].size>2*1024*1024){alert('Maximo 2MB');return}var reader=new FileReader();reader.onload=function(e){LOGO=e.target.result;renderLogoPan()};reader.readAsDataURL(inp.files[0])}
+
+// FREE NOTE
+function renderFreeNote(){
+  var fn=document.getElementById('free-note'); if(!fn) return
+  if(!CU||CU.plan!=='free'){fn.style.display='none';return}
+  var rem=trialLeft(); fn.style.display='block'
+  if(rem>0) fn.textContent='ATENCION: Te queda'+(rem===1?'':'n')+' '+rem+' exportacion'+(rem>1?'es':'')+' gratuita'+(rem>1?'s':'')+' - completa, sin marca de agua'
+  else fn.innerHTML='LIMITE ALCANZADO. <button onclick="openPricing()" style="background:var(--cyan);border:none;border-radius:4px;color:#000;padding:2px 8px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;margin-left:4px">Upgrade</button>'
+}
+
+// BLOCK/UNBLOCK
+function showBlockOverlay(){
+  document.getElementById('block-overlay').classList.add('on')
+  document.querySelectorAll('#s-app input,#s-app select,#s-app textarea,#s-app button').forEach(function(el){
+    if(el.closest('#block-overlay')||el.id==='tb-logout')return
+    el.disabled=true; el.style.pointerEvents='none'; el.style.opacity='.35'
+  })
+  var cw=document.querySelector('.canvas-wrap'); if(cw){cw.style.filter='blur(6px) brightness(.3)';cw.style.pointerEvents='none'}
+}
+function removeBlockOverlay(){
+  document.getElementById('block-overlay').classList.remove('on')
+  document.querySelectorAll('#s-app input,#s-app select,#s-app textarea,#s-app button').forEach(function(el){el.disabled=false;el.style.pointerEvents='';el.style.opacity=''})
+  var cw=document.querySelector('.canvas-wrap'); if(cw){cw.style.filter='';cw.style.pointerEvents=''}
+}
+
+// PRICING MODAL
+function openPricing(){document.getElementById('modal-pricing').classList.add('open')}
+function closePricing(){document.getElementById('modal-pricing').classList.remove('open')}
+
+// EXPORT PNG
+async function exportPNG(){
+  if(!S.tot||!S.pi){alert('Configura una pantalla primero');return}
+  if(CU&&CU.plan==='free'){
+    if(isBlocked()){showBlockOverlay();return}
+    incTrial(CU.email); renderFreeNote()
+    var rem=trialLeft()
+    var b=document.getElementById('tb-badge')
+    b.textContent=rem>0?('FREE ('+rem+' uso'+(rem>1?'s':'')+')'):'FREE BLOQUEADO'
+    b.className='badge '+(rem>0?'badge-free':'badge-blocked')
+  }
+  var isPro=CU&&(CU.plan==='pro'||CU.plan==='superop')
+  var cols=S.cols,rows=S.rows,pit=S.pit,W=S.W,H=S.H,mw=S.mw,mh=S.mh,mpw=S.mpw,mph=S.mph,tot=S.tot,pn=S.pn,maxP=S.maxP,ppp2=S.ppp2,mpx=S.mpx,dir=S.dir
+  var cc=Math.max(24,Math.floor(1200/cols)), hc=Math.max(12,Math.round(cc*(mh/mw)))
+  var gw=cols*cc, gh=rows*hc, HH=170, FH=52, PAD=24
+  var cvW=Math.max(gw+PAD*2,960), cvH=HH+gh+FH
+  var cv=document.createElement('canvas'); cv.width=cvW; cv.height=cvH
+  var ctx=cv.getContext('2d')
+  ctx.fillStyle='#07080b'; ctx.fillRect(0,0,cvW,cvH)
+  var hg=ctx.createLinearGradient(0,0,cvW,0); hg.addColorStop(0,'#0f1117'); hg.addColorStop(1,'#161a24')
+  ctx.fillStyle=hg; ctx.fillRect(0,0,cvW,HH)
+  ctx.strokeStyle='#2d3447'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,HH); ctx.lineTo(cvW,HH); ctx.stroke()
+  var textX=40
+  if(LOGO&&isPro){try{var img=await new Promise(function(res){var i=new Image();i.onload=function(){res(i)};i.onerror=function(){res(null)};i.src=LOGO});if(img&&img.width>0){var lh=60,lw=Math.min(120,img.width*(60/img.height));ctx.drawImage(img,40,HH/2-lh/2,lw,lh);textX=40+lw+20}}catch(e){}}
+  var title=document.getElementById('p-title').value||'PixelMap Pro'
+  var client=document.getElementById('p-client').value||''
+  var loc=document.getElementById('p-loc').value||''
+  var date=document.getElementById('p-date').value||new Date().toLocaleDateString('es-AR')
+  ctx.fillStyle='#eceef4'; ctx.font='bold 26px Arial,sans-serif'; ctx.fillText(title,textX,46)
+  ctx.fillStyle='#7a8599'; ctx.font='12px Courier New,monospace'; var iy=68
+  if(client){ctx.fillText('Cliente: '+client,textX,iy);iy+=17}
+  if(loc){ctx.fillText('Ubicacion: '+loc,textX,iy);iy+=17}
+  ctx.fillText(date,textX,iy)
+  ctx.textAlign='right'; ctx.fillStyle='#00d4ff'; ctx.font='bold 20px Arial,sans-serif'
+  ctx.fillText((cols*mpw)+'x'+(rows*mph)+' px',cvW-32,44)
+  ctx.fillStyle='#7a8599'; ctx.font='12px Courier New,monospace'
+  ctx.fillText('P'+pit+' - Modulo '+mw+'x'+mh+'cm ('+mpw+'x'+mph+' px)',cvW-32,64)
+  ctx.fillText(W+'x'+H+'m - '+cols+'x'+rows+' modulos - '+tot+' paneles',cvW-32,84)
+  ctx.fillText(pn+'/'+maxP+' puertos - '+mpx+' MP',cvW-32,104)
+  ctx.fillText('Cableado: '+({'h-snake':'Serp. Horizontal','h-line':'Lineas Horizontal','v-snake':'Serp. Vertical'}[dir]||dir),cvW-32,124)
+  ctx.textAlign='left'
+  var offsetX=(cvW-gw)/2
+  S.po.forEach(function(item){
+    var p=S.pi[item.panelNum]; if(!p) return
+    var col=PORT_COLORS[p.portIdx%PORT_COLORS.length], hex=col.replace('#','')
+    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+    var x=offsetX+item.col*cc, y=HH+item.row*hc
+    ctx.fillStyle='rgba('+R+','+G+','+B+',0.2)'; ctx.fillRect(x+1,y+1,cc-2,hc-2)
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.65)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,cc-2,hc-2)
+    if(cc>=24){var fs=Math.max(8,Math.min(14,cc*0.3,hc*0.5));ctx.fillStyle='rgba(255,255,255,0.9)';ctx.font='bold '+fs+'px Courier New,monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.panelNum,x+cc/2,y+hc*0.38);ctx.fillStyle='rgba('+R+','+G+','+B+',0.85)';ctx.font=(fs*0.8)+'px Courier New,monospace';ctx.fillText('P'+p.portNum,x+cc/2,y+hc*0.7)}
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic'
+  })
+  ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=0.5
+  for(var c=0;c<=cols;c++){ctx.beginPath();ctx.moveTo(offsetX+c*cc,HH);ctx.lineTo(offsetX+c*cc,HH+gh);ctx.stroke()}
+  for(var r=0;r<=rows;r++){ctx.beginPath();ctx.moveTo(offsetX,HH+r*hc);ctx.lineTo(offsetX+gw,HH+r*hc);ctx.stroke()}
+  var ppng={}
+  S.po.forEach(function(item){var p=S.pi[item.panelNum];if(!p)return;if(!ppng[p.portIdx])ppng[p.portIdx]=[];ppng[p.portIdx].push({x:offsetX+item.col*cc+cc/2,y:HH+item.row*hc+hc/2,seq:p.pxStart})})
+  Object.keys(ppng).forEach(function(portIdx){
+    ppng[portIdx].sort(function(a,b){return a.seq-b.seq})
+    var panels=ppng[portIdx]; if(!panels.length) return
+    var col=PORT_COLORS[parseInt(portIdx)%PORT_COLORS.length], hex=col.replace('#','')
+    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.8)'; ctx.lineWidth=Math.max(2,cc*0.07)
+    ctx.setLineDash([cc*0.22,cc*0.1]); ctx.lineCap='round'; ctx.lineJoin='round'
+    ctx.beginPath(); ctx.moveTo(panels[0].x,panels[0].y)
+    for(var i=1;i<panels.length;i++) ctx.lineTo(panels[i].x,panels[i].y)
+    ctx.stroke(); ctx.setLineDash([])
+    for(var i=0;i<panels.length-1;i++){var ax=panels[i].x,ay=panels[i].y,bx=panels[i+1].x,by=panels[i+1].y,mx=(ax+bx)/2,my=(ay+by)/2,angle=Math.atan2(by-ay,bx-ax),aw=Math.max(5,cc*0.16);ctx.fillStyle='rgba('+R+','+G+','+B+',0.95)';ctx.save();ctx.translate(mx,my);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(aw,0);ctx.lineTo(-aw*0.6,-aw*0.5);ctx.lineTo(-aw*0.6,aw*0.5);ctx.closePath();ctx.fill();ctx.restore()}
+    var first=panels[0],last=panels[panels.length-1],plabel=getPortLabel(parseInt(portIdx)+1)
+    var bh=Math.max(12,hc*0.26),bw=Math.max(22,cc*0.35),fs2=Math.max(7,bh*0.65)
+    var inX=first.x-cc/2+2,inY=first.y-hc/2+2
+    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'; roundRect(ctx,inX,inY,bw,bh,3); ctx.fill()
+    ctx.fillStyle='#000'; ctx.font='bold '+fs2+'px Arial,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('IN',inX+bw/2,inY+bh/2)
+    if(plabel!==('P'+(parseInt(portIdx)+1))){var lfs=Math.max(6,fs2*0.85);ctx.font='bold '+lfs+'px Arial,monospace';var lW=ctx.measureText(plabel).width+10,lY=inY+bh+3;ctx.fillStyle='rgba(0,0,0,0.75)';roundRect(ctx,inX,lY,lW,bh,3);ctx.fill();ctx.strokeStyle='rgba('+R+','+G+','+B+',0.9)';ctx.lineWidth=1.5;roundRect(ctx,inX,lY,lW,bh,3);ctx.stroke();ctx.fillStyle='rgba('+R+','+G+','+B+',1)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(plabel,inX+lW/2,lY+bh/2)}
+    var outX=last.x+cc/2-bw-2,outY=last.y+hc/2-bh-2
+    ctx.fillStyle='rgba(0,0,0,0.8)'; roundRect(ctx,outX,outY,bw,bh,3); ctx.fill()
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.5; roundRect(ctx,outX,outY,bw,bh,3); ctx.stroke()
+    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx.font='bold '+fs2+'px Arial,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OUT',outX+bw/2,outY+bh/2)
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic'
+  })
+  ctx.fillStyle='#0f1117'; ctx.fillRect(0,HH+gh,cvW,FH)
+  ctx.strokeStyle='#2d3447'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,HH+gh); ctx.lineTo(cvW,HH+gh); ctx.stroke()
+  ctx.fillStyle='#3d4558'; ctx.font='11px Courier New,monospace'
+  ctx.fillText('PixelMap Pro - @walabi_vj - '+new Date().toLocaleDateString('es-AR')+' - Derechos reservados Walabi Vj',32,HH+gh+FH/2+5)
+  ctx.textAlign='right'; ctx.fillText('pixelmap-pro.vercel.app',cvW-32,HH+gh+FH/2+5); ctx.textAlign='left'
+  try{
+    var safe=(document.getElementById('p-title').value||'pixelmap').replace(/[^a-z0-9]/gi,'_').toLowerCase()
+    var fname=safe+'_'+(cols*mpw)+'x'+(rows*mph)+'_P'+pit+'.png'
+    var dataURL=cv.toDataURL('image/png')
+    if(!dataURL||dataURL.length<200){alert('Error al generar PNG. Intenta de nuevo.');return}
+    var a=document.createElement('a'); a.download=fname; a.href=dataURL
+    a.style.display='none'; document.body.appendChild(a); a.click()
+    setTimeout(function(){a.remove()},500)
+  }catch(err){alert('No se pudo descargar: '+err.message)}
+  if(isBlocked()) setTimeout(function(){renderFreeNote();showBlockOverlay()},800)
+}
+
+// EXPORT CSV/JSON
+function exportCSV(){
+  if(!CU||CU.plan==='free')return
+  if(!S.pi||!S.po){alert('Configura la pantalla primero');return}
+  var csv='panel,fila,columna,puerto,etiqueta,px_inicio,px_fin,color\n'
+  S.po.forEach(function(item){var p=S.pi[item.panelNum];if(!p)return;csv+=p.panelNum+','+p.row+','+p.col+','+p.portNum+','+getPortLabel(p.portNum)+','+p.pxStart+','+p.pxEnd+','+PORT_COLORS[p.portIdx%PORT_COLORS.length]+'\n'})
+  var a=document.createElement('a');a.download='pixelmap_'+S.rw+'x'+S.rh+'.csv';a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500)
+}
+function exportJSON(){
+  if(!CU||CU.plan==='free')return
+  if(!S.pi||!S.po){alert('Configura la pantalla primero');return}
+  var panels=S.po.map(function(item){var p=S.pi[item.panelNum];if(!p)return null;return{panel:p.panelNum,row:p.row,col:p.col,port:p.portNum,label:getPortLabel(p.portNum),pxStart:p.pxStart,pxEnd:p.pxEnd,color:PORT_COLORS[p.portIdx%PORT_COLORS.length]}}).filter(Boolean)
+  var data={config:{pitch:S.pit,width:S.W,height:S.H,moduleW:S.mw,moduleH:S.mh,cols:S.cols,rows:S.rows,resolution:S.rw+'x'+S.rh,totalPanels:S.tot,ports:S.pn,maxPorts:S.maxP,direction:S.dir},panels:panels}
+  var a=document.createElement('a');a.download='pixelmap_'+S.rw+'x'+S.rh+'.json';a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500)
+}
+
+// PROCESSOR
+var PROC_DB={
+  novastar:{name:'Novastar',models:[{id:'mctrl660',name:'MCTRL660',ports:8,ppp:650000,notes:'8 puertos - 650k px/puerto'},{id:'mctrl4k',name:'MCTRL4K',ports:16,ppp:650000,notes:'16 puertos - 4K support'},{id:'mctrl700',name:'MCTRL700',ports:8,ppp:650000,notes:'8 puertos - compacto'},{id:'mctrl1600',name:'MCTRL1600',ports:16,ppp:800000,notes:'16 puertos - 800k px/puerto - flagship'},{id:'vx1000',name:'VX1000',ports:10,ppp:650000,notes:'10 puertos - all-in-one'},{id:'vx2000',name:'VX2000',ports:12,ppp:650000,notes:'12 puertos - all-in-one con switching'},{id:'vx4s',name:'VX4S',ports:4,ppp:650000,notes:'4 puertos - compacto'}]},
+  colorlight:{name:'Colorlight',models:[{id:'i5a',name:'i5A',ports:8,ppp:500000,notes:'8 puertos - 500k px/puerto - economico'},{id:'i6a',name:'i6A',ports:8,ppp:650000,notes:'8 puertos - 650k px/puerto - standard'},{id:'e6',name:'E6',ports:12,ppp:650000,notes:'12 puertos - profesional'},{id:'e8s',name:'E8S',ports:16,ppp:650000,notes:'16 puertos - flagship'},{id:'x4',name:'X4',ports:4,ppp:500000,notes:'4 puertos - compacto'},{id:'s2',name:'S2',ports:2,ppp:500000,notes:'2 puertos - pantallas pequenas'}]},
+  linsn:{name:'Linsn',models:[{id:'rv908m',name:'RV908M',ports:16,ppp:650000,notes:'16 puertos - muy popular'},{id:'rv908h',name:'RV908H',ports:8,ppp:650000,notes:'8 puertos - version reducida'},{id:'rv909',name:'RV909',ports:8,ppp:650000,notes:'8 puertos - next-gen Linsn'},{id:'ts802d',name:'TS802D',ports:2,ppp:500000,notes:'2 puertos - Sending Card'},{id:'ts852',name:'TS852',ports:4,ppp:500000,notes:'4 puertos - Sending Card'}]},
+  custom:{name:'Personalizado',models:[{id:'custom',name:'Configuracion manual',ports:null,ppp:null,notes:'Usa los valores manuales del panel Config.'}]}
+}
+function onProcBrandChange(){
+  var brand=document.getElementById('proc-brand').value,mr=document.getElementById('proc-model-row'),ms=document.getElementById('proc-model'),ib=document.getElementById('proc-info-box')
+  if(!brand){mr.style.display='none';ib.style.display='none';CURRENT_PROC=null;renderProcView();return}
+  var db=PROC_DB[brand]; ms.innerHTML=db.models.map(function(m){return'<option value="'+m.id+'">'+m.name+'</option>'}).join('')
+  mr.style.display=''; onProcModelChange()
+}
+function onProcModelChange(){
+  var brand=document.getElementById('proc-brand').value, modelId=document.getElementById('proc-model').value
+  var ib=document.getElementById('proc-info-box'); if(!brand||!modelId) return
+  var db=PROC_DB[brand], model=db.models.filter(function(m){return m.id===modelId})[0]; if(!model) return
+  CURRENT_PROC=Object.assign({brand:brand,brandName:db.name},model)
+  if(model.id==='custom'){ib.style.display='none';CURRENT_PROC=null;renderProcView();return}
+  ib.style.display='block'
+  ib.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--txt);margin-bottom:4px">'+db.name+' '+model.name+'</div><div>'+model.notes+'</div><div style="margin-top:6px"><button onclick="applyProcessorToConfig()" style="padding:6px 12px;background:var(--gold);color:#000;border:none;border-radius:4px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">Aplicar a configuracion</button></div>'
+  renderProcView()
+}
+function applyProcessorToConfig(){
+  if(!CURRENT_PROC) return
+  var pe=document.getElementById('cf-ports'),pp=document.getElementById('cf-ppp')
+  if(pe&&CURRENT_PROC.ports){var opts=Array.from(pe.options).map(function(o){return parseInt(o.value)});pe.value=opts.reduce(function(a,b){return Math.abs(b-CURRENT_PROC.ports)<Math.abs(a-CURRENT_PROC.ports)?b:a})}
+  if(pp&&CURRENT_PROC.ppp) pp.value=CURRENT_PROC.ppp
+  compute(); markUnsaved(); sbTab('cfg')
+}
+function renderProcView(){
+  var view=document.getElementById('proc-view'),lb=document.getElementById('proc-load-body'); if(!view) return
+  if(!S.ps||!S.ps.length){view.innerHTML='<div style="font-size:11px;color:var(--txt3);text-align:center;padding:12px">Configura una pantalla primero</div>';if(lb)lb.innerHTML='';return}
+  var proc=CURRENT_PROC, maxP2=proc&&proc.ports?proc.ports:S.maxP, maxPPP=proc&&proc.ppp?proc.ppp:S.ppp
+  var procName=proc?(proc.brandName+' '+proc.name):('Procesador ('+maxP2+' puertos)')
+  var html='<div style="font-size:11px;font-weight:700;color:var(--txt);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--b1)">'+escH(procName)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+  for(var i=1;i<=maxP2;i++){
+    var pd=S.ps.filter(function(p){return p.portNum===i})[0], lbl=getPortLabel(i), col=PORT_COLORS[(i-1)%PORT_COLORS.length]
+    if(pd){var over=pd.totalPx>maxPPP,pct=Math.min(100,Math.round((pd.totalPx/maxPPP)*100));html+='<div style="background:var(--s2);border:1px solid '+(over?'rgba(255,68,68,0.4)':'var(--b1)')+';border-left:3px solid '+col+';border-radius:6px;padding:8px 10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><div style="font-size:10px;font-weight:700;color:'+col+'">OUT'+i+'</div><div style="font-size:9px;color:'+(over?'var(--red)':'var(--txt3)')+'">'+pct+'%'+(over?' SOBRECARGA':'')+' </div></div><div style="font-size:10px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(lbl)+'</div><div style="font-size:9px;color:var(--txt3)">'+pd.panelCount+' pan - '+(pd.totalPx/1000).toFixed(0)+'k px</div><div style="height:3px;background:var(--b1);border-radius:2px;margin-top:5px;overflow:hidden"><div style="height:100%;border-radius:2px;background:'+(over?'var(--red)':col)+';width:'+pct+'%"></div></div></div>'}
+    else{html+='<div style="background:var(--s2);border:1px solid var(--b1);border-left:3px solid var(--b2);border-radius:6px;padding:8px 10px;opacity:0.5"><div style="font-size:10px;font-weight:700;color:var(--txt3)">OUT'+i+'</div><div style="font-size:9px;color:var(--txt3);margin-top:3px">Sin usar</div></div>'}
+  }
+  html+='</div>'; view.innerHTML=html
+  if(lb){var tpx=S.ps.reduce(function(a,p){return a+p.totalPx},0),over2=S.ps.filter(function(p){return p.totalPx>maxPPP}).length,ok=S.pn<=maxP2&&over2===0;lb.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="stat"><div class="sv '+(S.pn>maxP2?'err':'ok')+'">'+S.pn+'/'+maxP2+'</div><div class="sl">Puertos usados</div></div><div class="stat"><div class="sv '+(over2>0?'err':'ok')+'">'+over2+'</div><div class="sl">Sobrecargados</div></div><div class="stat"><div class="sv">'+(tpx/1e6).toFixed(2)+'</div><div class="sl">Megapixeles</div></div><div class="stat"><div class="sv '+(ok?'ok':'warn')+'">'+(ok?'OK':'REVISAR')+'</div><div class="sl">Estado</div></div></div>'}
+}
+
+// PROJECTS
+var PROJECTS_KEY='pmp_projects', _unsaved=false
+function markUnsaved(){_unsaved=true;var btn=document.getElementById('btn-quick-save');if(btn)btn.textContent='Guardar proyecto *'}
+function getProjects(){try{return JSON.parse(localStorage.getItem(PROJECTS_KEY)||'[]')}catch(e){return[]}}
+function setProjects(list){try{localStorage.setItem(PROJECTS_KEY,JSON.stringify(list))}catch(e){alert('Error al guardar: '+e.message)}}
+function getProjectSnapshot(){
+  saveCurrentScreenState()
+  return{id:Date.now(),savedAt:new Date().toISOString(),title:document.getElementById('p-title').value||'Sin titulo',client:document.getElementById('p-client').value||'',location:document.getElementById('p-loc').value||'',date:document.getElementById('p-date').value||'',screens:JSON.parse(JSON.stringify(SCREENS)),currentScreen:CURRENT_SCREEN}
+}
+function saveProject(overwriteId){
+  var snap=getProjectSnapshot(), list=getProjects()
+  if(overwriteId){var idx=list.findIndex(function(p){return p.id===overwriteId});if(idx>=0){snap.id=overwriteId;list[idx]=snap}else list.unshift(snap)}
+  else{var existing=list.findIndex(function(p){return p.title===snap.title&&p.client===snap.client});if(existing>=0){if(confirm('Ya existe "'+snap.title+'". Sobreescribir?')){snap.id=list[existing].id;list[existing]=snap}else list.unshift(snap)}else list.unshift(snap)}
+  if(list.length>50)list.splice(50); setProjects(list); _unsaved=false
+  var btn=document.getElementById('btn-quick-save'); if(btn) btn.textContent='Guardar proyecto'
+  var st=document.getElementById('save-status'); if(st){st.style.display='block';setTimeout(function(){st.style.display='none'},2000)}
+  renderProjectsList()
+}
+function loadProject(id){
+  var proj=getProjects().filter(function(p){return p.id===id})[0]; if(!proj) return
+  if(proj.screens&&proj.screens.length){SCREENS=proj.screens;CURRENT_SCREEN=proj.currentScreen||0}
+  document.getElementById('p-title').value=proj.title||''
+  document.getElementById('p-client').value=proj.client||''
+  document.getElementById('p-loc').value=proj.location||''
+  document.getElementById('p-date').value=proj.date||''
+  loadScreenState(CURRENT_SCREEN); renderScreenTabs(); renderScreensList(); updateScreensBar()
+  _unsaved=false; sbTab('cfg')
+  var btn=document.getElementById('btn-quick-save'); if(btn) btn.textContent='Guardar proyecto'
+}
+function deleteProject(id){
+  var list=getProjects(), proj=list.filter(function(p){return p.id===id})[0]
+  if(!proj) return; if(!confirm('Eliminar "'+proj.title+'"?')) return
+  setProjects(list.filter(function(p){return p.id!==id})); renderProjectsList()
+}
+function duplicateProject(id){
+  var list=getProjects(), proj=list.filter(function(p){return p.id===id})[0]; if(!proj) return
+  var copy=JSON.parse(JSON.stringify(proj)); copy.id=Date.now(); copy.title=proj.title+' (copia)'; copy.savedAt=new Date().toISOString()
+  list.unshift(copy); if(list.length>50)list.splice(50); setProjects(list); renderProjectsList()
+}
+function renderProjectsList(){
+  var list=getProjects(), container=document.getElementById('projects-list'), countEl=document.getElementById('projects-count')
+  if(!container) return; if(countEl) countEl.textContent=list.length?'('+list.length+')':''
+  if(!list.length){container.innerHTML='<div style="padding:16px;text-align:center;font-size:11px;color:var(--txt3)">No hay proyectos guardados aun.</div>';return}
+  container.innerHTML=''
+  list.forEach(function(proj){
+    var date=proj.savedAt?new Date(proj.savedAt).toLocaleDateString('es-AR'):'-'
+    var screens=proj.screens||[], tC=screens.reduce(function(a,sc){return a+(sc.S&&sc.S.pn?sc.S.pn:0)},0)
+    var div=document.createElement('div'); div.style.cssText='border-bottom:1px solid var(--b1);padding:10px 12px;transition:background .15s'
+    div.onmouseenter=function(){div.style.background='var(--s3)'}; div.onmouseleave=function(){div.style.background='transparent'}
+    div.innerHTML='<div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(proj.title)+'</div><div style="font-size:10px;color:var(--txt2);margin-top:2px">'+screens.length+' pantalla'+(screens.length!==1?'s':'')+' - '+tC+' cables</div><div style="font-size:9px;color:var(--txt3);margin-top:1px">'+escH(date)+'</div></div><div style="display:flex;gap:4px;flex-shrink:0"><button onclick="loadProject('+proj.id+')" style="background:var(--cyan);color:#000;border:none;border-radius:4px;padding:4px 8px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;min-height:28px">Abrir</button><button onclick="duplicateProject('+proj.id+')" style="background:transparent;color:var(--txt2);border:1px solid var(--b1);border-radius:4px;padding:4px 6px;font-family:inherit;font-size:11px;cursor:pointer;min-height:28px">Copiar</button><button onclick="deleteProject('+proj.id+')" style="background:transparent;color:var(--red);border:1px solid rgba(255,68,68,0.3);border-radius:4px;padding:4px 6px;font-family:inherit;font-size:11px;cursor:pointer;min-height:28px">X</button></div></div>'
+    container.appendChild(div)
+  })
+}
+function exportAllProjects(){
+  var list=getProjects(); if(!list.length){alert('No hay proyectos guardados.');return}
+  var a=document.createElement('a'); a.download='pixelmap-proyectos-'+new Date().toISOString().slice(0,10)+'.json'
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({app:'PixelMap Pro',version:'3.0',exportedAt:new Date().toISOString(),projects:list},null,2))
+  document.body.appendChild(a); a.click(); setTimeout(function(){a.remove()},500)
+}
+function importProjects(input){
+  if(!input.files||!input.files[0]) return
+  var reader=new FileReader()
+  reader.onload=function(e){
+    try{var data=JSON.parse(e.target.result),incoming=data.projects||[];if(!incoming.length){alert('No se encontraron proyectos.');return}var existing=getProjects(),existingIds=new Set(existing.map(function(p){return p.id})),toAdd=incoming.filter(function(p){return!existingIds.has(p.id)});var merged=[].concat(toAdd,existing);if(merged.length>50)merged.splice(50);setProjects(merged);renderProjectsList();alert('Se importaron '+toAdd.length+' proyecto'+(toAdd.length!==1?'s':'')+' nuevos.')}catch(err){alert('Error al leer el archivo: '+err.message)}
+  }
+  reader.readAsText(input.files[0]); input.value=''
+}
+
+// AI CHAT
+function addMsg(role,text){
+  var msgs=document.getElementById('ai-msgs')
+  var div=document.createElement('div'); div.className='ai-msg '+role
+  div.innerHTML='<div class="ai-who">'+(role==='user'?'Vos':'AI')+'</div><div class="ai-bubble">'+text.replace(/\n/g,'<br>')+'</div>'
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight
+}
+async function sendAI(){
+  var input=document.getElementById('ai-input'), msg=input.value.trim(); if(!msg) return
+  input.value=''; addMsg('user',msg); AI_HISTORY.push({role:'user',content:msg})
+  document.getElementById('ai-typing').classList.add('on')
+  var ctx3=S.cols?('Pantalla: P'+S.pit+', '+S.W+'x'+S.H+'m, '+S.rw+'x'+S.rh+'px, '+S.tot+' paneles, '+S.pn+' cables.'):'';
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':'','anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,system:'Sos un experto en pantallas LED y pixel maps. Responde en espanol, claro y accesible para operadores sin experiencia. Pantalla configurada: '+ctx3,messages:AI_HISTORY.slice(-10)})})
+    var data=await res.json(); var reply=(data.content&&data.content[0]&&data.content[0].text)||'Sin respuesta.'
+    AI_HISTORY.push({role:'assistant',content:reply})
+    document.getElementById('ai-typing').classList.remove('on'); addMsg('bot',reply)
+  }catch(e){document.getElementById('ai-typing').classList.remove('on');addMsg('bot','Error de conexion. Configura tu API key de Claude.')}
+}
+function renderAiSugs(){
+  var sugs=document.getElementById('ai-sugs'); if(!sugs) return; sugs.innerHTML=''
+  var ss=['Cuantos paneles necesito?','Como calcular la resolucion?','Que pitch me conviene?','Explicame los puertos','Como reducir la carga del procesador?']
+  ss.forEach(function(s){var b=document.createElement('button');b.className='ai-sug';b.textContent=s;b.onclick=function(){document.getElementById('ai-input').value=s;sendAI()};sugs.appendChild(b)})
+}
+
+
+// MERCADOPAGO INTEGRATION
+async function startMercadoPago(){
+  if(!CU){alert('Debes iniciar sesion primero');return}
+  if(!SB_SESSION){alert('Sesion no disponible. Vuelve a iniciar sesion.');return}
+
+  var btn=event.target; btn.disabled=true; btn.textContent='Procesando...'
+
+  try {
+    var res = await fetch('/api/create-payment',{
+      method:'POST',
+      headers:{
+        'Authorization':'Bearer '+SB_SESSION.access_token,
+        'Content-Type':'application/json'
+      }
+    })
+    var data = await res.json()
+
+    if(res.ok && data.init_point){
+      // Redirect to MercadoPago checkout
+      window.open(data.init_point, '_blank')
+      closePricing()
+      alert('Se abrio MercadoPago en una nueva pestaña. Luego de pagar, tu plan se actualizara automaticamente en unos minutos.')
+    } else {
+      alert('Error: '+(data.error||'No se pudo crear el pago. Intenta de nuevo.'))
+    }
+  } catch(e) {
+    alert('Error de conexion: '+e.message)
+  } finally {
+    btn.disabled=false; btn.textContent='MercadoPago'
+  }
+}
+
+// Check if returning from successful payment
+function checkPaymentReturn(){
+  var params = new URLSearchParams(window.location.search)
+  if(params.get('payment')==='success'){
+    setTimeout(async function(){
+      if(SB_SESSION){
+        await loadUserProfile()
+        if(CU&&CU.plan==='pro'){
+          alert('Pago confirmado. Tu plan Pro ya esta activo.')
+        } else {
+          alert('Pago recibido. Tu plan se activara en unos minutos automaticamente.')
+        }
+      }
+      window.history.replaceState({},document.title,window.location.pathname)
+    }, 2000)
+  }
+}
+
+// Restore session on page load (auto-login)
+async function restoreSession(){
+  try {
+    var { data } = await sb.auth.getSession()
+    if(data.session){
+      SB_SESSION = data.session
+      await loadUserProfile()
+    }
+  } catch(e) {
+    console.log('No session:', e.message)
+  }
+}
+
+// INIT
+document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
+applyT()
+renderProjectsList()
+renderAiSugs()
+// Restore Supabase session on load
+restoreSession().then(function(){
+  checkPaymentReturn()
+})
+</script>
+</body>
+</html>
