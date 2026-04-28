@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/auth", "dest": "/api/auth.js" },
+    { "src": "/api/create-payment", "dest": "/api/create-payment.js" },
+    { "src": "/api/webhook-mp", "dest": "/api/webhook-mp.js" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ]
+}
