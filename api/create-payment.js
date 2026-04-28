@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
     const mpToken = process.env.MP_ACCESS_TOKEN
 
     // Crear preference de pago con checkout Pro de MP
-    // Monto en ARS: ~$5000 ARS = U$S 4.99 aprox
+    // Monto en ARS: ~$7500 ARS = U$S 4.99 aprox
     // Unit price minimo en MP Argentina es $15 ARS
     const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
@@ -38,12 +38,12 @@ module.exports = async function handler(req, res) {
         items: [
           {
             id: 'pixelmap-pro-monthly',
-            title: 'PixelMap Pro - Suscripcion mensual',
-            description: 'Acceso completo: exportaciones ilimitadas, CSV, JSON, logo en PNG',
+            title: 'PixelMap Pro',
+            description: 'Plan Pro mensual - U$S 4.99/mes',
             category_id: 'software',
             quantity: 1,
             currency_id: 'ARS',
-            unit_price: 5000
+            unit_price: 7500
           }
         ],
         payer: {
