@@ -13,55 +13,79 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo no permitido' })
 
   const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({ error: 'No autenticado' })
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'No autenticado' })
+  }
 
   const token = authHeader.split(' ')[1]
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (authError || !user) return res.status(401).json({ error: 'Token invalido' })
 
   try {
-    const appUrl = process.env.APP_URL || 'https://pixelmap-pro-cr2o.vercel.app'
+    const appUrl = process.env.APP_URL || 'https://pixelmap-pro.vercel.app'
+    const mpToken = process.env.MP_ACCESS_TOKEN
 
-    const response = await fetch('https://api.mercadopago.com/preapproval', {
+    // Crear preference de pago con checkout Pro de MP
+    // Monto en ARS: ~$5000 ARS = U$S 4.99 aprox
+    // Unit price minimo en MP Argentina es $15 ARS
+    const prefResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + process.env.MP_ACCESS_TOKEN,
+        'Authorization': 'Bearer ' + mpToken,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        reason: 'PixelMap Pro - Plan Pro U$S 4.99/mes',
-        external_reference: user.id,
-        payer_email: user.email,
-        auto_recurring: {
-          frequency: 1,
-          frequency_type: 'months',
-          transaction_amount: 4.99,
-          currency_id: 'USD'
+        items: [
+          {
+            id: 'pixelmap-pro-monthly',
+            title: 'PixelMap Pro - Suscripcion mensual',
+            description: 'Acceso completo: exportaciones ilimitadas, CSV, JSON, logo en PNG',
+            category_id: 'software',
+            quantity: 1,
+            currency_id: 'ARS',
+            unit_price: 5000
+          }
+        ],
+        payer: {
+          email: user.email
         },
-        back_url: appUrl + '?payment=success',
-        status: 'pending'
+        external_reference: user.id,
+        back_urls: {
+          success: appUrl + '?payment=success',
+          failure: appUrl + '?payment=failure',
+          pending: appUrl + '?payment=pending'
+        },
+        auto_return: 'approved',
+        notification_url: appUrl + '/api/webhook-mp',
+        statement_descriptor: 'PixelMap Pro',
+        expires: false
       })
     })
 
-    const subscription = await response.json()
+    const prefData = await prefResponse.json()
+    console.log('MP Preference response:', JSON.stringify(prefData))
 
-    if (!subscription.init_point) {
-      console.error('MP error:', subscription)
-      return res.status(500).json({ error: 'Error creando suscripcion en MercadoPago', detail: subscription })
+    if (prefData.init_point) {
+      // Guardar preference_id en Supabase
+      await supabase.from('profiles').update({
+        mp_preapproval_id: prefData.id,
+        plan_updated_at: new Date().toISOString()
+      }).eq('id', user.id)
+
+      return res.status(200).json({
+        init_point: prefData.init_point,
+        preference_id: prefData.id
+      })
     }
 
-    await supabase.from('profiles').update({
-      mp_preapproval_id: subscription.id,
-      plan_updated_at: new Date().toISOString()
-    }).eq('id', user.id)
-
-    return res.status(200).json({
-      init_point: subscription.init_point,
-      subscription_id: subscription.id
+    console.error('MP error - no init_point:', prefData)
+    return res.status(500).json({
+      error: 'Error creando pago en MercadoPago',
+      detail: prefData
     })
 
   } catch (err) {
-    console.error('Error:', err)
+    console.error('Error interno:', err)
     return res.status(500).json({ error: 'Error interno', detail: err.message })
   }
 }
