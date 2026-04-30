@@ -1670,12 +1670,9 @@ var SHOW_AMPS = false
 var _elecDrops = []
 
 function elecDropsAuto(){
-  // Calculate minimum drops needed based on max modules per line
   if(!S.cols||!S.rows) return
   var maxMod = parseInt(document.getElementById('el-maxmod').value)||12
-  var totalPanels = S.tot
-  var minDrops = Math.ceil(totalPanels / maxMod)
-  // Round up to distribute evenly by rows
+  var minDrops = Math.ceil(S.tot / maxMod)
   var dropsInput = document.getElementById('el-drops')
   if(dropsInput){ dropsInput.value = minDrops; dropsInput.removeAttribute('readonly') }
   computeElec()
@@ -1695,11 +1692,10 @@ function computeElec(){
   var wMaxTotal = Math.round(wpm2 * totalArea)
   var wAvgTotal = Math.round(wpm2 * 0.27 * totalArea)
 
-  // AUTO: calculate minimum drops needed
+  // AUTO: calculate minimum drops needed based on total panels / maxMod
   var minDropsNeeded = Math.ceil(S.tot / maxMod)
   var dropsInput = document.getElementById('el-drops')
 
-  // If drops input is empty or 0, auto-set it
   var nDrops = dropsInput ? parseInt(dropsInput.value)||0 : 0
   if(nDrops < minDropsNeeded){
     nDrops = minDropsNeeded
@@ -1707,31 +1703,76 @@ function computeElec(){
   }
   nDrops = Math.max(1, nDrops)
 
-  // Show info about recommendation
+  // Show info
   var infoEl = document.getElementById('el-drops-info')
   var panelsPerDrop = Math.ceil(S.tot / nDrops)
   var isOk = panelsPerDrop <= maxMod
   if(infoEl){
     infoEl.style.color = isOk ? 'var(--green)' : 'var(--red)'
     infoEl.textContent = (isOk ? '✓ ' : '⚠ ') + panelsPerDrop + ' mod/linea promedio' +
-      (isOk ? ' — dentro del limite de '+maxMod : ' — SUPERA el limite de '+maxMod+'! Usá AUTO')
+      (isOk ? ' — dentro del limite de '+maxMod : ' — SUPERA el limite de '+maxMod+'! Usa AUTO')
   }
 
-  // Distribute rows equally among drops
-  var rowsPerDrop = S.rows / nDrops
+  // ── Distribute panels into drops (by panel count, not by rows) ──
+  // Base count per drop, distribute remainder
+  var baseCount = Math.floor(S.tot / nDrops)
+  var remainder = S.tot % nDrops
   _elecDrops = []
+
+  // Build a map: panelIndex (in grid order) → drop index
+  var panelDrop = new Array(S.tot)
+  var pIdx = 0
   for(var d=0; d<nDrops; d++){
-    var rowStart = Math.round(d * rowsPerDrop)
-    var rowEnd   = d===nDrops-1 ? S.rows : Math.round((d+1)*rowsPerDrop)
-    var rows     = rowEnd - rowStart
-    var panels   = rows * S.cols
+    var cnt = baseCount + (d < remainder ? 1 : 0)
+    for(var k=0; k<cnt; k++){
+      panelDrop[pIdx++] = d
+    }
+  }
+
+  // Now figure out which ROWS each drop covers (for visual coloring)
+  // A drop may span partial rows — track min/max row per drop
+  var dropRowMin = new Array(nDrops).fill(999)
+  var dropRowMax = new Array(nDrops).fill(-1)
+  var dropPanels = new Array(nDrops).fill(0)
+
+  // Walk panels in grid order (row by row, respecting wiring direction)
+  for(var r=0; r<S.rows; r++){
+    for(var c=0; c<S.cols; c++){
+      var gi = r*S.cols+c
+      // Find sequential index of this panel in wiring order
+      var seqIdx = -1
+      for(var si=0; si<S.po.length; si++){
+        if(S.po[si].gridIdx===gi){ seqIdx=si; break }
+      }
+      if(seqIdx<0) continue
+      var dIdx = panelDrop[seqIdx]
+      if(dIdx===undefined) continue
+      dropPanels[dIdx]++
+      if(r < dropRowMin[dIdx]) dropRowMin[dIdx] = r
+      if(r > dropRowMax[dIdx]) dropRowMax[dIdx] = r
+    }
+  }
+
+  // Build _elecDrops with correct row ranges
+  for(var d=0; d<nDrops; d++){
+    var panels   = dropPanels[d] || (baseCount + (d<remainder?1:0))
+    var rowStart = dropRowMin[d]===999 ? Math.floor(d*(S.rows/nDrops)) : dropRowMin[d]
+    var rowEnd   = dropRowMax[d]===-1  ? Math.min(rowStart+1,S.rows)   : dropRowMax[d]+1
     var wMax     = Math.round(wpm2 * panels * mArea)
     var wAvg     = Math.round(wMax * 0.27)
     var amps     = Math.round((wMax * safety / voltage) * 10) / 10
     var breaker  = amps<=10?10:amps<=16?16:amps<=20?20:amps<=25?25:amps<=32?32:40
     var cable    = amps<=10?'1.5mm²':amps<=16?'2.5mm²':amps<=25?'4mm²':'6mm²'
-    _elecDrops.push({d:d,rowStart:rowStart,rowEnd:rowEnd,rows:rows,panels:panels,wMax:wMax,wAvg:wAvg,amps:amps,breaker:breaker,cable:cable,color:ELEC_COLORS[d%ELEC_COLORS.length]})
+    _elecDrops.push({
+      d:d, rowStart:rowStart, rowEnd:rowEnd, rows:rowEnd-rowStart,
+      panels:panels, wMax:wMax, wAvg:wAvg, amps:amps,
+      breaker:breaker, cable:cable,
+      color:ELEC_COLORS[d%ELEC_COLORS.length],
+      panelDrop:panelDrop  // store for map rendering
+    })
   }
+  // Store global panel→drop map for renderElecMap
+  window._panelDropMap = panelDrop
 
   var totalAmps = Math.round((_elecDrops.reduce(function(a,d){return a+d.wMax},0) * safety / voltage)*10)/10
   var totalBreaker = totalAmps<=16?16:totalAmps<=20?20:totalAmps<=25?25:totalAmps<=32?32:totalAmps<=40?40:63
@@ -1799,17 +1840,34 @@ function renderElecMap(){
 
   if(!SHOW_ELEC||!_elecDrops.length) return
 
-  // ── PASS 1: Color fill de filas por bajada (fondo semitransparente) ──
-  _elecDrops.forEach(function(d){
-    var hex=d.color.replace('#','')
-    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-    for(var r=d.rowStart;r<d.rowEnd;r++){
-      for(var c=0;c<S.cols;c++){
-        ctx.fillStyle='rgba('+R+','+G+','+B+',0.15)'
-        ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
+  // ── PASS 1: Color each panel individually by its drop ──
+  var pdMap = window._panelDropMap
+  if(pdMap){
+    // Walk panels in wiring order and color each one
+    S.po.forEach(function(item, seqIdx){
+      var dIdx = pdMap[seqIdx]
+      if(dIdx===undefined||dIdx>=_elecDrops.length) return
+      var d   = _elecDrops[dIdx]
+      var hex = d.color.replace('#','')
+      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+      var c   = item.gridIdx % S.cols
+      var r   = Math.floor(item.gridIdx / S.cols)
+      ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
+      ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
+    })
+  } else {
+    // Fallback: color by rows
+    _elecDrops.forEach(function(d){
+      var hex=d.color.replace('#','')
+      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+      for(var r=d.rowStart;r<d.rowEnd;r++){
+        for(var c=0;c<S.cols;c++){
+          ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
+          ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
+        }
       }
-    }
-  })
+    })
+  }
 
   // ── PASS 2: Separadores entre bajadas (línea en borde superior de cada bajada) ──
   _elecDrops.forEach(function(d){
@@ -1832,9 +1890,12 @@ function renderElecMap(){
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
 
-    // La línea de tensión va en el borde INFERIOR de la bajada para no chocar con datos
-    var lastRow = d.rowEnd - 1
-    var py = lastRow*ch + ch*0.82   // 82% de la altura de la última fila → zona baja
+    // Para pantallas de 1 fila: línea en zona baja del panel
+    // Para pantallas multi-fila: línea en borde inferior de la bajada
+    var lastRow = Math.max(d.rowStart, d.rowEnd - 1)
+    var py = (S.rows===1)
+      ? ch * 0.82
+      : lastRow*ch + ch*0.82
 
     // Línea principal de tensión (sólida y gruesa)
     ctx.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
