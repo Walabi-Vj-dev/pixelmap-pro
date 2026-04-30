@@ -83,14 +83,14 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
 .main-area{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
 .sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:49;opacity:0;transition:opacity .3s}
 .sb-overlay.on{opacity:1}
-.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s ease;z-index:50}
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s ease;z-index:50;min-height:0}
 .sb-tabs{display:flex;border-bottom:1px solid var(--b1);flex-shrink:0;overflow-x:auto}
 .sb-tabs::-webkit-scrollbar{height:0}
 .sb-tab{flex:1;min-width:0;padding:6px 1px;background:transparent;border:none;color:var(--txt3);font-family:inherit;font-size:7px;text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;min-height:38px;cursor:pointer;overflow:hidden;text-overflow:ellipsis}
 .sb-tab.active{color:var(--cyan);border-bottom-color:var(--cyan);background:rgba(0,212,255,0.04)}
-.sb-pane{display:none;flex:1;overflow-y:auto;padding:10px;flex-direction:column;gap:8px}
+.sb-pane{display:none;flex:1;overflow-y:auto;overflow-x:hidden;padding:10px;flex-direction:column;gap:8px;min-height:0}
 .sb-pane.active{display:flex}
-.cp{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden}
+.cp{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);overflow:visible;flex-shrink:0}
 .cp-h{padding:8px 12px;border-bottom:1px solid var(--b1);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;min-height:36px;transition:color .15s}
 .cp-h:hover{color:var(--txt2)}
 .cp-h .arr{transition:transform .2s;font-size:9px;opacity:.5}
@@ -2131,15 +2131,61 @@ async function exportPDF(){
   '</div>'
   pages.push(page3)
 
-  // Open PDF print window
-  var win=window.open('','_blank','width=900,height=700')
+  // ── Capture pixelmap canvas as image ──
+  var mapImgData = ''
+  try {
+    var srcCanvas = document.getElementById('map-canvas')
+    if(srcCanvas){
+      // Make sure electrical overlay is rendered
+      renderElecMap()
+      mapImgData = srcCanvas.toDataURL('image/png')
+    }
+  } catch(e){ console.log('Canvas capture error:', e) }
+
+  // ── Page with pixelmap image ──
+  if(mapImgData){
+    var mapPage = '<div class="page">'+
+      '<h2>Mapa de pixeles / Cableado</h2>'+
+      '<p style="font-size:11px;color:#666;margin-bottom:12px">'+
+        'Pantalla: '+S.rw+'x'+S.rh+' px &middot; '+S.cols+'x'+S.rows+' modulos &middot; P'+S.pit+
+        ' &middot; '+S.W+'x'+S.H+'m'+
+      '</p>'+
+      '<div style="text-align:center;margin-bottom:12px">'+
+        '<img src="'+mapImgData+'" style="max-width:100%;border:1px solid #ddd;border-radius:6px">'+
+      '</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px">'+
+      S.ps.map(function(p){
+        var lbl=getPortLabel(p.portNum)
+        var col=PORT_COLORS[p.portIdx%PORT_COLORS.length]
+        return '<div style="display:flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid #ddd;border-radius:4px">'+
+          '<div style="width:12px;height:12px;border-radius:3px;background:'+col+'"></div>'+
+          '<span>'+escHtml(lbl)+' ('+p.panelCount+' pan.)</span>'+
+        '</div>'
+      }).join('')+
+      '</div>'+
+      (_elecDrops&&_elecDrops.length?
+        '<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;font-size:11px">'+
+        _elecDrops.map(function(d){
+          return '<div style="display:flex;align-items:center;gap:5px;padding:4px 8px;border:1px solid '+d.color+';border-radius:4px">'+
+            '<div style="width:12px;height:4px;border-radius:2px;background:'+d.color+'"></div>'+
+            '<span>B'+(d.d+1)+': '+d.amps+'A &middot; Disj. '+d.breaker+'A &middot; '+d.cable+'</span>'+
+          '</div>'
+        }).join('')+
+        '</div>'
+      :'')+
+    '</div>'
+    pages.splice(2, 0, mapPage)  // Insert as page 3, before ports page
+  }
+
+  // ── Open PDF print window ──
+  var win=window.open('','_blank','width=1000,height=800')
   if(!win){alert('Permite popups para generar el PDF.');return}
   win.document.write(
     '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
     '<title>'+escHtml(title)+' - PixelMap Pro</title>'+
     '<style>'+css+'</style></head><body>'+
     pages.join('')+
-    '<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script>'+
+    '<script>window.onload=function(){setTimeout(function(){window.print()},800)}<\/script>'+
     '</body></html>'
   )
   win.document.close()
