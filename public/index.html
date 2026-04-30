@@ -316,6 +316,7 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
         <button class="sb-tab" id="sbt-ai" onclick="sbTab('ai')" style="color:var(--purple)">AI</button>
         <button class="sb-tab" id="sbt-saves" onclick="sbTab('saves')" style="color:var(--gold)">💾</button>
         <button class="sb-tab" id="sbt-elec" onclick="sbTab('elec')" style="color:#ff9800">🔌 Elec.</button>
+        <button class="sb-tab" id="sbt-colors" onclick="sbTab('colors')" style="color:#ff6b9d">🎨</button>
         <button class="sb-tab" id="sbt-soon" onclick="sbTab('soon')" style="color:var(--purple)">★</button>
       </div>
 
@@ -542,6 +543,32 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
         </div>
       </div>
 
+      <!-- COLORS PANE -->
+      <div class="sb-pane" id="pane-colors">
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span>Colores de puertos (datos)</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div style="font-size:10px;color:var(--txt3);margin-bottom:8px;line-height:1.5">Personalizá el color de cada cable de datos. Se actualiza en tiempo real en el mapa.</div>
+            <div id="port-color-pickers" style="display:flex;flex-direction:column;gap:6px"></div>
+            <button onclick="resetPortColors()" style="margin-top:10px;width:100%;padding:7px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);font-family:inherit;font-size:10px;cursor:pointer">↺ Restablecer colores por defecto</button>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span>Colores de bajadas eléctricas</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div style="font-size:10px;color:var(--txt3);margin-bottom:8px;line-height:1.5">Personalizá el color de cada bajada de tensión.</div>
+            <div id="elec-color-pickers" style="display:flex;flex-direction:column;gap:6px"></div>
+            <button onclick="resetElecColors()" style="margin-top:10px;width:100%;padding:7px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt2);font-family:inherit;font-size:10px;cursor:pointer">↺ Restablecer colores por defecto</button>
+          </div>
+        </div>
+        <div class="cp">
+          <div class="cp-h" onclick="togglePanel(this)"><span>Presets de paleta</span><span class="arr">▾</span></div>
+          <div class="cp-b">
+            <div style="display:flex;flex-direction:column;gap:6px" id="palette-presets"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="sb-pane" id="pane-soon">
         <div class="soon-box">
           <div class="soon-badge" id="t-soon-badge">Próximamente</div>
@@ -677,7 +704,8 @@ const SUPABASE_URL = 'https://psgwqrduggekuuorrfqk.supabase.co'
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZ3dxcmR1Z2dla3V1b3JyZnFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTg2NDAsImV4cCI6MjA5Mjg5NDY0MH0.YhbhPaBJITVuHw7V89iAu2n2E41gzHtJh8C8cXtWk-E'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
 let SB_SESSION = null  // Supabase session with JWT token
-const PORT_COLORS = ['#00d4ff','#f5a623','#00e676','#ff4444','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800','#4caf50','#e91e63','#9c27b0','#03a9f4','#8bc34a','#ff5722','#607d8b']
+var PORT_COLORS = ['#00d4ff','#f5a623','#00e676','#ff4444','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800','#4caf50','#e91e63','#9c27b0','#03a9f4','#8bc34a','#ff5722','#607d8b']
+var PORT_COLORS_DEFAULT = PORT_COLORS.slice()
 const SCREEN_COLORS = ['#00d4ff','#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800']
 const FREE_LIMIT = 2
 let CU = null, LOGO = null, ZL = 100, S = {}, LOGIN_TAB = 'login', AI_HISTORY = []
@@ -1075,6 +1103,7 @@ function sbTab(name){
   if(name==='proc') renderProcView()
   if(name==='screens') renderScreensList()
   if(name==='elec') computeElec()
+  if(name==='colors') renderColorPickers()
 }
 function togglePanel(h){h.closest('.cp').classList.toggle('closed')}
 function toggleSidebar(){
@@ -1127,7 +1156,7 @@ function loadScreenState(idx){
   document.getElementById('p-title').value=sc.title||''; document.getElementById('p-client').value=sc.client||''
   document.getElementById('p-loc').value=sc.location||''; document.getElementById('p-date').value=sc.date||new Date().toISOString().slice(0,10)
   document.getElementById('p-notes').value=sc.notes||''
-  renderLogoPan(); compute()
+  loadScreenColors(SCREENS[idx]); renderLogoPan(); compute()
 }
 function addScreen(){saveCurrentScreenState();var sc=makeScreen(SCREENS.length+1);SCREENS.push(sc);switchScreen(SCREENS.length-1)}
 function switchScreen(idx){saveCurrentScreenState();loadScreenState(idx);renderScreenTabs();renderScreensList();updateScreensBar();sbTab('cfg')}
@@ -1279,7 +1308,8 @@ function compute(){
     'Consumo: '+wpm2Txt+'<br>'+
     'Total maximo: '+totalWmax
   if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
-  renderPorts(); renderMap(); renderProcView(); if(document.getElementById("pane-elec")&&document.getElementById("pane-elec").classList.contains("active")) computeElec()
+  renderPorts(); renderMap(); renderProcView();
+  if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers(); if(document.getElementById("pane-elec")&&document.getElementById("pane-elec").classList.contains("active")) computeElec()
 }
 
 // PORTS
@@ -2230,6 +2260,149 @@ async function exportPDF(){
 }
 
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+
+// ════ COLOR CUSTOMIZATION ════
+var ELEC_COLORS_DEFAULT = ['#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff5722','#4caf50','#e91e63','#03a9f4','#8bc34a','#607d8b']
+
+var COLOR_PRESETS = [
+  { name:'Predeterminado', port:['#00d4ff','#f5a623','#00e676','#ff4444','#b085f5','#ff6b9d','#26c6da','#ffb300'], elec:['#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff5722','#4caf50'] },
+  { name:'Neon oscuro',    port:['#ff00ff','#00ffff','#ffff00','#ff0080','#00ff80','#8000ff','#ff8000','#0080ff'], elec:['#ff00ff','#00ffff','#ffff00','#ff0080','#00ff80','#8000ff','#ff8000','#0080ff'] },
+  { name:'Pastel',         port:['#a8dadc','#ffd6a5','#caffbf','#ffadad','#c9b1ff','#fdffb6','#ffc6ff','#bde0fe'], elec:['#ffd6a5','#caffbf','#c9b1ff','#ffadad','#bde0fe','#fdffb6','#ffc6ff','#a8dadc'] },
+  { name:'Profesional',    port:['#2196f3','#ff9800','#4caf50','#f44336','#9c27b0','#00bcd4','#ffeb3b','#795548'], elec:['#ff9800','#4caf50','#9c27b0','#f44336','#00bcd4','#ffeb3b','#795548','#2196f3'] },
+  { name:'Alto contraste', port:['#ffffff','#ffff00','#00ff00','#ff0000','#00ffff','#ff00ff','#ff8800','#88ff00'], elec:['#ffff00','#00ff00','#ff0000','#00ffff','#ff00ff','#ff8800','#88ff00','#ffffff'] },
+]
+
+function renderColorPickers(){
+  if(!S.ps||!S.ps.length) return
+
+  // Port color pickers
+  var portDiv = document.getElementById('port-color-pickers')
+  if(portDiv){
+    portDiv.innerHTML = ''
+    S.ps.forEach(function(p,i){
+      var lbl = getPortLabel(p.portNum)
+      var col = PORT_COLORS[i % PORT_COLORS.length]
+      var row = document.createElement('div')
+      row.style.cssText = 'display:flex;align-items:center;gap:8px'
+      row.innerHTML =
+        '<div style="width:10px;height:10px;border-radius:50%;background:'+col+';flex-shrink:0" id="pcdot-'+i+'"></div>'+
+        '<span style="font-size:11px;color:var(--txt2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(lbl)+'</span>'+
+        '<input type="color" value="'+col+'" data-idx="'+i+'" onchange="setPortColor(this)" '+
+        'style="width:36px;height:28px;border:1px solid var(--b1);border-radius:4px;cursor:pointer;background:transparent;padding:2px">'
+      portDiv.appendChild(row)
+    })
+  }
+
+  // Elec color pickers
+  var elecDiv = document.getElementById('elec-color-pickers')
+  if(elecDiv){
+    elecDiv.innerHTML = ''
+    if(!_elecDrops||!_elecDrops.length){
+      elecDiv.innerHTML = '<div style="font-size:11px;color:var(--txt3)">Configurá las bajadas en la pestaña Eléctrico primero.</div>'
+    } else {
+      _elecDrops.forEach(function(d,i){
+        var col = d.color
+        var row = document.createElement('div')
+        row.style.cssText = 'display:flex;align-items:center;gap:8px'
+        row.innerHTML =
+          '<div style="width:10px;height:10px;border-radius:2px;background:'+col+';flex-shrink:0" id="ecdot-'+i+'"></div>'+
+          '<span style="font-size:11px;color:var(--txt2);flex:1">Bajada '+(i+1)+' (Filas '+(d.rowStart+1)+'-'+d.rowEnd+')</span>'+
+          '<input type="color" value="'+col+'" data-idx="'+i+'" onchange="setElecColor(this)" '+
+          'style="width:36px;height:28px;border:1px solid var(--b1);border-radius:4px;cursor:pointer;background:transparent;padding:2px">'
+        elecDiv.appendChild(row)
+      })
+    }
+  }
+
+  // Presets
+  var presetsDiv = document.getElementById('palette-presets')
+  if(presetsDiv){
+    presetsDiv.innerHTML = ''
+    COLOR_PRESETS.forEach(function(preset){
+      var btn = document.createElement('button')
+      btn.style.cssText = 'display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;text-align:left;transition:border-color .15s'
+      btn.onmouseover = function(){btn.style.borderColor='var(--cyan)'}
+      btn.onmouseout  = function(){btn.style.borderColor='var(--b1)'}
+      // Color dots preview
+      var dots = preset.port.slice(0,8).map(function(c){
+        return '<div style="width:12px;height:12px;border-radius:50%;background:'+c+';flex-shrink:0"></div>'
+      }).join('')
+      btn.innerHTML =
+        '<div style="flex:1;font-size:11px;color:var(--txt);font-family:inherit">'+preset.name+'</div>'+
+        '<div style="display:flex;gap:2px">'+dots+'</div>'
+      btn.onclick = function(){ applyPreset(preset) }
+      presetsDiv.appendChild(btn)
+    })
+  }
+}
+
+function setPortColor(input){
+  var idx = parseInt(input.dataset.idx)
+  PORT_COLORS[idx] = input.value
+  // Update dot
+  var dot = document.getElementById('pcdot-'+idx)
+  if(dot) dot.style.background = input.value
+  // Save to current screen
+  if(SCREENS.length && SCREENS[CURRENT_SCREEN]){
+    if(!SCREENS[CURRENT_SCREEN].portColors) SCREENS[CURRENT_SCREEN].portColors=PORT_COLORS.slice()
+    SCREENS[CURRENT_SCREEN].portColors[idx] = input.value
+  }
+  compute()
+}
+
+function setElecColor(input){
+  var idx = parseInt(input.dataset.idx)
+  if(_elecDrops[idx]){
+    ELEC_COLORS[idx] = input.value
+    _elecDrops[idx].color = input.value
+  }
+  var dot = document.getElementById('ecdot-'+idx)
+  if(dot) dot.style.background = input.value
+  renderElecMap()
+  renderColorPickers()
+}
+
+function resetPortColors(){
+  PORT_COLORS = PORT_COLORS_DEFAULT.slice()
+  if(SCREENS.length && SCREENS[CURRENT_SCREEN]){
+    SCREENS[CURRENT_SCREEN].portColors = null
+  }
+  compute()
+  renderColorPickers()
+}
+
+function resetElecColors(){
+  ELEC_COLORS = ELEC_COLORS_DEFAULT.slice()
+  _elecDrops.forEach(function(d,i){ d.color = ELEC_COLORS[i % ELEC_COLORS.length] })
+  renderElecMap()
+  renderColorPickers()
+}
+
+function applyPreset(preset){
+  // Apply port colors
+  preset.port.forEach(function(c,i){ PORT_COLORS[i]=c })
+  // Apply elec colors
+  preset.elec.forEach(function(c,i){
+    ELEC_COLORS[i]=c
+    if(_elecDrops[i]) _elecDrops[i].color=c
+  })
+  if(SCREENS.length && SCREENS[CURRENT_SCREEN]){
+    SCREENS[CURRENT_SCREEN].portColors = PORT_COLORS.slice()
+  }
+  compute()
+  if(_elecDrops.length) renderElecMap()
+  renderColorPickers()
+}
+
+// Load custom colors when switching screens
+function loadScreenColors(sc){
+  if(sc && sc.portColors && sc.portColors.length){
+    sc.portColors.forEach(function(c,i){ if(c) PORT_COLORS[i]=c })
+  } else {
+    PORT_COLORS = PORT_COLORS_DEFAULT.slice()
+  }
+}
 
 // INIT
 document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
