@@ -1621,10 +1621,52 @@ function exportJSON(){
 
 // PROCESSOR
 var PROC_DB={
-  novastar:{name:'Novastar',models:[{id:'mctrl660',name:'MCTRL660',ports:8,ppp:650000,notes:'8 puertos - 650k px/puerto'},{id:'mctrl4k',name:'MCTRL4K',ports:16,ppp:650000,notes:'16 puertos - 4K support'},{id:'mctrl700',name:'MCTRL700',ports:8,ppp:650000,notes:'8 puertos - compacto'},{id:'mctrl1600',name:'MCTRL1600',ports:16,ppp:800000,notes:'16 puertos - 800k px/puerto - flagship'},{id:'vx1000',name:'VX1000',ports:10,ppp:650000,notes:'10 puertos - all-in-one'},{id:'vx2000',name:'VX2000',ports:12,ppp:650000,notes:'12 puertos - all-in-one con switching'},{id:'vx4s',name:'VX4S',ports:4,ppp:650000,notes:'4 puertos - compacto'}]},
-  colorlight:{name:'Colorlight',models:[{id:'i5a',name:'i5A',ports:8,ppp:500000,notes:'8 puertos - 500k px/puerto - economico'},{id:'i6a',name:'i6A',ports:8,ppp:650000,notes:'8 puertos - 650k px/puerto - standard'},{id:'e6',name:'E6',ports:12,ppp:650000,notes:'12 puertos - profesional'},{id:'e8s',name:'E8S',ports:16,ppp:650000,notes:'16 puertos - flagship'},{id:'x4',name:'X4',ports:4,ppp:500000,notes:'4 puertos - compacto'},{id:'s2',name:'S2',ports:2,ppp:500000,notes:'2 puertos - pantallas pequenas'}]},
-  linsn:{name:'Linsn',models:[{id:'rv908m',name:'RV908M',ports:16,ppp:650000,notes:'16 puertos - muy popular'},{id:'rv908h',name:'RV908H',ports:8,ppp:650000,notes:'8 puertos - version reducida'},{id:'rv909',name:'RV909',ports:8,ppp:650000,notes:'8 puertos - next-gen Linsn'},{id:'ts802d',name:'TS802D',ports:2,ppp:500000,notes:'2 puertos - Sending Card'},{id:'ts852',name:'TS852',ports:4,ppp:500000,notes:'4 puertos - Sending Card'}]},
-  custom:{name:'Personalizado',models:[{id:'custom',name:'Configuracion manual',ports:null,ppp:null,notes:'Usa los valores manuales del panel Config.'}]}
+  novastar:{name:'Novastar',models:[
+    // Sending Cards
+    {id:'mctrl660',  name:'MCTRL660',     ports:8,  ppp:650000, notes:'8 puertos - 650k px/puerto - Gigabit - sincronico'},
+    {id:'mctrl700',  name:'MCTRL700',     ports:8,  ppp:650000, notes:'8 puertos - 650k px/puerto - compacto 1U - sincronico'},
+    {id:'mctrl4k',   name:'MCTRL4K',      ports:16, ppp:650000, notes:'16 puertos - 650k px/puerto - 4K - sincronico'},
+    {id:'mctrl1600', name:'MCTRL1600',    ports:16, ppp:800000, notes:'16 puertos - 800k px/puerto - flagship sincronico'},
+    // VX Series All-in-One
+    {id:'vx400',     name:'VX400',        ports:4,  ppp:650000, notes:'4 puertos - 2.6M px total - all-in-one - rental/stage'},
+    {id:'vx600',     name:'VX600',        ports:6,  ppp:650000, notes:'6 puertos - 3.9M px total - all-in-one - 4Kx1K@60Hz'},
+    {id:'vx1000',    name:'VX1000',       ports:10, ppp:650000, notes:'10 puertos - 6.5M px total - all-in-one - 4Kx2K@60Hz'},
+    {id:'vx2000',    name:'VX2000',       ports:12, ppp:650000, notes:'12 puertos - all-in-one - switching integrado'},
+    {id:'vx4s',      name:'VX4S',         ports:4,  ppp:650000, notes:'4 puertos - compacto - pantallas pequenas'},
+    // VX Pro Series (nueva generacion - HDMI 2.0 / real 4K)
+    {id:'vx400pro',  name:'VX400 Pro',    ports:4,  ppp:650000, notes:'4 puertos - 2.6M px - HDMI 2.0 - real 4096x2160@60Hz'},
+    {id:'vx600pro',  name:'VX600 Pro',    ports:6,  ppp:650000, notes:'6 puertos - 3.9M px - HDMI 2.0 - real 4K'},
+    {id:'vx1000pro', name:'VX1000 Pro',   ports:10, ppp:650000, notes:'10 puertos - 6.5M px - HDMI 2.0 - 4Kx2K@60Hz - version Pro'},
+    {id:'vx2000pro', name:'VX2000 Pro',   ports:20, ppp:650000, notes:'20 puertos - 13M px total - HDMI 2.0 - flagship Pro'},
+    // VC Series
+    {id:'vc6',       name:'VC6',          ports:6,  ppp:650000, notes:'6 puertos - all-in-one - serie VC estandar'},
+    {id:'vc10',      name:'VC10',         ports:10, ppp:650000, notes:'10 puertos - 6.5M px - similar VX1000 - serie VC'},
+    // V Series (procesadores de video con sending integrado)
+    {id:'v300',      name:'V300',         ports:6,  ppp:650000, notes:'6 puertos - procesador video + sending - rental y fijos'},
+    {id:'v400',      name:'V400',         ports:8,  ppp:650000, notes:'8 puertos - procesador video + sending - rental y fijos'},
+    // Taurus TB Series (Multimedia Players async/sync - señaletica)
+    {id:'tb30',      name:'TB30 (Taurus)',ports:1,  ppp:650000, notes:'1 puerto principal + 1 backup - 650k px - async/sync - WiFi - señaletica'},
+    {id:'tb50',      name:'TB50 (Taurus)',ports:2,  ppp:650000, notes:'2 puertos principales - 1.3M px - async/sync - WiFi - señaletica'},
+    {id:'tb60',      name:'TB60 (Taurus)',ports:4,  ppp:575000, notes:'4 puertos principales - 2.3M px - async/sync - WiFi/4G - señaletica digital'}
+  ]},
+  colorlight:{name:'Colorlight',models:[
+    {id:'i5a',  name:'i5A',  ports:8,  ppp:500000, notes:'8 puertos - 500k px/puerto - economico'},
+    {id:'i6a',  name:'i6A',  ports:8,  ppp:650000, notes:'8 puertos - 650k px/puerto - standard'},
+    {id:'e6',   name:'E6',   ports:12, ppp:650000, notes:'12 puertos - profesional'},
+    {id:'e8s',  name:'E8S',  ports:16, ppp:650000, notes:'16 puertos - flagship'},
+    {id:'x4',   name:'X4',   ports:4,  ppp:500000, notes:'4 puertos - compacto'},
+    {id:'s2',   name:'S2',   ports:2,  ppp:500000, notes:'2 puertos - pantallas pequenas'}
+  ]},
+  linsn:{name:'Linsn',models:[
+    {id:'rv908m',  name:'RV908M',  ports:16, ppp:650000, notes:'16 puertos - muy popular'},
+    {id:'rv908h',  name:'RV908H',  ports:8,  ppp:650000, notes:'8 puertos - version reducida'},
+    {id:'rv909',   name:'RV909',   ports:8,  ppp:650000, notes:'8 puertos - next-gen Linsn'},
+    {id:'ts802d',  name:'TS802D',  ports:2,  ppp:500000, notes:'2 puertos - Sending Card'},
+    {id:'ts852',   name:'TS852',   ports:4,  ppp:500000, notes:'4 puertos - Sending Card'}
+  ]},
+  custom:{name:'Personalizado',models:[
+    {id:'custom',name:'Configuracion manual',ports:null,ppp:null,notes:'Usa los valores manuales del panel Config.'}
+  ]}
 }
 function onProcBrandChange(){
   var brand=document.getElementById('proc-brand').value,mr=document.getElementById('proc-model-row'),ms=document.getElementById('proc-model'),ib=document.getElementById('proc-info-box')
