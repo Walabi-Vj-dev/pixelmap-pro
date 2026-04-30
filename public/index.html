@@ -1822,137 +1822,104 @@ function renderElecMap(){
 
   // Always re-render base data map first
   renderMap()
-
   if(!SHOW_ELEC||!_elecDrops.length) return
 
-  // ── PASS 1: Color each panel individually by its drop ──
   var pdMap = window._panelDropMap
-  if(pdMap){
-    // Walk panels in wiring order and color each one
-    S.po.forEach(function(item, seqIdx){
-      var dIdx = pdMap[seqIdx]
-      if(dIdx===undefined||dIdx>=_elecDrops.length) return
-      var d   = _elecDrops[dIdx]
-      var hex = d.color.replace('#','')
-      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-      var c   = item.gridIdx % S.cols
-      var r   = Math.floor(item.gridIdx / S.cols)
-      ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
-      ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
-    })
-  } else {
-    // Fallback: color by rows
-    _elecDrops.forEach(function(d){
-      var hex=d.color.replace('#','')
-      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-      for(var r=d.rowStart;r<d.rowEnd;r++){
-        for(var c=0;c<S.cols;c++){
-          ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
-          ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
-        }
-      }
-    })
-  }
+  if(!pdMap||!S.po) return
 
-  // ── PASS 2: Separadores entre bajadas ──
-  // For multi-row screens: horizontal line between row groups
-  // For single-row screens: vertical line between column groups
-  _elecDrops.forEach(function(d,i){
-    if(i===0) return
+  // ── PASS 1: Color fill each panel by its drop ──
+  S.po.forEach(function(item,seqIdx){
+    var dIdx=pdMap[seqIdx]; if(dIdx===undefined||dIdx>=_elecDrops.length) return
+    var d=_elecDrops[dIdx]
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.9)'
-    ctx.lineWidth=2
-    ctx.setLineDash([8,4])
-    ctx.beginPath()
-    if(S.rows===1){
-      // Single row: vertical separator at colStart
-      ctx.moveTo(d.colStart*cw, 0)
-      ctx.lineTo(d.colStart*cw, S.rows*ch)
-    } else {
-      // Multi row: horizontal separator at rowStart
-      ctx.moveTo(0, d.rowStart*ch)
-      ctx.lineTo(S.cols*cw, d.rowStart*ch)
-    }
-    ctx.stroke()
-    ctx.setLineDash([])
+    var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols)
+    ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
+    ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
   })
 
-  // ── PASS 3: Cable de tensión por bajada ──
-  _elecDrops.forEach(function(d){
+  // ── PASS 2: Draw power cable trace per drop (same style as data wiring) ──
+  // Group panels by drop, maintaining wiring order
+  var dropPanels = {}
+  S.po.forEach(function(item,seqIdx){
+    var dIdx=pdMap[seqIdx]; if(dIdx===undefined) return
+    if(!dropPanels[dIdx]) dropPanels[dIdx]=[]
+    var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols)
+    // Center of panel - offset to bottom 75% to separate from data wiring (center)
+    dropPanels[dIdx].push({
+      cx: c*cw+cw/2,
+      cy: r*ch+ch*0.78,  // lower than data wiring which is at 0.42
+      seq: seqIdx
+    })
+  })
+
+  Object.keys(dropPanels).forEach(function(dIdxStr){
+    var dIdx=parseInt(dIdxStr)
+    if(dIdx>=_elecDrops.length) return
+    var d=_elecDrops[dIdx]
+    var panels=dropPanels[dIdx]
+    if(!panels||!panels.length) return
+
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
 
-    var isSingleRow = S.rows===1
-
-    // Line position: bottom 82% of the drop zone
-    var lastRow = Math.max(d.rowStart, d.rowEnd-1)
-    var py = lastRow*ch + ch*0.82
-
-    // For single-row: cable spans only the columns of this drop
-    var xStart = isSingleRow ? d.colStart*cw : 0
-    var xEnd   = isSingleRow ? d.colEnd*cw   : S.cols*cw
-
-    // Línea principal de tensión (sólida y gruesa)
+    // Draw wiring trace line
     ctx.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
-    ctx.lineWidth=Math.max(3,cw*0.09)
+    ctx.lineWidth=Math.max(2,cw*0.07)
     ctx.setLineDash([])
-    ctx.lineCap='round'
+    ctx.lineCap='round'; ctx.lineJoin='round'
     ctx.beginPath()
-    ctx.moveTo(xStart,py)
-    ctx.lineTo(xEnd,py)
+    ctx.moveTo(panels[0].cx,panels[0].cy)
+    for(var i=1;i<panels.length;i++) ctx.lineTo(panels[i].cx,panels[i].cy)
     ctx.stroke()
 
-    // Flechas de dirección
-    var step=cw*1.5
-    for(var x=xStart+step; x<xEnd-cw; x+=step){
-      var aw=Math.max(5,cw*0.2)
-      ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-      ctx.save(); ctx.translate(x,py)
-      ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.5,-aw*0.5); ctx.lineTo(-aw*0.5,aw*0.5)
-      ctx.closePath(); ctx.fill(); ctx.restore()
+    // Draw directional arrows between panels
+    if(cw>=16){
+      for(var i=0;i<panels.length-1;i++){
+        var ax=panels[i].cx,ay=panels[i].cy,bx=panels[i+1].cx,by=panels[i+1].cy
+        var mx=(ax+bx)/2,my=(ay+by)/2
+        var angle=Math.atan2(by-ay,bx-ax)
+        var aw=Math.max(4,cw*0.16)
+        ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+        ctx.save(); ctx.translate(mx,my); ctx.rotate(angle)
+        ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.6,-aw*0.45); ctx.lineTo(-aw*0.6,aw*0.45)
+        ctx.closePath(); ctx.fill(); ctx.restore()
+      }
     }
 
-    // Badge "B1" a la izquierda del tramo
-    var fs=Math.max(7,Math.min(11,ch*0.22))
-    var label='B'+(d.d+1)
+    // IN badge at first panel (bottom-left area)
+    var first=panels[0], last=panels[panels.length-1]
+    var label='B'+(dIdx+1)
+    var fs=Math.max(6,Math.min(10,ch*0.2))
     ctx.font='bold '+fs+'px monospace'
-    var bW=ctx.measureText(label).width+12
-    var bH=Math.max(14,fs*1.6)
-    var bX=xStart+2, bY=py-bH/2
+    var bW=ctx.measureText(label).width+10
+    var bH=Math.max(11,fs*1.5)
+    var inX=first.cx-cw/2+1, inY=first.cy-bH/2
     ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-    roundRect(ctx,bX,bY,bW,bH,3); ctx.fill()
+    roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
     ctx.fillStyle='#000'
     ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText(label,bX+bW/2,py)
+    ctx.fillText(label,inX+bW/2,first.cy)
 
-    // Badge "Xamps" o "OUT" a la derecha del tramo
-    var rightLabel=SHOW_AMPS?d.amps+'A':'OUT'
-    ctx.font='bold '+fs+'px monospace'
-    var rW=ctx.measureText(rightLabel).width+12
-    var rX=xEnd-rW-2
-    ctx.fillStyle='rgba(0,0,0,0.85)'
-    roundRect(ctx,rX,bY,rW,bH,3); ctx.fill()
-    ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.5
-    roundRect(ctx,rX,bY,rW,bH,3); ctx.stroke()
-    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-    ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText(rightLabel,rX+rW/2,py)
-
-    // Barra de color lateral (izquierda para multi-row, arriba para single-row)
-    ctx.fillStyle='rgba('+R+','+G+','+B+',0.9)'
-    if(isSingleRow){
-      ctx.fillRect(d.colStart*cw, 0, 4, ch)
-    } else {
-      ctx.fillRect(0, d.rowStart*ch, 5, (d.rowEnd-d.rowStart)*ch)
+    // OUT / Amps badge at last panel
+    if(SHOW_AMPS||panels.length>1){
+      var rightLabel=SHOW_AMPS?d.amps+'A':'OUT'
+      ctx.font='bold '+fs+'px monospace'
+      var rW=ctx.measureText(rightLabel).width+10
+      var outX=last.cx+cw/2-rW-1, outY=last.cy-bH/2
+      ctx.fillStyle='rgba(0,0,0,0.82)'
+      roundRect(ctx,outX,outY,rW,bH,3); ctx.fill()
+      ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.2
+      roundRect(ctx,outX,outY,rW,bH,3); ctx.stroke()
+      ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+      ctx.textAlign='center'; ctx.textBaseline='middle'
+      ctx.fillText(rightLabel,outX+rW/2,last.cy)
     }
   })
 
   ctx.setLineDash([])
-  ctx.textAlign='left'
-  ctx.textBaseline='alphabetic'
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic'
 }
-
 function toggleElecLayer(layer){
   if(layer==='data') SHOW_DATA=!SHOW_DATA
   if(layer==='elec') SHOW_ELEC=!SHOW_ELEC
