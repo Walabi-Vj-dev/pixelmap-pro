@@ -421,6 +421,9 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
               <button class="eb" id="btn-csv" onclick="exportCSV()" disabled>CSV</button>
               <button class="eb" id="btn-json" onclick="exportJSON()" disabled>JSON</button>
             </div>
+            <div class="exp-row" style="margin-bottom:8px">
+              <button class="eb" onclick="exportPDF()" style="border-color:rgba(255,68,68,0.4);color:var(--red)">PDF Completo</button>
+            </div>
             <div style="font-size:10px;color:var(--txt3);line-height:1.5">PNG gratis · CSV y JSON requieren plan Pro</div>
           </div>
         </div>
@@ -535,7 +538,7 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
 
         <div class="cp">
           <div class="cp-h" onclick="togglePanel(this)"><span>Detalle por bajada</span><span class="arr">▾</span></div>
-          <div class="cp-b" id="elec-drops-list"></div>
+          <div class="cp-b" id="elec-drops-list" style="padding:0;max-height:320px;overflow-y:auto"></div>
         </div>
       </div>
 
@@ -1258,7 +1261,23 @@ function compute(){
   if(mhR) mhR.textContent=rw+'x'+rh+' px'
   if(mhD) mhD.textContent='P'+pit+' - '+W+'x'+H+'m - '+cols+'x'+rows+' modulos - '+tot+' paneles'
   var rb=document.getElementById('recap-box')
-  if(rb) rb.innerHTML='P'+pit+' - Modulo '+mw+'x'+mh+'cm ('+mpw+'x'+mph+' px)<br>'+W+'x'+H+' m - '+cols+'x'+rows+' modulos<br>Res: '+rw+'x'+rh+'<br>'+tot+' paneles - '+pn+'/'+maxP+' puertos<br>'+mpx+' MP<br>Cableado: '+({'h-snake':'Serp. Horizontal','h-line':'Lineas Horizontal','v-snake':'Serp. Vertical'}[dir]||dir)
+  var elVolt=document.getElementById('el-voltage'),elDrps=document.getElementById('el-drops'),elWpm=document.getElementById('el-wpm2')
+  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'—'
+  var nBajadas=elDrps?elDrps.value:'—'
+  var wpm2Txt=elWpm?elWpm.options[elWpm.selectedIndex].text:'—'
+  var totalWmax=elWpm?Math.round(parseFloat(elWpm.value)*W*H)+'W max.':'—'
+  if(rb) rb.innerHTML=
+    '<strong style="color:var(--cyan)">Datos</strong><br>'+
+    'P'+pit+' - Modulo '+mw+'x'+mh+'cm ('+mpw+'x'+mph+' px)<br>'+
+    W+'x'+H+' m - '+cols+'x'+rows+' modulos<br>'+
+    'Resolucion: '+rw+'x'+rh+' px<br>'+
+    tot+' paneles - '+pn+'/'+maxP+' puertos<br>'+
+    mpx+' MP - '+({'h-snake':'Serp. Horizontal','h-line':'Lineas Horizontal','v-snake':'Serp. Vertical'}[dir]||dir)+
+    '<br><br><strong style="color:#ff9800">Electrica</strong><br>'+
+    'Tension: '+voltTxt+'<br>'+
+    'Bajadas: '+nBajadas+'<br>'+
+    'Consumo: '+wpm2Txt+'<br>'+
+    'Total maximo: '+totalWmax
   if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
   renderPorts(); renderMap(); renderProcView(); if(document.getElementById("pane-elec")&&document.getElementById("pane-elec").classList.contains("active")) computeElec()
 }
@@ -1330,7 +1349,7 @@ function renderMap(){
   ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=0.5
   for(var c=0;c<=S.cols;c++){ctx.beginPath();ctx.moveTo(c*cw,0);ctx.lineTo(c*cw,tH);ctx.stroke()}
   for(var r=0;r<=S.rows;r++){ctx.beginPath();ctx.moveTo(0,r*ch);ctx.lineTo(tW,r*ch);ctx.stroke()}
-  if(cw>=12&&ch>=8){
+  if(cw>=12&&ch>=8&&SHOW_DATA){
     var pp={}
     S.po.forEach(function(item){var p=S.pi[item.panelNum];if(!p)return;if(!pp[p.portIdx])pp[p.portIdx]=[];pp[p.portIdx].push({x:item.gridIdx%S.cols*cw+cw/2,y:Math.floor(item.gridIdx/S.cols)*ch+ch/2,seq:p.pxStart})})
     Object.keys(pp).forEach(function(portIdx){
@@ -1961,6 +1980,172 @@ async function restoreSession(){
     console.log('No session:', e.message)
   }
 }
+
+
+// ════ EXPORT PDF ════
+async function exportPDF(){
+  if(!S.tot){alert('Configura una pantalla primero');return}
+  var isPro=CU&&(CU.plan==='pro'||CU.plan==='superop')
+  var title=document.getElementById('p-title').value||'PixelMap Pro'
+  var client=document.getElementById('p-client').value||''
+  var loc=document.getElementById('p-loc').value||''
+  var date2=document.getElementById('p-date').value||new Date().toLocaleDateString('es-AR')
+  var notes=document.getElementById('p-notes').value||''
+  var elVolt=document.getElementById('el-voltage'),elDrps=document.getElementById('el-drops'),elWpm=document.getElementById('el-wpm2'),elSafe=document.getElementById('el-safety')
+  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'—'
+  var nBajadas=elDrps?parseInt(elDrps.value):0
+  var wpm2Val=elWpm?parseFloat(elWpm.value):200
+  var safeVal=elSafe?parseFloat(elSafe.value):1.25
+  var totalWmax=Math.round(wpm2Val*S.W*S.H)
+  var totalWavg=Math.round(totalWmax*0.27)
+
+  // Build HTML pages for PDF
+  var pages=[]
+  var css='body{font-family:Arial,sans-serif;margin:0;padding:0;color:#1a1a2e}'+
+    '.page{width:210mm;min-height:297mm;padding:20mm;box-sizing:border-box;page-break-after:always}'+
+    '.page:last-child{page-break-after:auto}'+
+    'h1{font-size:24px;color:#00d4ff;margin:0 0 4px}'+
+    'h2{font-size:16px;color:#333;margin:20px 0 10px;border-bottom:2px solid #00d4ff;padding-bottom:5px}'+
+    '.sub{font-size:12px;color:#666;margin:0 0 20px}'+
+    'table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px}'+
+    'td,th{padding:8px 10px;border:1px solid #ddd;text-align:left}'+
+    'th{background:#f5f5f5;font-weight:700}'+
+    'tr:nth-child(even){background:#fafafa}'+
+    '.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}'+
+    '.badge-pro{background:#fff3cd;color:#856404}'+
+    '.badge-data{background:#cff4fc;color:#0c5460}'+
+    '.badge-elec{background:#ffe5cc;color:#cc5500}'+
+    '.highlight{color:#00d4ff;font-weight:700}'+
+    '.warn{color:#ff4444;font-weight:700}'+
+    '.ok{color:#00aa55;font-weight:700}'+
+    '.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}'+
+    '.card{background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:12px}'+
+    '.card-title{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}'+
+    '.card-value{font-size:20px;font-weight:700;color:#00d4ff}'+
+    '@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+
+  // ── Page 1: Portada + Datos del proyecto ──
+  var page1='<div class="page">'+
+    '<div style="text-align:center;padding:40px 0 30px">'+
+      '<h1 style="font-size:32px;margin-bottom:8px">PixelMap Pro</h1>'+
+      '<p style="font-size:14px;color:#666;text-transform:uppercase;letter-spacing:3px">Reporte de configuracion de pantalla LED</p>'+
+      '<div style="width:60px;height:3px;background:#00d4ff;margin:16px auto"></div>'+
+    '</div>'+
+    '<h2>Datos del proyecto</h2>'+
+    '<table>'+
+      '<tr><th style="width:35%">Campo</th><th>Valor</th></tr>'+
+      '<tr><td>Titulo</td><td><strong>'+escHtml(title)+'</strong></td></tr>'+
+      (client?'<tr><td>Cliente</td><td>'+escHtml(client)+'</td></tr>':'')+
+      (loc?'<tr><td>Ubicacion</td><td>'+escHtml(loc)+'</td></tr>':'')+
+      '<tr><td>Fecha</td><td>'+escHtml(date2)+'</td></tr>'+
+      (notes?'<tr><td>Notas</td><td>'+escHtml(notes)+'</td></tr>':'')+
+    '</table>'+
+    '<h2>Configuracion de pantalla</h2>'+
+    '<div class="grid">'+
+      '<div class="card"><div class="card-title">Resolucion</div><div class="card-value">'+S.rw+'x'+S.rh+'</div><div style="font-size:11px;color:#666">pixeles</div></div>'+
+      '<div class="card"><div class="card-title">Dimension</div><div class="card-value">'+S.W+'x'+S.H+'m</div><div style="font-size:11px;color:#666">metros</div></div>'+
+      '<div class="card"><div class="card-title">Total paneles</div><div class="card-value">'+S.tot+'</div><div style="font-size:11px;color:#666">'+S.cols+'x'+S.rows+' modulos</div></div>'+
+      '<div class="card"><div class="card-title">Megapixeles</div><div class="card-value">'+S.mpx+'</div><div style="font-size:11px;color:#666">MP</div></div>'+
+    '</div>'+
+    '<table>'+
+      '<tr><td style="width:50%">Pitch</td><td><strong>P'+S.pit+'</strong></td></tr>'+
+      '<tr><td>Modulo</td><td>'+S.mw+'x'+S.mh+' cm ('+S.mpw+'x'+S.mph+' px)</td></tr>'+
+      '<tr><td>Puertos de datos</td><td>'+S.pn+' de '+S.maxP+' disponibles</td></tr>'+
+      '<tr><td>Cableado</td><td>'+({'h-snake':'Serpentina Horizontal','h-line':'Lineas Horizontal','v-snake':'Serpentina Vertical'}[S.dir]||S.dir)+'</td></tr>'+
+    '</table>'+
+    '<div style="margin-top:20px;padding:12px;background:#e8f4fd;border-left:4px solid #00d4ff;border-radius:4px;font-size:11px;color:#555">'+
+      'Generado con PixelMap Pro &middot; pixelmap-pro.vercel.app &middot; @walabi_vj &middot; '+new Date().toLocaleDateString('es-AR')+
+    '</div>'+
+  '</div>'
+  pages.push(page1)
+
+  // ── Page 2: Datos electricos ──
+  if(_elecDrops&&_elecDrops.length){
+    var voltV=elVolt?parseInt(elVolt.value):220
+    var page2='<div class="page">'+
+      '<h2><span class="badge badge-elec">Electrico</span> Instalacion electrica</h2>'+
+      '<div class="grid">'+
+        '<div class="card"><div class="card-title">Consumo maximo</div><div class="card-value warn">'+totalWmax.toLocaleString()+'W</div></div>'+
+        '<div class="card"><div class="card-title">Consumo promedio</div><div class="card-value ok">'+totalWavg.toLocaleString()+'W</div></div>'+
+        '<div class="card"><div class="card-title">Tension</div><div class="card-value" style="font-size:15px">'+voltTxt+'</div></div>'+
+        '<div class="card"><div class="card-title">Factor seguridad</div><div class="card-value" style="font-size:18px">'+safeVal+'x</div></div>'+
+      '</div>'+
+      '<h2>Detalle por bajada</h2>'+
+      '<table>'+
+        '<tr>'+
+          '<th>Bajada</th><th>Filas</th><th>Paneles</th>'+
+          '<th>W Max.</th><th>W Prom.</th>'+
+          '<th>Amperaje</th><th>Disyuntor</th><th>Cable</th>'+
+        '</tr>'+
+        _elecDrops.map(function(d){
+          return '<tr>'+
+            '<td><strong style="color:'+d.color+'">&#9632; Bajada '+(d.d+1)+'</strong></td>'+
+            '<td>'+(d.rowStart+1)+' a '+d.rowEnd+'</td>'+
+            '<td>'+d.panels+'</td>'+
+            '<td class="warn">'+d.wMax.toLocaleString()+'W</td>'+
+            '<td class="ok">'+d.wAvg.toLocaleString()+'W</td>'+
+            '<td class="highlight">'+d.amps+'A</td>'+
+            '<td class="ok">'+d.breaker+'A</td>'+
+            '<td class="ok">'+d.cable+'</td>'+
+          '</tr>'
+        }).join('')+
+      '</table>'+
+      '<h2>Recomendaciones de instalacion</h2>'+
+      '<table>'+
+        '<tr><td style="width:50%">Calcular cableado sobre</td><td><strong>Consumo maximo (100% blanco)</strong></td></tr>'+
+        '<tr><td>Distribucion</td><td>'+nBajadas+' bajadas independientes</td></tr>'+
+        '<tr><td>Tipo de instalacion</td><td>'+voltTxt+'</td></tr>'+
+        '<tr><td>Proteccion recomendada</td><td>Disyuntor termico por bajada + diferencial general</td></tr>'+
+      '</table>'+
+    '</div>'
+    pages.push(page2)
+  }
+
+  // ── Page 3: Mapa de puertos (datos) ──
+  var portsHtml='<tr><th>Puerto</th><th>Etiqueta</th><th>Paneles</th><th>Px inicio</th><th>Px fin</th><th>Uso %</th></tr>'
+  S.ps.forEach(function(p){
+    var lbl=getPortLabel(p.portNum)
+    var over=p.totalPx>S.ppp
+    portsHtml+='<tr>'+'<td><strong>Puerto '+p.portNum+'</strong></td><td>'+escHtml(lbl)+'</td><td>'+p.panelCount+'</td>'+
+      '<td>'+((S.ps.slice(0,p.portNum-1).reduce(function(a,x){return a+x.panelCount},0))*S.ppp2).toLocaleString()+'</td>'+
+      '<td>'+(((S.ps.slice(0,p.portNum).reduce(function(a,x){return a+x.panelCount},0))-1)*S.ppp2+S.ppp2-1).toLocaleString()+'</td>'+
+      '<td class="'+(over?'warn':'ok')+'">'+p.usagePct+'%</td>'+
+    '</tr>'
+  })
+  var page3='<div class="page">'+
+    '<h2><span class="badge badge-data">Datos</span> Mapa de puertos</h2>'+
+    '<p style="font-size:12px;color:#666;margin-bottom:12px">Distribucion de paneles por puerto de procesador. Capacidad: '+S.ppp.toLocaleString()+' px/puerto.</p>'+
+    '<table>'+portsHtml+'</table>'+
+    (SCREENS&&SCREENS.length>1?
+      '<h2>Resumen multi-pantalla</h2>'+
+      '<table><tr><th>Pantalla</th><th>Nombre</th><th>Config</th><th>Cables</th><th>Paneles</th></tr>'+
+      SCREENS.map(function(sc,i){
+        var st=sc.S||{}
+        return '<tr><td>'+(i+1)+'</td><td><strong>'+escHtml(sc.name)+'</strong></td><td>P'+(sc.pitch||'-')+' '+( sc.w||'-')+'x'+(sc.h||'-')+'m</td><td>'+(st.pn||'-')+'</td><td>'+(st.tot||'-')+'</td></tr>'
+      }).join('')+
+      '</table>'
+    :'')+
+    '<div style="margin-top:20px;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;font-size:11px;color:#555">'+
+      '<strong>Nota:</strong> El mapa visual del pixel map se incluye en la exportacion PNG. Este PDF contiene el reporte tecnico completo.'+
+    '</div>'+
+  '</div>'
+  pages.push(page3)
+
+  // Open PDF print window
+  var win=window.open('','_blank','width=900,height=700')
+  if(!win){alert('Permite popups para generar el PDF.');return}
+  win.document.write(
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">'+
+    '<title>'+escHtml(title)+' - PixelMap Pro</title>'+
+    '<style>'+css+'</style></head><body>'+
+    pages.join('')+
+    '<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script>'+
+    '</body></html>'
+  )
+  win.document.close()
+}
+
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // INIT
 document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
