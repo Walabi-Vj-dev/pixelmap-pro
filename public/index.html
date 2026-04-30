@@ -1717,51 +1717,57 @@ function computeElec(){
       (isOk?' — dentro del limite de '+maxMod:' — SUPERA '+maxMod+'! Usa AUTO')
   }
 
-  // ── Assign drops following DATA WIRING ORDER (S.po sequence) ──
-  // The power cable follows the same serpentine path as data,
-  // grouped in blocks of maxMod consecutive panels.
-  // This matches real installation: tension follows the physical cable run.
+  // ── Assign drops by PHYSICAL GRID POSITION (top→bottom, left→right) ──
+  // gridIdx order: row0col0, row0col1...row0colN, row1col0...
+  // This groups physically adjacent panels together regardless of data wiring direction
+  // Result: B1=panels in top-left block, B2=next block, etc. No long diagonal jumps.
 
-  // panelDropMap[seqIdx] = dropIndex
-  var panelDropMap = new Array(S.tot)
-  for(var d=0; d<nDrops; d++){
-    var cnt = basePanels + (d < remPanels ? 1 : 0)
-    var start = 0
-    for(var dd=0; dd<d; dd++) start += basePanels + (dd<remPanels?1:0)
-    for(var k=0; k<cnt; k++) panelDropMap[start+k] = d
-  }
-  window._panelDropMap = panelDropMap
+  // Build ordered list of gridIdx in physical reading order
+  var physOrder = []
+  for(var r=0; r<S.rows; r++)
+    for(var c=0; c<S.cols; c++)
+      physOrder.push(r*S.cols+c)
 
-  // Also build gridIdx→drop for panel coloring
+  // gridDropMap[gridIdx] = dropIndex
   var gridDropMap = {}
-  if(S.po) S.po.forEach(function(item,seqIdx){
-    gridDropMap[item.gridIdx] = panelDropMap[seqIdx]
-  })
+  var pi=0
+  for(var d=0; d<nDrops; d++){
+    var cnt=basePanels+(d<remPanels?1:0)
+    for(var k=0;k<cnt&&pi<physOrder.length;k++)
+      gridDropMap[physOrder[pi++]]=d
+  }
   window._gridDropMap = gridDropMap
 
-  // Build _elecDrops metadata per drop
-  var dropData = []
-  for(var d=0; d<nDrops; d++){
-    var dPanels=0, rMin=999, rMax=-1
-    if(S.po) S.po.forEach(function(item,seqIdx){
-      if(panelDropMap[seqIdx]!==d) return
-      dPanels++
-      var row=Math.floor(item.gridIdx/S.cols)
-      if(row<rMin) rMin=row; if(row>rMax) rMax=row
+  // Build panelDropMap[seqIdx] = dropIndex (for renderElecMap compatibility)
+  var panelDropMap = new Array(S.tot)
+  if(S.po) S.po.forEach(function(item,si){
+    panelDropMap[si] = gridDropMap[item.gridIdx]
+  })
+  window._panelDropMap = panelDropMap
+
+  // Build _elecDrops metadata
+  var dropData=[]
+  for(var d=0;d<nDrops;d++){
+    var dP=0,rMin=999,rMax=-1
+    physOrder.forEach(function(gi){
+      if(gridDropMap[gi]!==d) return
+      dP++
+      var r=Math.floor(gi/S.cols)
+      if(r<rMin)rMin=r; if(r>rMax)rMax=r
     })
-    var panels   = dPanels||basePanels+(d<remPanels?1:0)
-    var rowStart = rMin===999?0:rMin
-    var rowEnd   = rMax===-1?1:rMax+1
-    var wMax     = Math.round(wpm2*panels*mArea)
-    var wAvg     = Math.round(wMax*0.27)
-    var amps     = Math.round((wMax*safety/voltage)*10)/10
-    var breaker  = amps<=10?10:amps<=16?16:amps<=20?20:amps<=25?25:amps<=32?32:40
-    var cable    = amps<=10?'1.5mm²':amps<=16?'2.5mm²':amps<=25?'4mm²':'6mm²'
+    var panels=dP||basePanels+(d<remPanels?1:0)
+    var rowStart=rMin===999?0:rMin
+    var rowEnd=rMax===-1?1:rMax+1
+    var wMax=Math.round(wpm2*panels*mArea)
+    var wAvg=Math.round(wMax*0.27)
+    var amps=Math.round((wMax*safety/voltage)*10)/10
+    var breaker=amps<=10?10:amps<=16?16:amps<=20?20:amps<=25?25:amps<=32?32:40
+    var cable=amps<=10?'1.5mm²':amps<=16?'2.5mm²':amps<=25?'4mm²':'6mm²'
     dropData.push({d:d,rowStart:rowStart,rowEnd:rowEnd,rows:rowEnd-rowStart,
       panels:panels,wMax:wMax,wAvg:wAvg,amps:amps,breaker:breaker,cable:cable,
       color:ELEC_COLORS[d%ELEC_COLORS.length]})
   }
-  _elecDrops = dropData
+  _elecDrops=dropData
 
   var totalAmps = Math.round((_elecDrops.reduce(function(a,d){return a+d.wMax},0) * safety / voltage)*10)/10
   var totalBreaker = totalAmps<=16?16:totalAmps<=20?20:totalAmps<=25?25:totalAmps<=32?32:totalAmps<=40?40:63
@@ -1824,102 +1830,122 @@ function renderElecMap(){
   var cw=Math.floor(cv.width/S.cols), ch=Math.floor(cv.height/S.rows)
   if(cw<1||ch<1) return
 
-  // Always re-render base data map first
   renderMap()
   if(!SHOW_ELEC||!_elecDrops.length) return
 
   var pdMap = window._panelDropMap
   if(!pdMap||!S.po) return
 
-  // ── PASS 1: Color fill each panel by its drop ──
-  S.po.forEach(function(item,seqIdx){
-    var dIdx=pdMap[seqIdx]; if(dIdx===undefined||dIdx>=_elecDrops.length) return
-    var d=_elecDrops[dIdx]
+  // PASS 1: Color fill each panel
+  S.po.forEach(function(item,si){
+    var di=pdMap[si]; if(di===undefined||di>=_elecDrops.length) return
+    var d=_elecDrops[di]
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
     var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols)
-    ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
+    ctx.fillStyle='rgba('+R+','+G+','+B+',0.25)'
     ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
   })
 
-  // ── PASS 2: Draw power cable trace per drop following DATA WIRING ORDER ──
-  // Same serpentine path as data cable — groups of maxMod consecutive panels
-  var dropPanels = {}
-  if(pdMap && S.po){
-    S.po.forEach(function(item,seqIdx){
-      var dIdx=pdMap[seqIdx]
-      if(dIdx===undefined) return
-      if(!dropPanels[dIdx]) dropPanels[dIdx]=[]
-      var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols)
-      dropPanels[dIdx].push({
-        cx: c*cw+cw/2,
-        cy: r*ch+ch*0.78,  // below data wiring (0.42) — no overlap
-        gi: item.gridIdx, row: r, col: c, seq: seqIdx
-      })
-    })
-  }
-
-  Object.keys(dropPanels).forEach(function(dIdxStr){
-    var dIdx=parseInt(dIdxStr)
-    if(dIdx>=_elecDrops.length) return
-    var d=_elecDrops[dIdx]
-    var panels=dropPanels[dIdx]
-    if(!panels||!panels.length) return
-
+  // PASS 2: For each drop, draw ONE horizontal line per row it occupies
+  // Line goes straight left→right across the panels of that drop in that row
+  // This shows the real cable run: a straight wire feeding all panels in a row segment
+  _elecDrops.forEach(function(d){
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-    var fs=Math.max(6,Math.min(10,ch*0.2))
-    var bH=Math.max(11,fs*1.5)
-    var lw=Math.max(2,cw*0.07)
+    var lw=Math.max(2.5,cw*0.08)
+    var fs=Math.max(6,Math.min(11,ch*0.22))
+    var bH=Math.max(13,fs*1.6)
 
-    // Draw continuous line following the wiring serpentine order
-    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
-    ctx.lineWidth=lw
-    ctx.setLineDash([])
-    ctx.lineCap='round'; ctx.lineJoin='round'
-    ctx.beginPath()
-    ctx.moveTo(panels[0].cx,panels[0].cy)
-    for(var i=1;i<panels.length;i++) ctx.lineTo(panels[i].cx,panels[i].cy)
-    ctx.stroke()
+    // Find which panels belong to this drop, grouped by row
+    var byRow={}
+    S.po.forEach(function(item,si){
+      if(pdMap[si]!==d.d) return
+      var r=Math.floor(item.gridIdx/S.cols)
+      var c=item.gridIdx%S.cols
+      if(!byRow[r]) byRow[r]=[]
+      byRow[r].push(c)
+    })
 
-    // Directional arrows between consecutive panels
-    if(cw>=14){
-      for(var i=0;i<panels.length-1;i++){
-        var ax=panels[i].cx,ay=panels[i].cy,bx=panels[i+1].cx,by=panels[i+1].cy
-        var mx=(ax+bx)/2,my=(ay+by)/2
-        var angle=Math.atan2(by-ay,bx-ax)
-        var aw=Math.max(4,cw*0.16)
+    var rows=Object.keys(byRow).map(Number).sort(function(a,b){return a-b})
+    var isFirstRow=true
+
+    rows.forEach(function(row,ri){
+      var cols=byRow[row].sort(function(a,b){return a-b})
+      var cMin=cols[0], cMax=cols[cols.length-1]
+
+      // Y position: lower 80% of row to avoid data wiring
+      var py=row*ch+ch*0.82
+
+      // Horizontal power cable line
+      var xStart=cMin*cw+2
+      var xEnd=(cMax+1)*cw-2
+      ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'
+      ctx.lineWidth=lw
+      ctx.setLineDash([])
+      ctx.lineCap='round'
+      ctx.beginPath()
+      ctx.moveTo(xStart,py)
+      ctx.lineTo(xEnd,py)
+      ctx.stroke()
+
+      // Arrows every ~2 panels
+      var step=cw*2
+      for(var x=xStart+step;x<xEnd-cw*0.5;x+=step){
+        var aw=Math.max(4,cw*0.18)
         ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-        ctx.save(); ctx.translate(mx,my); ctx.rotate(angle)
+        ctx.save(); ctx.translate(x,py)
         ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.6,-aw*0.45); ctx.lineTo(-aw*0.6,aw*0.45)
         ctx.closePath(); ctx.fill(); ctx.restore()
       }
-    }
 
-    // B1/B2... badge at first panel
-    var first=panels[0], last=panels[panels.length-1]
-    var label='B'+(dIdx+1)
-    ctx.font='bold '+fs+'px monospace'
-    var bW=ctx.measureText(label).width+10
-    var inX=first.cx-cw/2+1, inY=first.cy-bH/2
-    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-    roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
-    ctx.fillStyle='#000'
-    ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText(label,inX+bW/2,first.cy)
+      // B1/B2 badge at start of FIRST row of this drop
+      if(isFirstRow){
+        isFirstRow=false
+        var label='B'+(d.d+1)
+        ctx.font='bold '+fs+'px monospace'
+        var bW=ctx.measureText(label).width+10
+        ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+        roundRect(ctx,xStart,py-bH/2,bW,bH,3); ctx.fill()
+        ctx.fillStyle='#000'
+        ctx.textAlign='center'; ctx.textBaseline='middle'
+        ctx.fillText(label,xStart+bW/2,py)
+      }
 
-    // OUT/Amps badge at last panel
-    var rightLabel=SHOW_AMPS?d.amps+'A':'OUT'
-    ctx.font='bold '+fs+'px monospace'
-    var rW=ctx.measureText(rightLabel).width+10
-    var outX=last.cx+cw/2-rW-1, outY=last.cy-bH/2
-    ctx.fillStyle='rgba(0,0,0,0.82)'
-    roundRect(ctx,outX,outY,rW,bH,3); ctx.fill()
-    ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.2
-    roundRect(ctx,outX,outY,rW,bH,3); ctx.stroke()
-    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-    ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText(rightLabel,outX+rW/2,last.cy)
+      // OUT badge at end of LAST row of this drop
+      if(ri===rows.length-1){
+        var rl=SHOW_AMPS?d.amps+'A':'OUT'
+        ctx.font='bold '+fs+'px monospace'
+        var rW=ctx.measureText(rl).width+10
+        ctx.fillStyle='rgba(0,0,0,0.85)'
+        roundRect(ctx,xEnd-rW,py-bH/2,rW,bH,3); ctx.fill()
+        ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.2
+        roundRect(ctx,xEnd-rW,py-bH/2,rW,bH,3); ctx.stroke()
+        ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+        ctx.textAlign='center'; ctx.textBaseline='middle'
+        ctx.fillText(rl,xEnd-rW/2,py)
+      }
+
+      // Vertical connector to next row (short line on left side)
+      if(ri<rows.length-1){
+        var nextRow=rows[ri+1]
+        var nextCols=byRow[nextRow].sort(function(a,b){return a-b})
+        var nextXStart=nextCols[0]*cw+2
+        var nextPy=nextRow*ch+ch*0.82
+        // Vertical drop line on the leftmost edge
+        var vx=Math.min(xStart,nextXStart)+cw*0.3
+        ctx.strokeStyle='rgba('+R+','+G+','+B+',0.75)'
+        ctx.lineWidth=lw*0.7
+        ctx.setLineDash([5,3])
+        ctx.beginPath()
+        ctx.moveTo(xEnd,py)
+        ctx.lineTo(xEnd,(row+1)*ch)
+        ctx.lineTo(nextXStart,(row+1)*ch)
+        ctx.lineTo(nextXStart,nextPy)
+        ctx.stroke()
+        ctx.setLineDash([])
+      }
+    })
   })
 
   ctx.setLineDash([])
