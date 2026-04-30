@@ -500,13 +500,20 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
             </div>
             <div class="fg"><label>Tension</label>
               <select id="el-voltage" onchange="computeElec()">
-                <option value="220">220V monofasico</option>
-                <option value="380" selected>380V trifasico</option>
+                <option value="110">110V monofasico</option>
+                <option value="220" selected>220V monofasico</option>
               </select>
             </div>
-            <div class="fg"><label>Nro. bajadas</label>
-              <input type="number" id="el-drops" value="3" min="1" max="12" onchange="computeElec()">
+            <div class="fg"><label>Max. mod/linea</label>
+              <input type="number" id="el-maxmod" value="12" min="1" max="30" onchange="computeElec()" title="Maxima cantidad de modulos 50x100cm por linea de tension">
             </div>
+            <div class="fg"><label>Bajadas</label>
+              <div style="display:flex;gap:4px;align-items:center">
+                <input type="number" id="el-drops" min="1" max="99" onchange="computeElec()" style="flex:1" readonly>
+                <button onclick="elecDropsAuto()" title="Calcular automaticamente" style="padding:6px 8px;background:var(--cyan);color:#000;border:none;border-radius:var(--r);font-family:inherit;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;min-height:32px">AUTO</button>
+              </div>
+            </div>
+            <div id="el-drops-info" style="font-size:10px;color:var(--green);padding:0 2px 4px;line-height:1.5"></div>
             <div class="fg"><label>Factor seg.</label>
               <select id="el-safety" onchange="computeElec()">
                 <option value="1.0">1.0x (sin margen)</option>
@@ -1102,7 +1109,12 @@ function sbTab(name){
   if(name==='saves') renderProjectsList()
   if(name==='proc') renderProcView()
   if(name==='screens') renderScreensList()
-  if(name==='elec') computeElec()
+  if(name==='elec'){
+    // Auto-calculate drops on first open if input is empty
+    var dropsEl=document.getElementById('el-drops')
+    if(dropsEl&&(!dropsEl.value||parseInt(dropsEl.value)<1)) elecDropsAuto()
+    else computeElec()
+  }
   if(name==='colors') renderColorPickers()
 }
 function togglePanel(h){h.closest('.cp').classList.toggle('closed')}
@@ -1291,7 +1303,7 @@ function compute(){
   if(mhD) mhD.textContent='P'+pit+' - '+W+'x'+H+'m - '+cols+'x'+rows+' modulos - '+tot+' paneles'
   var rb=document.getElementById('recap-box')
   var elVolt=document.getElementById('el-voltage'),elDrps=document.getElementById('el-drops'),elWpm=document.getElementById('el-wpm2')
-  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'—'
+  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'220V monofasico'
   var nBajadas=elDrps?elDrps.value:'—'
   var wpm2Txt=elWpm?elWpm.options[elWpm.selectedIndex].text:'—'
   var totalWmax=elWpm?Math.round(parseFloat(elWpm.value)*W*H)+'W max.':'—'
@@ -1657,6 +1669,18 @@ var SHOW_ELEC = true
 var SHOW_AMPS = false
 var _elecDrops = []
 
+function elecDropsAuto(){
+  // Calculate minimum drops needed based on max modules per line
+  if(!S.cols||!S.rows) return
+  var maxMod = parseInt(document.getElementById('el-maxmod').value)||12
+  var totalPanels = S.tot
+  var minDrops = Math.ceil(totalPanels / maxMod)
+  // Round up to distribute evenly by rows
+  var dropsInput = document.getElementById('el-drops')
+  if(dropsInput){ dropsInput.value = minDrops; dropsInput.removeAttribute('readonly') }
+  computeElec()
+}
+
 function computeElec(){
   if(!S.cols||!S.rows){
     var s=document.getElementById('elec-stats'); if(s) s.innerHTML='<div style="font-size:11px;color:var(--txt3);padding:8px;text-align:center">Configura una pantalla primero</div>'
@@ -1664,12 +1688,34 @@ function computeElec(){
   }
   var wpm2    = parseFloat(document.getElementById('el-wpm2').value)||200
   var voltage = parseFloat(document.getElementById('el-voltage').value)||220
-  var nDrops  = Math.max(1, parseInt(document.getElementById('el-drops').value)||3)
+  var maxMod  = parseInt(document.getElementById('el-maxmod').value)||12
   var safety  = parseFloat(document.getElementById('el-safety').value)||1.25
   var mArea   = (S.mw/100)*(S.mh/100)
   var totalArea = S.tot * mArea
   var wMaxTotal = Math.round(wpm2 * totalArea)
   var wAvgTotal = Math.round(wpm2 * 0.27 * totalArea)
+
+  // AUTO: calculate minimum drops needed
+  var minDropsNeeded = Math.ceil(S.tot / maxMod)
+  var dropsInput = document.getElementById('el-drops')
+
+  // If drops input is empty or 0, auto-set it
+  var nDrops = dropsInput ? parseInt(dropsInput.value)||0 : 0
+  if(nDrops < minDropsNeeded){
+    nDrops = minDropsNeeded
+    if(dropsInput) dropsInput.value = nDrops
+  }
+  nDrops = Math.max(1, nDrops)
+
+  // Show info about recommendation
+  var infoEl = document.getElementById('el-drops-info')
+  var panelsPerDrop = Math.ceil(S.tot / nDrops)
+  var isOk = panelsPerDrop <= maxMod
+  if(infoEl){
+    infoEl.style.color = isOk ? 'var(--green)' : 'var(--red)'
+    infoEl.textContent = (isOk ? '✓ ' : '⚠ ') + panelsPerDrop + ' mod/linea promedio' +
+      (isOk ? ' — dentro del limite de '+maxMod : ' — SUPERA el limite de '+maxMod+'! Usá AUTO')
+  }
 
   // Distribute rows equally among drops
   var rowsPerDrop = S.rows / nDrops
@@ -1702,7 +1748,7 @@ function computeElec(){
   // Details
   var det=document.getElementById('elec-details')
   if(det) det.innerHTML=
-    'Tension: <strong style="color:var(--cyan)">'+voltage+'V '+(voltage===220?'monofasico':'trifasico')+'</strong><br>'+
+    'Tension: <strong style="color:var(--cyan)">'+voltage+'V monofasico</strong><br>'+
     'Disyuntor general: <strong style="color:var(--green)">'+totalBreaker+'A</strong><br>'+
     'Cable general: <strong style="color:var(--green)">'+totalCable+'</strong><br>'+
     'Factor seg.: <strong style="color:var(--gold)">'+safety+'x</strong><br>'+
@@ -2060,7 +2106,7 @@ async function exportPDF(){
   var date2=document.getElementById('p-date').value||new Date().toLocaleDateString('es-AR')
   var notes=document.getElementById('p-notes').value||''
   var elVolt=document.getElementById('el-voltage'),elDrps=document.getElementById('el-drops'),elWpm=document.getElementById('el-wpm2'),elSafe=document.getElementById('el-safety')
-  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'—'
+  var voltTxt=elVolt?elVolt.options[elVolt.selectedIndex].text:'220V monofasico'
   var nBajadas=elDrps?parseInt(elDrps.value):0
   var wpm2Val=elWpm?parseFloat(elWpm.value):200
   var safeVal=elSafe?parseFloat(elSafe.value):1.25
