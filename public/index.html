@@ -1717,32 +1717,49 @@ function computeElec(){
       (isOk?' — dentro del limite de '+maxMod:' — SUPERA '+maxMod+'! Usa AUTO')
   }
 
-  // Build panel→drop assignment array (sequential wiring order)
-  // panelDropMap[seqIndex] = dropIndex
-  var panelDropMap = []
+  // ── Build panel→drop assignment using PHYSICAL ORDER (row by row, L→R) ──
+  // Physical order: panel at grid position [row][col] gets index = row*cols + col
+  // This ensures drop groups are physically contiguous (no long cable jumps)
+
+  // Create array of grid indices in physical order (row 0 L→R, row 1 L→R, ...)
+  var physicalOrder = []
+  for(var r=0; r<S.rows; r++){
+    for(var c=0; c<S.cols; c++){
+      physicalOrder.push(r*S.cols+c)  // gridIdx in physical reading order
+    }
+  }
+
+  // Assign physical panels to drops evenly
+  // physDropMap[gridIdx] = dropIndex
+  var physDropMap = {}
+  var physIdx = 0
   for(var d=0; d<nDrops; d++){
     var cnt = basePanels + (d < remPanels ? 1 : 0)
-    for(var k=0; k<cnt; k++) panelDropMap.push(d)
+    for(var k=0; k<cnt && physIdx<physicalOrder.length; k++){
+      physDropMap[physicalOrder[physIdx]] = d
+      physIdx++
+    }
   }
+  window._physDropMap = physDropMap
+
+  // For renderElecMap: also build seqIdx→drop (for wiring trace coloring)
+  var panelDropMap = new Array(S.tot)
+  if(S.po) S.po.forEach(function(item,seqIdx){
+    panelDropMap[seqIdx] = physDropMap[item.gridIdx]
+  })
   window._panelDropMap = panelDropMap
 
-  // For each drop: find which grid rows/cols it covers
-  // gridToSeq[gridIdx] = seqIdx (position in wiring order)
-  var gridToSeq = {}
-  if(S.po) S.po.forEach(function(item,si){ gridToSeq[item.gridIdx]=si })
-
+  // Build _elecDrops with row/col ranges per drop
   var dropData = []
   for(var d=0; d<nDrops; d++){
     var dPanels=0, rMin=999, rMax=-1, cMin=999, cMax=-1
-    for(var gi=0; gi<S.cols*S.rows; gi++){
-      var si = gridToSeq[gi]
-      if(si===undefined) continue
-      if(panelDropMap[si]!==d) continue
+    physicalOrder.forEach(function(gi){
+      if(physDropMap[gi]!==d) return
       dPanels++
       var row=Math.floor(gi/S.cols), col=gi%S.cols
       if(row<rMin) rMin=row; if(row>rMax) rMax=row
       if(col<cMin) cMin=col; if(col>cMax) cMax=col
-    }
+    })
     var panels   = dPanels||basePanels+(d<remPanels?1:0)
     var rowStart = rMin===999?0:rMin
     var rowEnd   = rMax===-1?1:rMax+1
@@ -1838,20 +1855,24 @@ function renderElecMap(){
     ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
   })
 
-  // ── PASS 2: Draw power cable trace per drop (same style as data wiring) ──
-  // Group panels by drop, maintaining wiring order
+  // ── PASS 2: Draw power cable trace per drop in PHYSICAL ORDER (L→R, row by row) ──
+  // Use physDropMap so the cable goes left→right in each row, not following data wiring
+  var physMap = window._physDropMap || {}
   var dropPanels = {}
-  S.po.forEach(function(item,seqIdx){
-    var dIdx=pdMap[seqIdx]; if(dIdx===undefined) return
-    if(!dropPanels[dIdx]) dropPanels[dIdx]=[]
-    var c=item.gridIdx%S.cols, r=Math.floor(item.gridIdx/S.cols)
-    // Center of panel - offset to bottom 75% to separate from data wiring (center)
-    dropPanels[dIdx].push({
-      cx: c*cw+cw/2,
-      cy: r*ch+ch*0.78,  // lower than data wiring which is at 0.42
-      seq: seqIdx
-    })
-  })
+  // Walk in physical order: row by row, left to right
+  for(var r=0; r<S.rows; r++){
+    for(var c=0; c<S.cols; c++){
+      var gi = r*S.cols+c
+      var dIdx = physMap[gi]
+      if(dIdx===undefined) continue
+      if(!dropPanels[dIdx]) dropPanels[dIdx]=[]
+      dropPanels[dIdx].push({
+        cx: c*cw+cw/2,
+        cy: r*ch+ch*0.78,  // lower than data wiring (0.42) — no overlap
+        gi: gi, row: r, col: c
+      })
+    }
+  }
 
   Object.keys(dropPanels).forEach(function(dIdxStr){
     var dIdx=parseInt(dIdxStr)
