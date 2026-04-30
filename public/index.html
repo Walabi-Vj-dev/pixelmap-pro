@@ -1718,70 +1718,108 @@ function renderElecMap(){
   var cw=Math.floor(cv.width/S.cols), ch=Math.floor(cv.height/S.rows)
   if(cw<1||ch<1) return
 
-  // Re-render base map first
+  // Always re-render base data map first
   renderMap()
 
   if(!SHOW_ELEC||!_elecDrops.length) return
 
+  // ── PASS 1: Color fill de filas por bajada (fondo semitransparente) ──
+  _elecDrops.forEach(function(d){
+    var hex=d.color.replace('#','')
+    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+    for(var r=d.rowStart;r<d.rowEnd;r++){
+      for(var c=0;c<S.cols;c++){
+        ctx.fillStyle='rgba('+R+','+G+','+B+',0.15)'
+        ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
+      }
+    }
+  })
+
+  // ── PASS 2: Separadores entre bajadas (línea en borde superior de cada bajada) ──
+  _elecDrops.forEach(function(d){
+    if(d.rowStart===0) return
+    var hex=d.color.replace('#','')
+    var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.8)'
+    ctx.lineWidth=2
+    ctx.setLineDash([8,4])
+    ctx.beginPath()
+    ctx.moveTo(0,d.rowStart*ch)
+    ctx.lineTo(S.cols*cw,d.rowStart*ch)
+    ctx.stroke()
+    ctx.setLineDash([])
+  })
+
+  // ── PASS 3: Cable de tensión por bajada ──
+  // El cable va por la PARTE INFERIOR de cada bajada (separado del cableado de datos que va en el centro)
   _elecDrops.forEach(function(d){
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
 
-    // Color rows
-    for(var r=d.rowStart;r<d.rowEnd;r++){
-      for(var c=0;c<S.cols;c++){
-        ctx.fillStyle='rgba('+R+','+G+','+B+',0.22)'
-        ctx.fillRect(c*cw+1,r*ch+1,cw-2,ch-2)
-      }
-      // Left color strip
-      ctx.fillStyle=d.color
-      ctx.fillRect(0,r*ch,4,ch-1)
-    }
+    // La línea de tensión va en el borde INFERIOR de la bajada para no chocar con datos
+    var lastRow = d.rowEnd - 1
+    var py = lastRow*ch + ch*0.82   // 82% de la altura de la última fila → zona baja
 
-    // Power cable line (solid, thicker than data wiring)
-    var py = d.rowStart*ch + ch/2
-    ctx.strokeStyle=d.color
-    ctx.lineWidth=Math.max(2.5,cw*0.08)
+    // Línea principal de tensión (sólida y gruesa)
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
+    ctx.lineWidth=Math.max(3,cw*0.09)
     ctx.setLineDash([])
     ctx.lineCap='round'
-    ctx.beginPath(); ctx.moveTo(4,py); ctx.lineTo(S.cols*cw,py); ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(0,py)
+    ctx.lineTo(S.cols*cw,py)
+    ctx.stroke()
 
-    // Separator line between drops
-    if(d.rowStart>0){
-      ctx.strokeStyle='rgba('+R+','+G+','+B+',0.6)'
-      ctx.lineWidth=1.5
-      ctx.setLineDash([6,4])
-      ctx.beginPath(); ctx.moveTo(0,d.rowStart*ch); ctx.lineTo(S.cols*cw,d.rowStart*ch); ctx.stroke()
-      ctx.setLineDash([])
+    // Flechas de dirección (de izquierda a derecha = sentido de conexión)
+    var step=cw*1.5
+    for(var x=step; x<S.cols*cw-cw; x+=step){
+      var aw=Math.max(5,cw*0.2)
+      ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+      ctx.save()
+      ctx.translate(x,py)
+      ctx.beginPath()
+      ctx.moveTo(aw,0)
+      ctx.lineTo(-aw*0.5,-aw*0.5)
+      ctx.lineTo(-aw*0.5,aw*0.5)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
     }
 
-    // IN badge "B1", "B2"...
-    var bH=Math.max(12,ch*0.28), bW=Math.max(28,cw*0.4)
-    var inX=6, inY=py-bH/2
-    var fs=Math.max(7,bH*0.6)
-    ctx.fillStyle=d.color
-    roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
-    ctx.fillStyle='#000'
+    // Badge "B1 IN" a la izquierda
+    var fs=Math.max(7,Math.min(11,ch*0.22))
+    var label='B'+(d.d+1)
     ctx.font='bold '+fs+'px monospace'
+    var bW=ctx.measureText(label).width+12
+    var bH=Math.max(14,fs*1.6)
+    var bX=2, bY=py-bH/2
+    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+    roundRect(ctx,bX,bY,bW,bH,3); ctx.fill()
+    ctx.fillStyle='#000'
     ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText('B'+(d.d+1),inX+bW/2,py)
+    ctx.fillText(label,bX+bW/2,py)
 
-    // OUT label with amps
-    if(SHOW_AMPS){
-      var ampText=d.amps+'A'
-      ctx.font='bold '+fs+'px monospace'
-      var ampW=ctx.measureText(ampText).width+10
-      var ampX=S.cols*cw-ampW-4
-      ctx.fillStyle='rgba(0,0,0,0.78)'
-      roundRect(ctx,ampX,py-bH/2,ampW,bH,3); ctx.fill()
-      ctx.strokeStyle=d.color; ctx.lineWidth=1
-      roundRect(ctx,ampX,py-bH/2,ampW,bH,3); ctx.stroke()
-      ctx.fillStyle=d.color
-      ctx.textAlign='center'; ctx.textBaseline='middle'
-      ctx.fillText(ampText,ampX+ampW/2,py)
-    }
+    // Badge "Xamps" o "OUT" a la derecha
+    var rightLabel=SHOW_AMPS?d.amps+'A':'OUT'
+    ctx.font='bold '+fs+'px monospace'
+    var rW=ctx.measureText(rightLabel).width+12
+    var rX=S.cols*cw-rW-2
+    ctx.fillStyle='rgba(0,0,0,0.85)'
+    roundRect(ctx,rX,bY,rW,bH,3); ctx.fill()
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.5
+    roundRect(ctx,rX,bY,rW,bH,3); ctx.stroke()
+    ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
+    ctx.textAlign='center'; ctx.textBaseline='middle'
+    ctx.fillText(rightLabel,rX+rW/2,py)
+
+    // Barra de color fina a la izquierda (identificador de bajada)
+    ctx.fillStyle='rgba('+R+','+G+','+B+',0.9)'
+    ctx.fillRect(0,d.rowStart*ch,5,(d.rowEnd-d.rowStart)*ch)
   })
+
   ctx.setLineDash([])
+  ctx.textAlign='left'
+  ctx.textBaseline='alphabetic'
 }
 
 function toggleElecLayer(layer){
