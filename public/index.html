@@ -1140,7 +1140,7 @@ window.addEventListener('resize',function(){if(window.innerWidth>=1024)closeSide
 // MULTI-SCREEN
 function makeScreen(num){
   return{id:Date.now()+Math.random(),name:'Pantalla '+num,color:SCREEN_COLORS[(num-1)%SCREEN_COLORS.length],
-    pitch:'3.9',w:'4',h:'3',mw:'50',mh:'100',ppp:'650000',ports:'8',dir:'h-snake',
+    pitch:'3.9',w:'4',h:'3',mw:'50',mh:'100',elMaxMod:12,ppp:'650000',ports:'8',dir:'h-snake',
     title:'',client:'',location:'',date:new Date().toISOString().slice(0,10),notes:'',logo:null,portLabels:{},S:{}}
 }
 function saveCurrentScreenState(){
@@ -1155,11 +1155,14 @@ function saveCurrentScreenState(){
   sc.client=document.getElementById('p-client').value; sc.location=document.getElementById('p-loc').value
   sc.date=document.getElementById('p-date').value; sc.notes=document.getElementById('p-notes').value
   sc.logo=LOGO; sc.S=Object.assign({},S)
+  var mmSave=document.getElementById('el-maxmod'); if(mmSave) sc.elMaxMod=parseInt(mmSave.value)||12
 }
 function loadScreenState(idx){
   var sc=SCREENS[idx]; if(!sc) return
   CURRENT_SCREEN=idx; LOGO=sc.logo||null
   var nm=document.getElementById('p-screen-name'); if(nm) nm.value=sc.name||''
+  var mmEl=document.getElementById('el-maxmod'); if(mmEl) mmEl.value=sc.elMaxMod||12
+  var drEl=document.getElementById('el-drops'); if(drEl) drEl.value=''
   document.getElementById('cf-pitch').value=sc.pitch||'5'
   document.getElementById('cf-w').value=sc.w||'4'; document.getElementById('cf-h').value=sc.h||'3'
   document.getElementById('cf-mw').value=sc.mw||'50'; document.getElementById('cf-mh').value=sc.mh||'100'
@@ -1692,87 +1695,69 @@ function computeElec(){
   var wMaxTotal = Math.round(wpm2 * totalArea)
   var wAvgTotal = Math.round(wpm2 * 0.27 * totalArea)
 
-  // AUTO: calculate minimum drops needed based on total panels / maxMod
+  // ── Calculate drops: divide total panels evenly by maxMod ──
+  // nDrops = ceil(total / maxMod), then distribute evenly
   var minDropsNeeded = Math.ceil(S.tot / maxMod)
   var dropsInput = document.getElementById('el-drops')
-
   var nDrops = dropsInput ? parseInt(dropsInput.value)||0 : 0
-  if(nDrops < minDropsNeeded){
-    nDrops = minDropsNeeded
-    if(dropsInput) dropsInput.value = nDrops
-  }
+  if(nDrops < minDropsNeeded){ nDrops = minDropsNeeded; if(dropsInput) dropsInput.value = nDrops }
   nDrops = Math.max(1, nDrops)
 
-  // Show info
+  // Panels per drop (balanced: base + 1 for first 'remainder' drops)
+  var basePanels = Math.floor(S.tot / nDrops)
+  var remPanels  = S.tot % nDrops
+
+  // Info display
   var infoEl = document.getElementById('el-drops-info')
-  var panelsPerDrop = Math.ceil(S.tot / nDrops)
-  var isOk = panelsPerDrop <= maxMod
+  var ppd = basePanels + (remPanels > 0 ? 1 : 0)
+  var isOk = ppd <= maxMod
   if(infoEl){
     infoEl.style.color = isOk ? 'var(--green)' : 'var(--red)'
-    infoEl.textContent = (isOk ? '✓ ' : '⚠ ') + panelsPerDrop + ' mod/linea promedio' +
-      (isOk ? ' — dentro del limite de '+maxMod : ' — SUPERA el limite de '+maxMod+'! Usa AUTO')
+    infoEl.textContent = (isOk?'✓ ':'⚠ ')+ppd+' mod/linea max'+
+      (isOk?' — dentro del limite de '+maxMod:' — SUPERA '+maxMod+'! Usa AUTO')
   }
 
-  // ── Distribute panels into drops (by panel count, not by rows) ──
-  // Base count per drop, distribute remainder
-  var baseCount = Math.floor(S.tot / nDrops)
-  var remainder = S.tot % nDrops
-  _elecDrops = []
-
-  // Build a map: panelIndex (in grid order) → drop index
-  var panelDrop = new Array(S.tot)
-  var pIdx = 0
+  // Build panel→drop assignment array (sequential wiring order)
+  // panelDropMap[seqIndex] = dropIndex
+  var panelDropMap = []
   for(var d=0; d<nDrops; d++){
-    var cnt = baseCount + (d < remainder ? 1 : 0)
-    for(var k=0; k<cnt; k++){
-      panelDrop[pIdx++] = d
-    }
+    var cnt = basePanels + (d < remPanels ? 1 : 0)
+    for(var k=0; k<cnt; k++) panelDropMap.push(d)
   }
+  window._panelDropMap = panelDropMap
 
-  // Now figure out which ROWS each drop covers (for visual coloring)
-  // A drop may span partial rows — track min/max row per drop
-  var dropRowMin = new Array(nDrops).fill(999)
-  var dropRowMax = new Array(nDrops).fill(-1)
-  var dropPanels = new Array(nDrops).fill(0)
+  // For each drop: find which grid rows/cols it covers
+  // gridToSeq[gridIdx] = seqIdx (position in wiring order)
+  var gridToSeq = {}
+  if(S.po) S.po.forEach(function(item,si){ gridToSeq[item.gridIdx]=si })
 
-  // Walk panels in grid order (row by row, respecting wiring direction)
-  for(var r=0; r<S.rows; r++){
-    for(var c=0; c<S.cols; c++){
-      var gi = r*S.cols+c
-      // Find sequential index of this panel in wiring order
-      var seqIdx = -1
-      for(var si=0; si<S.po.length; si++){
-        if(S.po[si].gridIdx===gi){ seqIdx=si; break }
-      }
-      if(seqIdx<0) continue
-      var dIdx = panelDrop[seqIdx]
-      if(dIdx===undefined) continue
-      dropPanels[dIdx]++
-      if(r < dropRowMin[dIdx]) dropRowMin[dIdx] = r
-      if(r > dropRowMax[dIdx]) dropRowMax[dIdx] = r
-    }
-  }
-
-  // Build _elecDrops with correct row ranges
+  var dropData = []
   for(var d=0; d<nDrops; d++){
-    var panels   = dropPanels[d] || (baseCount + (d<remainder?1:0))
-    var rowStart = dropRowMin[d]===999 ? Math.floor(d*(S.rows/nDrops)) : dropRowMin[d]
-    var rowEnd   = dropRowMax[d]===-1  ? Math.min(rowStart+1,S.rows)   : dropRowMax[d]+1
-    var wMax     = Math.round(wpm2 * panels * mArea)
-    var wAvg     = Math.round(wMax * 0.27)
-    var amps     = Math.round((wMax * safety / voltage) * 10) / 10
+    var dPanels=0, rMin=999, rMax=-1, cMin=999, cMax=-1
+    for(var gi=0; gi<S.cols*S.rows; gi++){
+      var si = gridToSeq[gi]
+      if(si===undefined) continue
+      if(panelDropMap[si]!==d) continue
+      dPanels++
+      var row=Math.floor(gi/S.cols), col=gi%S.cols
+      if(row<rMin) rMin=row; if(row>rMax) rMax=row
+      if(col<cMin) cMin=col; if(col>cMax) cMax=col
+    }
+    var panels   = dPanels||basePanels+(d<remPanels?1:0)
+    var rowStart = rMin===999?0:rMin
+    var rowEnd   = rMax===-1?1:rMax+1
+    var colStart = cMin===999?0:cMin
+    var colEnd   = cMax===-1?S.cols:cMax+1
+    var wMax     = Math.round(wpm2*panels*mArea)
+    var wAvg     = Math.round(wMax*0.27)
+    var amps     = Math.round((wMax*safety/voltage)*10)/10
     var breaker  = amps<=10?10:amps<=16?16:amps<=20?20:amps<=25?25:amps<=32?32:40
     var cable    = amps<=10?'1.5mm²':amps<=16?'2.5mm²':amps<=25?'4mm²':'6mm²'
-    _elecDrops.push({
-      d:d, rowStart:rowStart, rowEnd:rowEnd, rows:rowEnd-rowStart,
-      panels:panels, wMax:wMax, wAvg:wAvg, amps:amps,
-      breaker:breaker, cable:cable,
-      color:ELEC_COLORS[d%ELEC_COLORS.length],
-      panelDrop:panelDrop  // store for map rendering
-    })
+    dropData.push({d:d,rowStart:rowStart,rowEnd:rowEnd,colStart:colStart,colEnd:colEnd,
+      rows:rowEnd-rowStart,panels:panels,wMax:wMax,wAvg:wAvg,amps:amps,
+      breaker:breaker,cable:cable,color:ELEC_COLORS[d%ELEC_COLORS.length]})
   }
-  // Store global panel→drop map for renderElecMap
-  window._panelDropMap = panelDrop
+  _elecDrops = dropData
 
   var totalAmps = Math.round((_elecDrops.reduce(function(a,d){return a+d.wMax},0) * safety / voltage)*10)/10
   var totalBreaker = totalAmps<=16?16:totalAmps<=20?20:totalAmps<=25?25:totalAmps<=32?32:totalAmps<=40?40:63
@@ -1869,33 +1854,44 @@ function renderElecMap(){
     })
   }
 
-  // ── PASS 2: Separadores entre bajadas (línea en borde superior de cada bajada) ──
-  _elecDrops.forEach(function(d){
-    if(d.rowStart===0) return
+  // ── PASS 2: Separadores entre bajadas ──
+  // For multi-row screens: horizontal line between row groups
+  // For single-row screens: vertical line between column groups
+  _elecDrops.forEach(function(d,i){
+    if(i===0) return
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.8)'
+    ctx.strokeStyle='rgba('+R+','+G+','+B+',0.9)'
     ctx.lineWidth=2
     ctx.setLineDash([8,4])
     ctx.beginPath()
-    ctx.moveTo(0,d.rowStart*ch)
-    ctx.lineTo(S.cols*cw,d.rowStart*ch)
+    if(S.rows===1){
+      // Single row: vertical separator at colStart
+      ctx.moveTo(d.colStart*cw, 0)
+      ctx.lineTo(d.colStart*cw, S.rows*ch)
+    } else {
+      // Multi row: horizontal separator at rowStart
+      ctx.moveTo(0, d.rowStart*ch)
+      ctx.lineTo(S.cols*cw, d.rowStart*ch)
+    }
     ctx.stroke()
     ctx.setLineDash([])
   })
 
   // ── PASS 3: Cable de tensión por bajada ──
-  // El cable va por la PARTE INFERIOR de cada bajada (separado del cableado de datos que va en el centro)
   _elecDrops.forEach(function(d){
     var hex=d.color.replace('#','')
     var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
 
-    // Para pantallas de 1 fila: línea en zona baja del panel
-    // Para pantallas multi-fila: línea en borde inferior de la bajada
-    var lastRow = Math.max(d.rowStart, d.rowEnd - 1)
-    var py = (S.rows===1)
-      ? ch * 0.82
-      : lastRow*ch + ch*0.82
+    var isSingleRow = S.rows===1
+
+    // Line position: bottom 82% of the drop zone
+    var lastRow = Math.max(d.rowStart, d.rowEnd-1)
+    var py = lastRow*ch + ch*0.82
+
+    // For single-row: cable spans only the columns of this drop
+    var xStart = isSingleRow ? d.colStart*cw : 0
+    var xEnd   = isSingleRow ? d.colEnd*cw   : S.cols*cw
 
     // Línea principal de tensión (sólida y gruesa)
     ctx.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
@@ -1903,44 +1899,38 @@ function renderElecMap(){
     ctx.setLineDash([])
     ctx.lineCap='round'
     ctx.beginPath()
-    ctx.moveTo(0,py)
-    ctx.lineTo(S.cols*cw,py)
+    ctx.moveTo(xStart,py)
+    ctx.lineTo(xEnd,py)
     ctx.stroke()
 
-    // Flechas de dirección (de izquierda a derecha = sentido de conexión)
+    // Flechas de dirección
     var step=cw*1.5
-    for(var x=step; x<S.cols*cw-cw; x+=step){
+    for(var x=xStart+step; x<xEnd-cw; x+=step){
       var aw=Math.max(5,cw*0.2)
       ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
-      ctx.save()
-      ctx.translate(x,py)
-      ctx.beginPath()
-      ctx.moveTo(aw,0)
-      ctx.lineTo(-aw*0.5,-aw*0.5)
-      ctx.lineTo(-aw*0.5,aw*0.5)
-      ctx.closePath()
-      ctx.fill()
-      ctx.restore()
+      ctx.save(); ctx.translate(x,py)
+      ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.5,-aw*0.5); ctx.lineTo(-aw*0.5,aw*0.5)
+      ctx.closePath(); ctx.fill(); ctx.restore()
     }
 
-    // Badge "B1 IN" a la izquierda
+    // Badge "B1" a la izquierda del tramo
     var fs=Math.max(7,Math.min(11,ch*0.22))
     var label='B'+(d.d+1)
     ctx.font='bold '+fs+'px monospace'
     var bW=ctx.measureText(label).width+12
     var bH=Math.max(14,fs*1.6)
-    var bX=2, bY=py-bH/2
+    var bX=xStart+2, bY=py-bH/2
     ctx.fillStyle='rgba('+R+','+G+','+B+',1)'
     roundRect(ctx,bX,bY,bW,bH,3); ctx.fill()
     ctx.fillStyle='#000'
     ctx.textAlign='center'; ctx.textBaseline='middle'
     ctx.fillText(label,bX+bW/2,py)
 
-    // Badge "Xamps" o "OUT" a la derecha
+    // Badge "Xamps" o "OUT" a la derecha del tramo
     var rightLabel=SHOW_AMPS?d.amps+'A':'OUT'
     ctx.font='bold '+fs+'px monospace'
     var rW=ctx.measureText(rightLabel).width+12
-    var rX=S.cols*cw-rW-2
+    var rX=xEnd-rW-2
     ctx.fillStyle='rgba(0,0,0,0.85)'
     roundRect(ctx,rX,bY,rW,bH,3); ctx.fill()
     ctx.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx.lineWidth=1.5
@@ -1949,9 +1939,13 @@ function renderElecMap(){
     ctx.textAlign='center'; ctx.textBaseline='middle'
     ctx.fillText(rightLabel,rX+rW/2,py)
 
-    // Barra de color fina a la izquierda (identificador de bajada)
+    // Barra de color lateral (izquierda para multi-row, arriba para single-row)
     ctx.fillStyle='rgba('+R+','+G+','+B+',0.9)'
-    ctx.fillRect(0,d.rowStart*ch,5,(d.rowEnd-d.rowStart)*ch)
+    if(isSingleRow){
+      ctx.fillRect(d.colStart*cw, 0, 4, ch)
+    } else {
+      ctx.fillRect(0, d.rowStart*ch, 5, (d.rowEnd-d.rowStart)*ch)
+    }
   })
 
   ctx.setLineDash([])
