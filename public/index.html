@@ -334,8 +334,8 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
           <div class="cp-b">
             <div class="fg"><label id="lbl-pitch">Pitch</label>
               <select id="cf-pitch" onchange="compute();markUnsaved()">
-                <option value="2.5">P2.5</option><option value="3">P3</option><option value="3.9">P3.9</option>
-                <option value="4">P4</option><option value="4.8">P4.8</option><option value="5" selected>P5</option>
+                <option value="2.5">P2.5</option><option value="3">P3</option><option value="3.9" selected>P3.9</option>
+                <option value="4">P4</option><option value="4.8">P4.8</option><option value="5">P5</option>
                 <option value="6">P6</option><option value="6.25">P6.25</option><option value="8">P8</option><option value="10">P10</option>
               </select>
             </div>
@@ -1099,7 +1099,7 @@ window.addEventListener('resize',function(){if(window.innerWidth>=1024)closeSide
 // MULTI-SCREEN
 function makeScreen(num){
   return{id:Date.now()+Math.random(),name:'Pantalla '+num,color:SCREEN_COLORS[(num-1)%SCREEN_COLORS.length],
-    pitch:'5',w:'4',h:'3',mw:'50',mh:'100',ppp:'650000',ports:'8',dir:'h-snake',
+    pitch:'3.9',w:'4',h:'3',mw:'50',mh:'100',ppp:'650000',ports:'8',dir:'h-snake',
     title:'',client:'',location:'',date:new Date().toISOString().slice(0,10),notes:'',logo:null,portLabels:{},S:{}}
 }
 function saveCurrentScreenState(){
