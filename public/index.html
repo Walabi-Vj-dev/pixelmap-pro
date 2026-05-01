@@ -1339,7 +1339,8 @@ function computeMixed(){
 
   // Recap
   var rb=document.getElementById('recap-box')
-  if(rb) rb.innerHTML='Modulos mixtos ('+MIX_DIR==='rows'?'por filas':'por columnas')+')<br>'+
+  var mixDirLabel = MIX_DIR==='rows' ? 'por filas' : 'por columnas'
+  if(rb) rb.innerHTML='Modulos mixtos ('+mixDirLabel+')<br>'+
     'Pantalla: P'+pit+' · '+mc.W+'x'+mc.H+'m<br>'+
     'Zona 1: '+mc.z1.mw+'x'+mc.z1.mh+'cm · '+(MIX_DIR==='rows'?mc.z1.rows+' filas':mc.z1.cols+' cols')+' · '+mc.z1.panels+' paneles<br>'+
     'Zona 2: '+mc.z2.mw+'x'+mc.z2.mh+'cm · '+(MIX_DIR==='rows'?mc.z2.rows+' filas':mc.z2.cols+' cols')+' · '+mc.z2.panels+' paneles<br>'+
