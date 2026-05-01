@@ -366,20 +366,20 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
               <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.25);border-radius:var(--r);padding:8px 10px;margin-bottom:6px">
                 <div style="font-size:10px;font-weight:700;color:var(--cyan);margin-bottom:6px">Zona 1 — Modulo principal</div>
                 <div class="fg2">
-                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z1-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
-                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z1-mh" value="100" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z1-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z1-mh" value="100" min="10" max="200" step="5" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
                 </div>
-                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z1-size-label">Filas</label><input type="number" id="z1-count" value="2" min="1" max="99" onchange="compute();markUnsaved()"></div>
+                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z1-size-label">Filas</label><input type="number" id="z1-count" value="2" min="1" max="99" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
                 <div style="font-size:9px;color:var(--txt3);margin-top:4px" id="z1-info"></div>
               </div>
               <!-- Zone 2 -->
               <div style="background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.25);border-radius:var(--r);padding:8px 10px">
                 <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:6px">Zona 2 — Modulo secundario</div>
                 <div class="fg2">
-                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z2-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
-                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z2-mh" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z2-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z2-mh" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
                 </div>
-                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z2-size-label">Filas</label><input type="number" id="z2-count" value="1" min="1" max="99" onchange="compute();markUnsaved()"></div>
+                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z2-size-label">Filas</label><input type="number" id="z2-count" value="1" min="1" max="99" onchange="compute();markUnsaved()" oninput="compute();markUnsaved()"></div>
                 <div style="font-size:9px;color:var(--txt3);margin-top:4px" id="z2-info"></div>
               </div>
             </div>
@@ -1375,29 +1375,33 @@ function computeMixed(){
     pn+'/'+maxP+' cables'
 
   if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
-  renderMixedMap()
-  renderPorts()
-  renderProcView()
-  if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
-  if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
+  // Use rAF to ensure DOM is ready before drawing
+  requestAnimationFrame(function(){
+    renderMixedMap()
+    renderPorts()
+    renderProcView()
+    if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
+    if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
+  })
 }
 
 function renderMixedMap(){
   var mc = window._mixedCfg; if(!mc) return
   var wrap = document.querySelector('.canvas-wrap')
   var grid = document.getElementById('pixelgrid')
+  if(!wrap||!grid) return
 
-  // Ensure canvas exists
-  if(!document.getElementById('map-canvas')){
-    grid.innerHTML=''
-    var newcv=document.createElement('canvas')
-    newcv.id='map-canvas'; newcv.style.cssText='display:block;cursor:crosshair'
-    grid.appendChild(newcv)
-  }
+  // Ensure canvas exists and is the only child
   var cv=document.getElementById('map-canvas')
+  if(!cv){
+    grid.innerHTML=''
+    cv=document.createElement('canvas')
+    cv.id='map-canvas'; cv.style.cssText='display:block;cursor:crosshair'
+    grid.appendChild(cv)
+  }
   var ctx=cv.getContext('2d')
 
-  var availW=(wrap.clientWidth||700)-32
+  var availW=Math.max(400,(wrap?wrap.clientWidth:700)-32)
   var z=ZL/100
   var cols=mc.cols
   var viewMode=document.getElementById('view-mode')?document.getElementById('view-mode').value:'panel'
@@ -1590,64 +1594,101 @@ function renderMixedMap(){
   var infobar=document.getElementById('infobar')
   if(infobar) infobar.textContent='Mixto · Z1:'+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Z2:'+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · '+mc.rw+'x'+mc.rh+' px'
 
-  // Draw electrical overlay on top if active
-  if(SHOW_ELEC && _elecDrops && _elecDrops.length && window._panelDropMap){
+  // Draw electrical overlay following the SAME SERPENTINE as data wiring
+  if(SHOW_ELEC && _elecDrops && _elecDrops.length){
     var cv2=document.getElementById('map-canvas'); if(!cv2) return
     var ctx2=cv2.getContext('2d')
-    var cw2=Math.floor(cv2.width/S.cols)
-    // Get row heights for mixed mode
-    var z1ch2=mc.dir==='rows'?Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw))):Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw)))
-    var z2ch2=mc.dir==='rows'?Math.max(6,Math.floor(cw2*(mc.z2.mh/mc.z2.mw))):z1ch2
+    var cw2=Math.floor(cv2.width/mc.cols)
+    var z1ch2=Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw)))
+    var z2ch2=Math.max(6,Math.floor(cw2*(mc.z2.mh/mc.z2.mw)))
     var sepY2=mc.z1.rows*z1ch2
-    // Draw elec cables using _panelDropMap — same as normal but with variable row heights
-    if(window._panelDropMap && S.po && S.po.length){
-      var dropPanels2={}
-      S.po.forEach(function(item,si){
-        var di=window._panelDropMap[si]; if(di===undefined) return
-        if(!dropPanels2[di]) dropPanels2[di]=[]
-        var r=Math.floor(item.gridIdx/mc.cols), c=item.gridIdx%mc.cols
-        var isZ1=(r<mc.z1.rows)
-        var ch_e=isZ1?z1ch2:z2ch2
-        var yBase=isZ1?r*z1ch2:(sepY2+((r-mc.z1.rows)*z2ch2))
-        dropPanels2[di].push({cx:c*cw2+cw2/2, cy:yBase+ch_e*0.82})
-      })
-      Object.keys(dropPanels2).forEach(function(dStr){
-        var di=parseInt(dStr), d=_elecDrops[di]; if(!d) return
-        var pts2=dropPanels2[di]; if(!pts2||!pts2.length) return
-        var hex=d.color.replace('#','')
-        var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
-        ctx2.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
-        ctx2.lineWidth=Math.max(2.5,cw2*0.08); ctx2.setLineDash([]); ctx2.lineCap='round'; ctx2.lineJoin='round'
-        ctx2.beginPath(); ctx2.moveTo(pts2[0].cx,pts2[0].cy)
-        for(var i=1;i<pts2.length;i++) ctx2.lineTo(pts2[i].cx,pts2[i].cy)
-        ctx2.stroke()
-        // Arrows
-        for(var i=0;i<pts2.length-1;i++){
-          var mx2=(pts2[i].cx+pts2[i+1].cx)/2,my2=(pts2[i].cy+pts2[i+1].cy)/2
-          var ang=Math.atan2(pts2[i+1].cy-pts2[i].cy,pts2[i+1].cx-pts2[i].cx)
-          var aw2=Math.max(3,cw2*0.13)
-          ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'
-          ctx2.save(); ctx2.translate(mx2,my2); ctx2.rotate(ang)
-          ctx2.beginPath(); ctx2.moveTo(aw2,0); ctx2.lineTo(-aw2*0.6,-aw2*0.4); ctx2.lineTo(-aw2*0.6,aw2*0.4)
-          ctx2.closePath(); ctx2.fill(); ctx2.restore()
+    var dirE=document.getElementById('cf-dir').value
+
+    // Build serpentine panel positions (same order as data wiring)
+    // Each point is at 82% height (lower than data wiring at 42%)
+    var serpPts=[]
+    var totalRows2=mc.z1.rows+mc.z2.rows
+    for(var _r=0;_r<totalRows2;_r++){
+      var isZ12=(_r<mc.z1.rows)
+      var ch_r2=isZ12?z1ch2:z2ch2
+      var yBase2=isZ12?_r*z1ch2:(sepY2+((_r-mc.z1.rows)*z2ch2))
+      var evenR2=(_r%2===0)
+      var cols2=mc.cols
+      if(dirE==='v-snake'){
+        // vertical: column by column
+        serpPts.push({row:_r})
+      } else {
+        // h-snake or h-line
+        var colArr=[]
+        if(dirE==='h-line'||evenR2){
+          for(var _c=0;_c<cols2;_c++) colArr.push(_c)
+        } else {
+          for(var _c=cols2-1;_c>=0;_c--) colArr.push(_c)
         }
-        // B1/B2 badge
-        var fs_e=Math.max(6,Math.min(9,cw2*0.2))
-        ctx2.font='bold '+fs_e+'px monospace'
-        var lbl_e='B'+(di+1), bW_e=ctx2.measureText(lbl_e).width+8, bH_e=Math.max(10,fs_e*1.5)
-        ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'; roundRect(ctx2,pts2[0].cx-cw2/2+1,pts2[0].cy-bH_e/2,bW_e,bH_e,3); ctx2.fill()
-        ctx2.fillStyle='#000'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
-        ctx2.fillText(lbl_e,pts2[0].cx-cw2/2+1+bW_e/2,pts2[0].cy)
-        // OUT badge
-        var last_e=pts2[pts2.length-1]
-        var rl_e=SHOW_AMPS?d.amps+'A':'OUT', rW_e=ctx2.measureText(rl_e).width+8
-        ctx2.fillStyle='rgba(0,0,0,0.82)'; roundRect(ctx2,last_e.cx+cw2/2-rW_e-2,last_e.cy-bH_e/2,rW_e,bH_e,3); ctx2.fill()
-        ctx2.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx2.lineWidth=1
-        roundRect(ctx2,last_e.cx+cw2/2-rW_e-2,last_e.cy-bH_e/2,rW_e,bH_e,3); ctx2.stroke()
-        ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
-        ctx2.fillText(rl_e,last_e.cx+cw2/2-rW_e/2-2,last_e.cy)
-      })
+        colArr.forEach(function(_c){
+          serpPts.push({x:_c*cw2+cw2/2, y:yBase2+ch_r2*0.82})
+        })
+      }
     }
+
+    // Assign serpentine points to drops using _panelDropMap
+    var pdMap2=window._panelDropMap
+    var dropSegs={}
+    serpPts.forEach(function(pt,si){
+      if(!pt.x) return // skip placeholder
+      var di=pdMap2?pdMap2[si]:Math.floor(si/Math.ceil(serpPts.length/_elecDrops.length))
+      if(di===undefined||di>=_elecDrops.length) return
+      if(!dropSegs[di]) dropSegs[di]=[]
+      dropSegs[di].push(pt)
+    })
+
+    // Draw each drop's cable following the serpentine path
+    Object.keys(dropSegs).forEach(function(dStr){
+      var di=parseInt(dStr), d=_elecDrops[di]; if(!d) return
+      var pts=dropSegs[di]; if(!pts||!pts.length) return
+      var hex=d.color.replace('#','')
+      var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+
+      // Cable line
+      ctx2.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
+      ctx2.lineWidth=Math.max(2.5,cw2*0.08)
+      ctx2.setLineDash([]); ctx2.lineCap='round'; ctx2.lineJoin='round'
+      ctx2.beginPath(); ctx2.moveTo(pts[0].x,pts[0].y)
+      for(var i=1;i<pts.length;i++) ctx2.lineTo(pts[i].x,pts[i].y)
+      ctx2.stroke()
+
+      // Directional arrows
+      for(var i=0;i<pts.length-1;i++){
+        var mx3=(pts[i].x+pts[i+1].x)/2, my3=(pts[i].y+pts[i+1].y)/2
+        var ang2=Math.atan2(pts[i+1].y-pts[i].y, pts[i+1].x-pts[i].x)
+        var aw3=Math.max(3,cw2*0.13)
+        ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'
+        ctx2.save(); ctx2.translate(mx3,my3); ctx2.rotate(ang2)
+        ctx2.beginPath(); ctx2.moveTo(aw3,0); ctx2.lineTo(-aw3*0.6,-aw3*0.4); ctx2.lineTo(-aw3*0.6,aw3*0.4)
+        ctx2.closePath(); ctx2.fill(); ctx2.restore()
+      }
+
+      // B1/B2... badge at first point
+      var fs_e2=Math.max(6,Math.min(9,cw2*0.2))
+      ctx2.font='bold '+fs_e2+'px monospace'
+      var lbl_e2='B'+(di+1), bW_e2=ctx2.measureText(lbl_e2).width+8, bH_e2=Math.max(10,fs_e2*1.5)
+      ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'
+      roundRect(ctx2,pts[0].x-cw2/2+1,pts[0].y-bH_e2/2,bW_e2,bH_e2,3); ctx2.fill()
+      ctx2.fillStyle='#000'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
+      ctx2.fillText(lbl_e2,pts[0].x-cw2/2+1+bW_e2/2,pts[0].y)
+
+      // OUT/Amps badge at last point
+      var last_e2=pts[pts.length-1]
+      var rl_e2=SHOW_AMPS?d.amps+'A':'OUT'
+      ctx2.font='bold '+fs_e2+'px monospace'
+      var rW_e2=ctx2.measureText(rl_e2).width+8
+      ctx2.fillStyle='rgba(0,0,0,0.82)'
+      roundRect(ctx2,last_e2.x+cw2/2-rW_e2-2,last_e2.y-bH_e2/2,rW_e2,bH_e2,3); ctx2.fill()
+      ctx2.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx2.lineWidth=1
+      roundRect(ctx2,last_e2.x+cw2/2-rW_e2-2,last_e2.y-bH_e2/2,rW_e2,bH_e2,3); ctx2.stroke()
+      ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
+      ctx2.fillText(rl_e2,last_e2.x+cw2/2-rW_e2/2-2,last_e2.y)
+    })
   }
 }
 
