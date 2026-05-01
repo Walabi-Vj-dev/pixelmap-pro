@@ -347,6 +347,42 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
               <div><label id="lbl-mh">Alto mod</label><input type="number" id="cf-mh" value="100" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
             </div>
             <div style="font-size:10px;color:var(--txt3);text-align:center;margin-bottom:6px" id="mod-info"></div>
+            <!-- Mixed modules toggle -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;margin-bottom:4px;border-top:1px solid var(--b1);border-bottom:1px solid var(--b1)">
+              <span style="font-size:10px;color:var(--txt2)">Modulos mixtos</span>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="cf-mixed" onchange="toggleMixed()" style="width:14px;height:14px;cursor:pointer">
+                <span style="font-size:9px;color:var(--txt3)" id="mixed-label">OFF</span>
+              </label>
+            </div>
+            <!-- Mixed zones (hidden by default) -->
+            <div id="mixed-zones" style="display:none">
+              <div style="margin-bottom:8px;font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:1px">Division</div>
+              <div style="display:flex;gap:4px;margin-bottom:10px">
+                <button id="mix-by-rows" onclick="setMixMode('rows')" style="flex:1;padding:6px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.4);border-radius:var(--r);color:var(--cyan);font-family:inherit;font-size:10px;cursor:pointer;font-weight:700">Por filas</button>
+                <button id="mix-by-cols" onclick="setMixMode('cols')" style="flex:1;padding:6px;background:transparent;border:1px solid var(--b1);border-radius:var(--r);color:var(--txt3);font-family:inherit;font-size:10px;cursor:pointer">Por columnas</button>
+              </div>
+              <!-- Zone 1 -->
+              <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.25);border-radius:var(--r);padding:8px 10px;margin-bottom:6px">
+                <div style="font-size:10px;font-weight:700;color:var(--cyan);margin-bottom:6px">Zona 1 — Modulo principal</div>
+                <div class="fg2">
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z1-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z1-mh" value="100" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                </div>
+                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z1-size-label">Filas</label><input type="number" id="z1-count" value="2" min="1" max="99" onchange="compute();markUnsaved()"></div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:4px" id="z1-info"></div>
+              </div>
+              <!-- Zone 2 -->
+              <div style="background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.25);border-radius:var(--r);padding:8px 10px">
+                <div style="font-size:10px;font-weight:700;color:var(--gold);margin-bottom:6px">Zona 2 — Modulo secundario</div>
+                <div class="fg2">
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Ancho mod (cm)</label><input type="number" id="z2-mw" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                  <div><label style="font-size:9px;color:var(--txt3);display:block;margin-bottom:3px">Alto mod (cm)</label><input type="number" id="z2-mh" value="50" min="10" max="200" step="5" onchange="compute();markUnsaved()"></div>
+                </div>
+                <div class="fg" style="margin-bottom:0"><label style="font-size:10px;color:var(--txt2)" id="z2-size-label">Filas</label><input type="number" id="z2-count" value="1" min="1" max="99" onchange="compute();markUnsaved()"></div>
+                <div style="font-size:9px;color:var(--txt3);margin-top:4px" id="z2-info"></div>
+              </div>
+            </div>
             <div class="fg"><label id="lbl-ppp">Px/Puerto</label><input type="number" id="cf-ppp" value="650000" min="50000" step="50000" onchange="compute();markUnsaved()"></div>
             <div class="fg2">
               <div><label id="lbl-ports">Puertos</label>
@@ -1254,10 +1290,190 @@ function setPortLabel(portNum,label){
 }
 
 // COMPUTE
+
+function computeMixed(){
+  var mc = getMixedConfig()
+  window._mixedCfg = mc
+  var ppp    = parseInt(document.getElementById('cf-ppp').value)||650000
+  var maxP   = parseInt(document.getElementById('cf-ports').value)||8
+  var dir2   = document.getElementById('cf-dir').value
+
+  // For stats: treat as combined screen
+  var tot = mc.tot, rw = mc.rw, rh = mc.rh, pit = mc.pit
+  var tpx = 0
+  if(mc.z1) tpx += mc.z1.panels * mc.z1.mpw * mc.z1.mph
+  if(mc.z2) tpx += mc.z2.panels * mc.z2.mpw * mc.z2.mph
+  var mpx = (tpx/1e6).toFixed(2)
+
+  // Simple port distribution based on total panels
+  var ppmax = Math.max(1,Math.floor(ppp/(mc.z1.mpw*mc.z1.mph)))
+  var pn    = Math.ceil(tot/ppmax)
+  var base  = Math.floor(tot/pn), rem = tot%pn
+  var sizes = Array.from({length:pn},function(_,i){return base+(i<rem?1:0)})
+
+  // Simplified S for stats/export (use z1 module as reference)
+  S={W:mc.W,H:mc.H,pit:pit,mw:mc.z1.mw,mh:mc.z1.mh,ppp:ppp,maxP:maxP,
+     cols:mc.cols,rows:mc.rows,tot:tot,
+     mpw:mc.z1.mpw,mph:mc.z1.mph,ppp2:mc.z1.mpw*mc.z1.mph,
+     rw:rw,rh:rh,tpx:tpx,mpx:mpx,pn:pn,ppport:base,dir:dir2,
+     ps:sizes.map(function(cnt,i){return{portNum:i+1,panelCount:cnt,totalPx:cnt*mc.z1.mpw*mc.z1.mph,usagePct:Math.round((cnt*mc.z1.mpw*mc.z1.mph/ppp)*100),color:PORT_COLORS[i%PORT_COLORS.length]}}),
+     pi:{},po:[]}
+
+  // Stats
+  var stR=document.getElementById('st-res'); if(stR){stR.textContent=rw+'x'+rh;stR.className='sv'}
+  var stP=document.getElementById('st-panels'); if(stP) stP.textContent=tot
+  var stPx=document.getElementById('st-px'); if(stPx){stPx.textContent='Z1:'+mc.z1.mpw*mc.z1.mph+' / Z2:'+mc.z2.mpw*mc.z2.mph;stPx.className='sv ok'}
+  var stL=document.getElementById('st-load'); if(stL){stL.textContent=pn+'/'+maxP;stL.className='sv '+(pn>maxP?'err':pn===maxP?'warn':'ok')}
+
+  // Map header
+  var mhR=document.getElementById('mh-res'); if(mhR) mhR.textContent=rw+'x'+rh+' px'
+  var mhD=document.getElementById('mh-det'); if(mhD) mhD.textContent='P'+pit+' · '+mc.W+'x'+mc.H+'m · '+tot+' paneles · Modulos mixtos'
+  var mhT=document.getElementById('mh-title'); if(mhT) mhT.textContent=(document.getElementById('p-title').value||'Sin titulo')
+
+  // Port recommendation
+  var recEl=document.getElementById('port-rec')
+  if(recEl){var ok=maxP>=pn;recEl.textContent=ok?('OK: '+pn+' cable'+(pn>1?'s':'')+' de '+maxP+' puertos'):('ATENCION: Necesitas '+pn+' cables (tienes '+maxP+')');recEl.style.color=ok?'var(--green)':'var(--red)'}
+
+  // mod-info
+  var mi=document.getElementById('mod-info'); if(mi) mi.textContent='Z1: '+mc.z1.mpw+'x'+mc.z1.mph+' px | Z2: '+mc.z2.mpw+'x'+mc.z2.mph+' px'
+
+  // Recap
+  var rb=document.getElementById('recap-box')
+  if(rb) rb.innerHTML='Modulos mixtos ('+MIX_DIR==='rows'?'por filas':'por columnas')+')<br>'+
+    'Pantalla: P'+pit+' · '+mc.W+'x'+mc.H+'m<br>'+
+    'Zona 1: '+mc.z1.mw+'x'+mc.z1.mh+'cm · '+(MIX_DIR==='rows'?mc.z1.rows+' filas':mc.z1.cols+' cols')+' · '+mc.z1.panels+' paneles<br>'+
+    'Zona 2: '+mc.z2.mw+'x'+mc.z2.mh+'cm · '+(MIX_DIR==='rows'?mc.z2.rows+' filas':mc.z2.cols+' cols')+' · '+mc.z2.panels+' paneles<br>'+
+    'Total: '+tot+' paneles · '+rw+'x'+rh+' px · '+mpx+' MP<br>'+
+    pn+'/'+maxP+' cables'
+
+  if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
+  renderMixedMap()
+  renderPorts()
+}
+
+function renderMixedMap(){
+  var mc = window._mixedCfg; if(!mc) return
+  var wrap = document.querySelector('.canvas-wrap')
+  var grid = document.getElementById('pixelgrid')
+  var cv   = document.getElementById('map-canvas')
+  if(!cv){grid.innerHTML='';cv=document.createElement('canvas');cv.id='map-canvas';cv.style.display='block';cv.style.cursor='crosshair';grid.appendChild(cv)}
+
+  var availW=(wrap.clientWidth||600)-32, availH=(wrap.clientHeight||400)-32
+  var z=ZL/100
+
+  // Calculate cell sizes for each zone
+  var cols = mc.cols
+  // For rows mode: zones have different row heights
+  if(mc.dir==='rows'){
+    var z1ar = mc.z1.mh/mc.z1.mw  // aspect ratio zone1
+    var z2ar = mc.z2.mh/mc.z2.mw  // aspect ratio zone2
+    var cw   = Math.max(8, Math.min(Math.floor(availW/cols), 80))
+    cw = Math.max(8, Math.floor(cw*z))
+    var z1ch = Math.max(4, Math.floor(cw*z1ar))
+    var z2ch = Math.max(4, Math.floor(cw*z2ar))
+    var totalH = mc.z1.rows*z1ch + mc.z2.rows*z2ch
+    var totalW = cols*cw
+
+    cv.width=totalW; cv.height=totalH
+    var ctx=cv.getContext('2d'); ctx.clearRect(0,0,totalW,totalH)
+
+    // Draw Zone 1 (cyan)
+    for(var r=0;r<mc.z1.rows;r++){
+      for(var c=0;c<cols;c++){
+        var x=c*cw, y=r*z1ch
+        ctx.fillStyle='rgba(0,212,255,0.2)'; ctx.fillRect(x+1,y+1,cw-2,z1ch-2)
+        ctx.strokeStyle='rgba(0,212,255,0.55)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,cw-2,z1ch-2)
+        if(cw>=14&&z1ch>=8){var n=r*cols+c+1;var fs=Math.max(6,Math.min(10,cw*0.28));ctx.fillStyle='rgba(0,212,255,0.9)';ctx.font='bold '+fs+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n,x+cw/2,y+z1ch/2)}
+      }
+    }
+
+    // Draw separator line
+    var sepY = mc.z1.rows*z1ch
+    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2; ctx.setLineDash([8,4])
+    ctx.beginPath(); ctx.moveTo(0,sepY); ctx.lineTo(totalW,sepY); ctx.stroke()
+    ctx.setLineDash([])
+    // Label the separator
+    var sepFs=Math.max(7,Math.min(9,cw*0.2))
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font=sepFs+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'
+    ctx.fillText('Z1 '+mc.z1.mw+'x'+mc.z1.mh+'cm → Z2 '+mc.z2.mw+'x'+mc.z2.mh+'cm', totalW/2, sepY)
+
+    // Draw Zone 2 (gold/orange)
+    for(var r=0;r<mc.z2.rows;r++){
+      for(var c=0;c<cols;c++){
+        var x=c*cw, y=sepY+r*z2ch+2
+        ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.fillRect(x+1,y+1,cw-2,z2ch-2)
+        ctx.strokeStyle='rgba(245,166,35,0.6)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,cw-2,z2ch-2)
+        if(cw>=14&&z2ch>=8){var n2=mc.z1.panels+r*cols+c+1;var fs2=Math.max(6,Math.min(10,cw*0.28));ctx.fillStyle='rgba(245,166,35,0.95)';ctx.font='bold '+fs2+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n2,x+cw/2,y+z2ch/2)}
+      }
+    }
+
+    // Zone labels on left edge
+    ctx.fillStyle='rgba(0,212,255,0.85)'; ctx.fillRect(0,0,4,sepY)
+    ctx.fillStyle='rgba(245,166,35,0.85)'; ctx.fillRect(0,sepY+2,4,mc.z2.rows*z2ch)
+
+    // Grid lines
+    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=0.5
+    for(var c=0;c<=cols;c++){ctx.beginPath();ctx.moveTo(c*cw,0);ctx.lineTo(c*cw,totalH);ctx.stroke()}
+
+  } else {
+    // Columns mode
+    var z1ar2= mc.z1.mh/mc.z1.mw, z2ar2=mc.z2.mh/mc.z2.mw
+    var rows2 = mc.rows
+    var z1cw  = Math.max(8, Math.floor(availW*mc.z1.cols/mc.cols * z))
+    var z2cw  = Math.max(8, Math.floor(availW*mc.z2.cols/mc.cols * z))
+    var ch2   = Math.max(4, Math.floor(z1cw*z1ar2))
+    var totalW2= mc.z1.cols*z1cw + mc.z2.cols*z2cw
+    var totalH2= rows2*ch2
+
+    cv.width=totalW2; cv.height=totalH2
+    var ctx=cv.getContext('2d'); ctx.clearRect(0,0,totalW2,totalH2)
+
+    // Zone 1
+    for(var r=0;r<rows2;r++){
+      for(var c=0;c<mc.z1.cols;c++){
+        var x=c*z1cw, y=r*ch2
+        ctx.fillStyle='rgba(0,212,255,0.2)'; ctx.fillRect(x+1,y+1,z1cw-2,ch2-2)
+        ctx.strokeStyle='rgba(0,212,255,0.55)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,z1cw-2,ch2-2)
+        if(z1cw>=14&&ch2>=8){var n3=r*mc.z1.cols+c+1;var fs3=Math.max(6,Math.min(10,z1cw*0.28));ctx.fillStyle='rgba(0,212,255,0.9)';ctx.font='bold '+fs3+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n3,x+z1cw/2,y+ch2/2)}
+      }
+    }
+
+    // Separator
+    var sepX=mc.z1.cols*z1cw
+    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2; ctx.setLineDash([8,4])
+    ctx.beginPath(); ctx.moveTo(sepX,0); ctx.lineTo(sepX,totalH2); ctx.stroke()
+    ctx.setLineDash([])
+
+    // Zone 2
+    for(var r=0;r<rows2;r++){
+      for(var c=0;c<mc.z2.cols;c++){
+        var x=sepX+2+c*z2cw, y=r*ch2
+        ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.fillRect(x+1,y+1,z2cw-2,ch2-2)
+        ctx.strokeStyle='rgba(245,166,35,0.6)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,z2cw-2,ch2-2)
+        if(z2cw>=14&&ch2>=8){var n4=mc.z1.panels+r*mc.z2.cols+c+1;var fs4=Math.max(6,Math.min(10,z2cw*0.28));ctx.fillStyle='rgba(245,166,35,0.95)';ctx.font='bold '+fs4+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n4,x+z2cw/2,y+ch2/2)}
+      }
+    }
+
+    // Zone bars
+    ctx.fillStyle='rgba(0,212,255,0.85)'; ctx.fillRect(0,0,sepX,4)
+    ctx.fillStyle='rgba(245,166,35,0.85)'; ctx.fillRect(sepX+2,0,mc.z2.cols*z2cw,4)
+  }
+
+  document.getElementById('zv').textContent=ZL+'%'
+  var info=document.getElementById('infobar')
+  if(info) info.textContent='Modulos mixtos · Zona 1: '+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Zona 2: '+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · Total: '+mc.tot+' paneles · '+mc.rw+'x'+mc.rh+' px'
+}
+
 function compute(){
+  // Mixed modules mode: delegate to computeMixed() first
+  if(MIXED_MODE){
+    computeMixed()
+    return
+  }
+
   var W=parseFloat(document.getElementById('cf-w').value)||4
   var H=parseFloat(document.getElementById('cf-h').value)||3
-  var pit=parseFloat(document.getElementById('cf-pitch').value)||5
+  var pit=parseFloat(document.getElementById('cf-pitch').value)||3.9
   var mw=parseFloat(document.getElementById('cf-mw').value)||50
   var mh=parseFloat(document.getElementById('cf-mh').value)||100
   var ppp=parseInt(document.getElementById('cf-ppp').value)||650000
@@ -2011,6 +2227,71 @@ function toggleElecLayer(layer){
 
   // Re-render map with layers
   renderElecMap()
+}
+
+
+// ════ MIXED MODULES ════
+var MIXED_MODE = false
+var MIX_DIR = 'rows'
+
+function toggleMixed(){
+  MIXED_MODE = document.getElementById('cf-mixed').checked
+  document.getElementById('mixed-label').textContent = MIXED_MODE ? 'ON' : 'OFF'
+  document.getElementById('mixed-zones').style.display = MIXED_MODE ? 'block' : 'none'
+  var mwRow = document.querySelector('.fg2')
+  compute(); markUnsaved()
+}
+
+function setMixMode(dir){
+  MIX_DIR = dir
+  var rBtn=document.getElementById('mix-by-rows'), cBtn=document.getElementById('mix-by-cols')
+  if(rBtn){rBtn.style.background=dir==='rows'?'rgba(0,212,255,0.1)':'transparent';rBtn.style.borderColor=dir==='rows'?'rgba(0,212,255,0.4)':'var(--b1)';rBtn.style.color=dir==='rows'?'var(--cyan)':'var(--txt3)'}
+  if(cBtn){cBtn.style.background=dir==='cols'?'rgba(0,212,255,0.1)':'transparent';cBtn.style.borderColor=dir==='cols'?'rgba(0,212,255,0.4)':'var(--b1)';cBtn.style.color=dir==='cols'?'var(--cyan)':'var(--txt3)'}
+  var lbl1=document.getElementById('z1-size-label'),lbl2=document.getElementById('z2-size-label')
+  if(lbl1) lbl1.textContent=dir==='rows'?'Filas':'Columnas'
+  if(lbl2) lbl2.textContent=dir==='rows'?'Filas':'Columnas'
+  compute(); markUnsaved()
+}
+
+function getMixedConfig(){
+  var pit  = parseFloat(document.getElementById('cf-pitch').value)||3.9
+  var W    = parseFloat(document.getElementById('cf-w').value)||4
+  var H    = parseFloat(document.getElementById('cf-h').value)||3
+  var z1mw = parseFloat(document.getElementById('z1-mw').value)||50
+  var z1mh = parseFloat(document.getElementById('z1-mh').value)||100
+  var z2mw = parseFloat(document.getElementById('z2-mw').value)||50
+  var z2mh = parseFloat(document.getElementById('z2-mh').value)||50
+  var z1cnt= parseInt(document.getElementById('z1-count').value)||2
+  var z2cnt= parseInt(document.getElementById('z2-count').value)||1
+
+  if(MIX_DIR==='rows'){
+    var cols  = Math.round((W*100)/z1mw)
+    var z1mpw = Math.round((z1mw*10)/pit), z1mph = Math.round((z1mh*10)/pit)
+    var z2mpw = Math.round((z2mw*10)/pit), z2mph = Math.round((z2mh*10)/pit)
+    var rw    = cols * z1mpw
+    var z1rh  = z1cnt * z1mph, z2rh = z2cnt * z2mph
+    var rh    = z1rh + z2rh
+    var z1p   = z1cnt * cols, z2p = z2cnt * cols
+    var i1=document.getElementById('z1-info'),i2=document.getElementById('z2-info')
+    if(i1) i1.textContent=z1p+' paneles · '+rw+'x'+z1rh+' px'
+    if(i2) i2.textContent=z2p+' paneles · '+rw+'x'+z2rh+' px'
+    return{W:W,H:H,pit:pit,cols:cols,rows:z1cnt+z2cnt,tot:z1p+z2p,rw:rw,rh:rh,dir:MIX_DIR,
+      z1:{mw:z1mw,mh:z1mh,mpw:z1mpw,mph:z1mph,rows:z1cnt,cols:cols,panels:z1p,rh:z1rh,rowStart:0},
+      z2:{mw:z2mw,mh:z2mh,mpw:z2mpw,mph:z2mph,rows:z2cnt,cols:cols,panels:z2p,rh:z2rh,rowStart:z1cnt}}
+  } else {
+    var rows2 = Math.round((H*100)/z1mh)
+    var z1mpw2= Math.round((z1mw*10)/pit),z1mph2=Math.round((z1mh*10)/pit)
+    var z2mpw2= Math.round((z2mw*10)/pit),z2mph2=Math.round((z2mh*10)/pit)
+    var z1rw  = z1cnt*z1mpw2, z2rw=z2cnt*z2mpw2
+    var rw2   = z1rw+z2rw, rh2=rows2*z1mph2
+    var z1p2  = z1cnt*rows2, z2p2=z2cnt*rows2
+    var i12=document.getElementById('z1-info'),i22=document.getElementById('z2-info')
+    if(i12) i12.textContent=z1p2+' paneles · '+z1rw+'x'+rh2+' px'
+    if(i22) i22.textContent=z2p2+' paneles · '+z2rw+'x'+rh2+' px'
+    return{W:W,H:H,pit:pit,cols:z1cnt+z2cnt,rows:rows2,tot:z1p2+z2p2,rw:rw2,rh:rh2,dir:MIX_DIR,
+      z1:{mw:z1mw,mh:z1mh,mpw:z1mpw2,mph:z1mph2,rows:rows2,cols:z1cnt,panels:z1p2,rw:z1rw,colStart:0},
+      z2:{mw:z2mw,mh:z2mh,mpw:z2mpw2,mph:z2mph2,rows:rows2,cols:z2cnt,panels:z2p2,rw:z2rw,colStart:z1cnt}}
+  }
 }
 
 // PROJECTS
