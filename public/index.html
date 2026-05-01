@@ -642,7 +642,7 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
       </div>
       <div class="toolbar">
         <span class="tl-label" id="t-viewlabel">Vista</span>
-        <select class="tl-sel" id="view-mode" onchange="renderMap()">
+        <select class="tl-sel" id="view-mode" onchange="MIXED_MODE?renderMixedMap():renderMap()">
           <option value="num">Numero panel</option>
           <option value="port">Por puerto</option>
           <option value="range">Rango px</option>
@@ -1192,6 +1192,11 @@ function saveCurrentScreenState(){
   sc.date=document.getElementById('p-date').value; sc.notes=document.getElementById('p-notes').value
   sc.logo=LOGO; sc.S=Object.assign({},S)
   var mmSave=document.getElementById('el-maxmod'); if(mmSave) sc.elMaxMod=parseInt(mmSave.value)||12
+  // Save mixed modules state
+  sc.mixedMode = MIXED_MODE
+  sc.mixDir = MIX_DIR
+  var g = function(id){ var el=document.getElementById(id); return el?el.value:null }
+  sc.mixedVals = {z1mw:g('z1-mw'),z1mh:g('z1-mh'),z2mw:g('z2-mw'),z2mh:g('z2-mh'),z1cnt:g('z1-count'),z2cnt:g('z2-count')}
 }
 function loadScreenState(idx){
   var sc=SCREENS[idx]; if(!sc) return
@@ -1199,6 +1204,20 @@ function loadScreenState(idx){
   var nm=document.getElementById('p-screen-name'); if(nm) nm.value=sc.name||''
   var mmEl=document.getElementById('el-maxmod'); if(mmEl) mmEl.value=sc.elMaxMod||12
   var drEl=document.getElementById('el-drops'); if(drEl) drEl.value=''
+  // Restore mixed modules state
+  MIXED_MODE = sc.mixedMode||false
+  MIX_DIR    = sc.mixDir||'rows'
+  var cfm=document.getElementById('cf-mixed'); if(cfm) cfm.checked=MIXED_MODE
+  var mlbl=document.getElementById('mixed-label'); if(mlbl) mlbl.textContent=MIXED_MODE?'ON':'OFF'
+  var mzones=document.getElementById('mixed-zones'); if(mzones) mzones.style.display=MIXED_MODE?'block':'none'
+  if(sc.mixedVals){
+    var sv=sc.mixedVals
+    var s=function(id,v){var el=document.getElementById(id);if(el&&v!=null)el.value=v}
+    s('z1-mw',sv.z1mw);s('z1-mh',sv.z1mh);s('z2-mw',sv.z2mw);s('z2-mh',sv.z2mh)
+    s('z1-count',sv.z1cnt);s('z2-count',sv.z2cnt)
+  }
+  // Sync mix direction buttons
+  if(MIXED_MODE) setMixMode(MIX_DIR)
   document.getElementById('cf-pitch').value=sc.pitch||'5'
   document.getElementById('cf-w').value=sc.w||'4'; document.getElementById('cf-h').value=sc.h||'3'
   document.getElementById('cf-mw').value=sc.mw||'50'; document.getElementById('cf-mh').value=sc.mh||'100'
@@ -1350,6 +1369,9 @@ function computeMixed(){
   if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
   renderMixedMap()
   renderPorts()
+  renderProcView()
+  if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
+  if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
 }
 
 function renderMixedMap(){
@@ -1669,7 +1691,7 @@ function renderMap(){
   document.getElementById('zv').textContent=ZL+'%'
 }
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
-function zoom(delta){if(delta===0)ZL=100;else ZL=Math.max(20,Math.min(500,ZL+delta));renderMap()}
+function zoom(delta){if(delta===0)ZL=100;else ZL=Math.max(20,Math.min(500,ZL+delta));if(MIXED_MODE)renderMixedMap();else renderMap()}
 
 // LOGO
 function renderLogoPan(){
@@ -1945,6 +1967,13 @@ function computeElec(){
     var s=document.getElementById('elec-stats'); if(s) s.innerHTML='<div style="font-size:11px;color:var(--txt3);padding:8px;text-align:center">Configura una pantalla primero</div>'
     return
   }
+  // In mixed mode, S.po is empty — build a simple physical order map
+  if(MIXED_MODE && (!S.po||!S.po.length)){
+    S.po = []
+    for(var _r=0;_r<S.rows;_r++)
+      for(var _c=0;_c<S.cols;_c++)
+        S.po.push({gridIdx:_r*S.cols+_c,panelNum:_r*S.cols+_c})
+  }
   var wpm2    = parseFloat(document.getElementById('el-wpm2').value)||200
   var voltage = parseFloat(document.getElementById('el-voltage').value)||220
   var maxMod  = parseInt(document.getElementById('el-maxmod').value)||12
@@ -2084,6 +2113,8 @@ function computeElec(){
 
 function renderElecMap(){
   if(!S.cols||!S.rows) return
+  // Mixed mode: renderMixedMap handles the full canvas — elec overlay not supported yet
+  if(MIXED_MODE){ renderMixedMap(); return }
   var cv=document.getElementById('map-canvas'); if(!cv) return
   var ctx=cv.getContext('2d')
   var cw=Math.floor(cv.width/S.cols), ch=Math.floor(cv.height/S.rows)
@@ -2633,14 +2664,17 @@ async function exportPDF(){
   try {
     var srcCanvas = document.getElementById('map-canvas')
     if(srcCanvas){
-      var prevElec = SHOW_ELEC
-      var prevData = SHOW_DATA
-      SHOW_DATA = true
-      SHOW_ELEC = false
-      renderMap()   // Solo datos, sin eléctrico
+      if(MIXED_MODE){
+        renderMixedMap()  // Mixed: render zones
+      } else {
+        var prevElec = SHOW_ELEC
+        var prevData = SHOW_DATA
+        SHOW_DATA = true; SHOW_ELEC = false
+        renderMap()
+        mapDataImg = srcCanvas.toDataURL('image/png')
+        SHOW_ELEC = prevElec; SHOW_DATA = prevData
+      }
       mapDataImg = srcCanvas.toDataURL('image/png')
-      SHOW_ELEC = prevElec
-      SHOW_DATA = prevData
     }
   } catch(e){ console.log('Canvas data capture error:', e) }
 
