@@ -1324,14 +1324,19 @@ function computeMixed(){
   if(mc.z2) tpx += mc.z2.panels * mc.z2.mpw * mc.z2.mph
   var mpx = (tpx/1e6).toFixed(2)
 
-  // Calculate ports needed: avg px per panel across both zones
+  // Port distribution: respect zone boundaries
+  // Zone 1 gets its own port(s), Zone 2 gets its own port(s)
   var z1px = mc.z1.mpw * mc.z1.mph
   var z2px = mc.z2.mpw * mc.z2.mph
-  var avgPx = Math.round((mc.z1.panels*z1px + mc.z2.panels*z2px) / tot)
-  var ppport = Math.max(1, Math.floor(ppp / avgPx))
-  var pn    = Math.min(maxP, Math.ceil(tot / ppport))
-  var base  = Math.floor(tot/pn), rem = tot%pn
-  var sizes = Array.from({length:pn},function(_,i){return base+(i<rem?1:0)})
+  var z1ports = Math.max(1, Math.ceil(mc.z1.panels * z1px / ppp))
+  var z2ports = Math.max(1, Math.ceil(mc.z2.panels * z2px / ppp))
+  var pn = Math.min(maxP, z1ports + z2ports)
+  // Build sizes: distribute z1 panels among z1ports, z2 panels among z2ports
+  var sizes = []
+  var z1base=Math.floor(mc.z1.panels/z1ports), z1rem=mc.z1.panels%z1ports
+  for(var _i=0;_i<z1ports;_i++) sizes.push(z1base+(_i<z1rem?1:0))
+  var z2base=Math.floor(mc.z2.panels/z2ports), z2rem=mc.z2.panels%z2ports
+  for(var _i=0;_i<z2ports;_i++) sizes.push(z2base+(_i<z2rem?1:0))
 
   // Simplified S for stats/export (use z1 module as reference)
   S={W:mc.W,H:mc.H,pit:pit,mw:mc.z1.mw,mh:mc.z1.mh,ppp:ppp,maxP:maxP,
@@ -1481,48 +1486,60 @@ function renderMixedMap(){
           }
         }
       }
-      // Calculate actual cables needed based on px per port
-      var z1ppanel2=mc.z1.mpw*mc.z1.mph, z2ppanel2=mc.z2.mpw*mc.z2.mph
-      var avgPxPerPanel=Math.round((mc.z1.panels*z1ppanel2+mc.z2.panels*z2ppanel2)/mc.tot)
-      var ppport=Math.max(1,Math.floor(ppp/avgPxPerPanel))
-      var actualPorts=Math.min(maxP,Math.ceil(mc.tot/ppport))
-      for(var p=0;p<actualPorts;p++){
-        var start=p*ppport, end2=Math.min(start+ppport,allPanels.length)
-        if(start>=allPanels.length) break
-        var pts=allPanels.slice(start,end2)
-        if(!pts.length) continue
-        var col=portColors2[p%portColors2.length]
-        ctx.strokeStyle=col; ctx.lineWidth=Math.max(1.5,cw*0.05)
-        ctx.setLineDash([6,3]); ctx.lineCap='round'; ctx.lineJoin='round'
-        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y)
-        for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y)
-        ctx.stroke(); ctx.setLineDash([])
-        // Arrows
-        if(cw>=18){
-          for(var i=0;i<pts.length-1;i++){
-            var mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2
-            var angle=Math.atan2(pts[i+1].y-pts[i].y,pts[i+1].x-pts[i].x)
-            var aw=Math.max(3,cw*0.14)
-            ctx.fillStyle=col; ctx.save(); ctx.translate(mx,my); ctx.rotate(angle)
-            ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.6,-aw*0.4); ctx.lineTo(-aw*0.6,aw*0.4)
-            ctx.closePath(); ctx.fill(); ctx.restore()
+      // Draw cables zone by zone (each zone gets its own port(s))
+      var z1px2=mc.z1.mpw*mc.z1.mph, z2px2=mc.z2.mpw*mc.z2.mph
+      var z1ports2=Math.max(1,Math.min(maxP-1,Math.ceil(mc.z1.panels*z1px2/ppp)))
+      var z2ports2=Math.max(1,Math.ceil(mc.z2.panels*z2px2/ppp))
+      var portNum2=0
+
+      function drawZoneCables(zonePanels, nPorts, startPort){
+        var ppPort2=Math.ceil(zonePanels.length/nPorts)
+        for(var p=0;p<nPorts;p++){
+          var s2=p*ppPort2, e2=Math.min(s2+ppPort2,zonePanels.length)
+          if(s2>=zonePanels.length) break
+          var pts=zonePanels.slice(s2,e2); if(!pts.length) continue
+          var col=portColors2[(startPort+p)%portColors2.length]
+          // Line
+          ctx.strokeStyle=col; ctx.lineWidth=Math.max(1.5,cw*0.05)
+          ctx.setLineDash([6,3]); ctx.lineCap='round'; ctx.lineJoin='round'
+          ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y)
+          for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y)
+          ctx.stroke(); ctx.setLineDash([])
+          // Arrows
+          if(cw>=16){
+            for(var i=0;i<pts.length-1;i++){
+              var mx=(pts[i].x+pts[i+1].x)/2,my=(pts[i].y+pts[i+1].y)/2
+              var angle=Math.atan2(pts[i+1].y-pts[i].y,pts[i+1].x-pts[i].x)
+              var aw=Math.max(3,cw*0.13)
+              ctx.fillStyle=col; ctx.save(); ctx.translate(mx,my); ctx.rotate(angle)
+              ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.6,-aw*0.4); ctx.lineTo(-aw*0.6,aw*0.4)
+              ctx.closePath(); ctx.fill(); ctx.restore()
+            }
           }
+          // IN badge
+          var fs3=Math.max(6,Math.min(9,cw*0.22))
+          ctx.font='bold '+fs3+'px monospace'
+          var inLbl='P'+(startPort+p+1)
+          var bW=ctx.measureText(inLbl).width+8, bH=Math.max(10,fs3*1.5)
+          var inX=pts[0].x-cw/2+1, inY=pts[0].y-bH/2
+          ctx.fillStyle=col; roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
+          ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='middle'
+          ctx.fillText(inLbl,inX+bW/2,pts[0].y)
+          // OUT badge
+          var last2=pts[pts.length-1]
+          var outX2=last2.x+cw/2-bW-2
+          ctx.fillStyle='rgba(0,0,0,0.82)'; roundRect(ctx,outX2,last2.y-bH/2,bW,bH,3); ctx.fill()
+          ctx.strokeStyle=col; ctx.lineWidth=1; roundRect(ctx,outX2,last2.y-bH/2,bW,bH,3); ctx.stroke()
+          ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle'
+          ctx.fillText('OUT',outX2+bW/2,last2.y)
         }
-        // IN badge
-        var fs3=Math.max(6,Math.min(9,cw*0.22))
-        ctx.font='bold '+fs3+'px monospace'
-        var inLbl='P'+(p+1); var bW=ctx.measureText(inLbl).width+8, bH=Math.max(10,fs3*1.5)
-        var inX=pts[0].x-cw/2, inY=pts[0].y-bH/2
-        ctx.fillStyle=col; roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
-        ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='middle'
-        ctx.fillText(inLbl,inX+bW/2,pts[0].y)
-        // OUT badge
-        var outX=pts[pts.length-1].x+cw/2-bW-2
-        ctx.fillStyle='rgba(0,0,0,0.8)'; roundRect(ctx,outX,pts[pts.length-1].y-bH/2,bW,bH,3); ctx.fill()
-        ctx.strokeStyle=col; ctx.lineWidth=1; roundRect(ctx,outX,pts[pts.length-1].y-bH/2,bW,bH,3); ctx.stroke()
-        ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle'
-        ctx.fillText('OUT',outX+bW/2,pts[pts.length-1].y)
       }
+
+      // Split allPanels into zone1 and zone2
+      var z1Panels=allPanels.slice(0,mc.z1.panels)
+      var z2Panels=allPanels.slice(mc.z1.panels)
+      drawZoneCables(z1Panels, z1ports2, 0)
+      drawZoneCables(z2Panels, z2ports2, z1ports2)
     }
 
     // Zone labels (small badges bottom-right)
@@ -1572,6 +1589,66 @@ function renderMixedMap(){
   document.getElementById('zv').textContent=ZL+'%'
   var infobar=document.getElementById('infobar')
   if(infobar) infobar.textContent='Mixto · Z1:'+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Z2:'+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · '+mc.rw+'x'+mc.rh+' px'
+
+  // Draw electrical overlay on top if active
+  if(SHOW_ELEC && _elecDrops && _elecDrops.length && window._panelDropMap){
+    var cv2=document.getElementById('map-canvas'); if(!cv2) return
+    var ctx2=cv2.getContext('2d')
+    var cw2=Math.floor(cv2.width/S.cols)
+    // Get row heights for mixed mode
+    var z1ch2=mc.dir==='rows'?Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw))):Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw)))
+    var z2ch2=mc.dir==='rows'?Math.max(6,Math.floor(cw2*(mc.z2.mh/mc.z2.mw))):z1ch2
+    var sepY2=mc.z1.rows*z1ch2
+    // Draw elec cables using _panelDropMap — same as normal but with variable row heights
+    if(window._panelDropMap && S.po && S.po.length){
+      var dropPanels2={}
+      S.po.forEach(function(item,si){
+        var di=window._panelDropMap[si]; if(di===undefined) return
+        if(!dropPanels2[di]) dropPanels2[di]=[]
+        var r=Math.floor(item.gridIdx/mc.cols), c=item.gridIdx%mc.cols
+        var isZ1=(r<mc.z1.rows)
+        var ch_e=isZ1?z1ch2:z2ch2
+        var yBase=isZ1?r*z1ch2:(sepY2+((r-mc.z1.rows)*z2ch2))
+        dropPanels2[di].push({cx:c*cw2+cw2/2, cy:yBase+ch_e*0.82})
+      })
+      Object.keys(dropPanels2).forEach(function(dStr){
+        var di=parseInt(dStr), d=_elecDrops[di]; if(!d) return
+        var pts2=dropPanels2[di]; if(!pts2||!pts2.length) return
+        var hex=d.color.replace('#','')
+        var R=parseInt(hex.slice(0,2),16),G=parseInt(hex.slice(2,4),16),B=parseInt(hex.slice(4,6),16)
+        ctx2.strokeStyle='rgba('+R+','+G+','+B+',0.95)'
+        ctx2.lineWidth=Math.max(2.5,cw2*0.08); ctx2.setLineDash([]); ctx2.lineCap='round'; ctx2.lineJoin='round'
+        ctx2.beginPath(); ctx2.moveTo(pts2[0].cx,pts2[0].cy)
+        for(var i=1;i<pts2.length;i++) ctx2.lineTo(pts2[i].cx,pts2[i].cy)
+        ctx2.stroke()
+        // Arrows
+        for(var i=0;i<pts2.length-1;i++){
+          var mx2=(pts2[i].cx+pts2[i+1].cx)/2,my2=(pts2[i].cy+pts2[i+1].cy)/2
+          var ang=Math.atan2(pts2[i+1].cy-pts2[i].cy,pts2[i+1].cx-pts2[i].cx)
+          var aw2=Math.max(3,cw2*0.13)
+          ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'
+          ctx2.save(); ctx2.translate(mx2,my2); ctx2.rotate(ang)
+          ctx2.beginPath(); ctx2.moveTo(aw2,0); ctx2.lineTo(-aw2*0.6,-aw2*0.4); ctx2.lineTo(-aw2*0.6,aw2*0.4)
+          ctx2.closePath(); ctx2.fill(); ctx2.restore()
+        }
+        // B1/B2 badge
+        var fs_e=Math.max(6,Math.min(9,cw2*0.2))
+        ctx2.font='bold '+fs_e+'px monospace'
+        var lbl_e='B'+(di+1), bW_e=ctx2.measureText(lbl_e).width+8, bH_e=Math.max(10,fs_e*1.5)
+        ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'; roundRect(ctx2,pts2[0].cx-cw2/2+1,pts2[0].cy-bH_e/2,bW_e,bH_e,3); ctx2.fill()
+        ctx2.fillStyle='#000'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
+        ctx2.fillText(lbl_e,pts2[0].cx-cw2/2+1+bW_e/2,pts2[0].cy)
+        // OUT badge
+        var last_e=pts2[pts2.length-1]
+        var rl_e=SHOW_AMPS?d.amps+'A':'OUT', rW_e=ctx2.measureText(rl_e).width+8
+        ctx2.fillStyle='rgba(0,0,0,0.82)'; roundRect(ctx2,last_e.cx+cw2/2-rW_e-2,last_e.cy-bH_e/2,rW_e,bH_e,3); ctx2.fill()
+        ctx2.strokeStyle='rgba('+R+','+G+','+B+',1)'; ctx2.lineWidth=1
+        roundRect(ctx2,last_e.cx+cw2/2-rW_e-2,last_e.cy-bH_e/2,rW_e,bH_e,3); ctx2.stroke()
+        ctx2.fillStyle='rgba('+R+','+G+','+B+',1)'; ctx2.textAlign='center'; ctx2.textBaseline='middle'
+        ctx2.fillText(rl_e,last_e.cx+cw2/2-rW_e/2-2,last_e.cy)
+      })
+    }
+  }
 }
 
 function compute(){
@@ -2054,12 +2131,27 @@ function computeElec(){
     var s=document.getElementById('elec-stats'); if(s) s.innerHTML='<div style="font-size:11px;color:var(--txt3);padding:8px;text-align:center">Configura una pantalla primero</div>'
     return
   }
-  // In mixed mode, S.po is empty — build a simple physical order map
-  if(MIXED_MODE && (!S.po||!S.po.length)){
-    S.po = []
-    for(var _r=0;_r<S.rows;_r++)
-      for(var _c=0;_c<S.cols;_c++)
-        S.po.push({gridIdx:_r*S.cols+_c,panelNum:_r*S.cols+_c})
+  // In mixed mode, S.po is empty — build from mixed config
+  if(MIXED_MODE){
+    var mc2=window._mixedCfg
+    if(mc2){
+      S.po=[]; S.cols=mc2.cols; S.rows=mc2.rows; S.tot=mc2.tot
+      var idx2=0
+      for(var _r=0;_r<mc2.rows;_r++){
+        var evenR=(_r%2===0)
+        var cArr=[]
+        for(var _c=0;_c<mc2.cols;_c++) cArr.push(_c)
+        if(!evenR) cArr=cArr.reverse()
+        cArr.forEach(function(_c){
+          S.po.push({gridIdx:_r*mc2.cols+_c,panelNum:idx2++})
+        })
+      }
+    } else if(!S.po||!S.po.length){
+      S.po=[]
+      for(var _r=0;_r<S.rows;_r++)
+        for(var _c=0;_c<S.cols;_c++)
+          S.po.push({gridIdx:_r*S.cols+_c,panelNum:_r*S.cols+_c})
+    }
   }
   var wpm2    = parseFloat(document.getElementById('el-wpm2').value)||200
   var voltage = parseFloat(document.getElementById('el-voltage').value)||220
