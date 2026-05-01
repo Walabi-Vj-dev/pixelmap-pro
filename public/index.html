@@ -1324,9 +1324,12 @@ function computeMixed(){
   if(mc.z2) tpx += mc.z2.panels * mc.z2.mpw * mc.z2.mph
   var mpx = (tpx/1e6).toFixed(2)
 
-  // Simple port distribution based on total panels
-  var ppmax = Math.max(1,Math.floor(ppp/(mc.z1.mpw*mc.z1.mph)))
-  var pn    = Math.ceil(tot/ppmax)
+  // Calculate ports needed: avg px per panel across both zones
+  var z1px = mc.z1.mpw * mc.z1.mph
+  var z2px = mc.z2.mpw * mc.z2.mph
+  var avgPx = Math.round((mc.z1.panels*z1px + mc.z2.panels*z2px) / tot)
+  var ppport = Math.max(1, Math.floor(ppp / avgPx))
+  var pn    = Math.min(maxP, Math.ceil(tot / ppport))
   var base  = Math.floor(tot/pn), rem = tot%pn
   var sizes = Array.from({length:pn},function(_,i){return base+(i<rem?1:0)})
 
@@ -1478,9 +1481,12 @@ function renderMixedMap(){
           }
         }
       }
-      // Draw cables port by port
-      var ppport=Math.ceil(mc.tot/maxP)
-      for(var p=0;p<maxP;p++){
+      // Calculate actual cables needed based on px per port
+      var z1ppanel2=mc.z1.mpw*mc.z1.mph, z2ppanel2=mc.z2.mpw*mc.z2.mph
+      var avgPxPerPanel=Math.round((mc.z1.panels*z1ppanel2+mc.z2.panels*z2ppanel2)/mc.tot)
+      var ppport=Math.max(1,Math.floor(ppp/avgPxPerPanel))
+      var actualPorts=Math.min(maxP,Math.ceil(mc.tot/ppport))
+      for(var p=0;p<actualPorts;p++){
         var start=p*ppport, end2=Math.min(start+ppport,allPanels.length)
         if(start>=allPanels.length) break
         var pts=allPanels.slice(start,end2)
