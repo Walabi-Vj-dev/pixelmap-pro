@@ -1378,113 +1378,194 @@ function renderMixedMap(){
   var mc = window._mixedCfg; if(!mc) return
   var wrap = document.querySelector('.canvas-wrap')
   var grid = document.getElementById('pixelgrid')
-  var cv   = document.getElementById('map-canvas')
-  if(!cv){grid.innerHTML='';cv=document.createElement('canvas');cv.id='map-canvas';cv.style.display='block';cv.style.cursor='crosshair';grid.appendChild(cv)}
 
-  var availW=(wrap.clientWidth||600)-32, availH=(wrap.clientHeight||400)-32
+  // Ensure canvas exists
+  if(!document.getElementById('map-canvas')){
+    grid.innerHTML=''
+    var newcv=document.createElement('canvas')
+    newcv.id='map-canvas'; newcv.style.cssText='display:block;cursor:crosshair'
+    grid.appendChild(newcv)
+  }
+  var cv=document.getElementById('map-canvas')
+  var ctx=cv.getContext('2d')
+
+  var availW=(wrap.clientWidth||700)-32
   var z=ZL/100
+  var cols=mc.cols
+  var viewMode=document.getElementById('view-mode')?document.getElementById('view-mode').value:'panel'
+  var ppp=parseInt(document.getElementById('cf-ppp').value)||650000
+  var maxP=parseInt(document.getElementById('cf-ports').value)||8
+  var dir=document.getElementById('cf-dir').value
 
-  // Calculate cell sizes for each zone
-  var cols = mc.cols
-  // For rows mode: zones have different row heights
   if(mc.dir==='rows'){
-    var z1ar = mc.z1.mh/mc.z1.mw  // aspect ratio zone1
-    var z2ar = mc.z2.mh/mc.z2.mw  // aspect ratio zone2
-    var cw   = Math.max(8, Math.min(Math.floor(availW/cols), 80))
-    cw = Math.max(8, Math.floor(cw*z))
-    var z1ch = Math.max(4, Math.floor(cw*z1ar))
-    var z2ch = Math.max(4, Math.floor(cw*z2ar))
-    var totalH = mc.z1.rows*z1ch + mc.z2.rows*z2ch
-    var totalW = cols*cw
+    var cw=Math.max(10,Math.min(Math.floor(availW/cols),90))
+    cw=Math.max(10,Math.floor(cw*z))
+    var z1ch=Math.max(6,Math.floor(cw*(mc.z1.mh/mc.z1.mw)))
+    var z2ch=Math.max(6,Math.floor(cw*(mc.z2.mh/mc.z2.mw)))
+    var sepY=mc.z1.rows*z1ch
+    var totalW=cols*cw, totalH=sepY+mc.z2.rows*z2ch
 
     cv.width=totalW; cv.height=totalH
-    var ctx=cv.getContext('2d'); ctx.clearRect(0,0,totalW,totalH)
+    ctx.clearRect(0,0,totalW,totalH)
 
-    // Draw Zone 1 (cyan)
+    // ── Draw panels ──
+    var panelNum=0
+    // Zone 1
     for(var r=0;r<mc.z1.rows;r++){
       for(var c=0;c<cols;c++){
+        panelNum++
         var x=c*cw, y=r*z1ch
-        ctx.fillStyle='rgba(0,212,255,0.2)'; ctx.fillRect(x+1,y+1,cw-2,z1ch-2)
-        ctx.strokeStyle='rgba(0,212,255,0.55)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,cw-2,z1ch-2)
-        if(cw>=14&&z1ch>=8){var n=r*cols+c+1;var fs=Math.max(6,Math.min(10,cw*0.28));ctx.fillStyle='rgba(0,212,255,0.9)';ctx.font='bold '+fs+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n,x+cw/2,y+z1ch/2)}
+        ctx.fillStyle='rgba(0,212,255,0.18)'; ctx.fillRect(x+1,y+1,cw-2,z1ch-2)
+        ctx.strokeStyle='rgba(0,212,255,0.5)'; ctx.lineWidth=0.8; ctx.strokeRect(x+1,y+1,cw-2,z1ch-2)
+        if(cw>=16&&z1ch>=10){
+          var fs=Math.max(6,Math.min(10,cw*0.26))
+          ctx.fillStyle='rgba(0,212,255,0.85)'; ctx.font='bold '+fs+'px monospace'
+          ctx.textAlign='center'; ctx.textBaseline='middle'
+          var label=viewMode==='port'?('P'+Math.ceil(panelNum/Math.ceil(mc.z1.panels/maxP))):String(panelNum)
+          ctx.fillText(label,x+cw/2,y+z1ch/2)
+        }
       }
     }
-
-    // Draw separator line
-    var sepY = mc.z1.rows*z1ch
-    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2; ctx.setLineDash([8,4])
-    ctx.beginPath(); ctx.moveTo(0,sepY); ctx.lineTo(totalW,sepY); ctx.stroke()
-    ctx.setLineDash([])
-    // Label the separator
-    var sepFs=Math.max(7,Math.min(9,cw*0.2))
-    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font=sepFs+'px monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'
-    ctx.fillText('Z1 '+mc.z1.mw+'x'+mc.z1.mh+'cm → Z2 '+mc.z2.mw+'x'+mc.z2.mh+'cm', totalW/2, sepY)
-
-    // Draw Zone 2 (gold/orange)
+    // Zone 2
     for(var r=0;r<mc.z2.rows;r++){
       for(var c=0;c<cols;c++){
-        var x=c*cw, y=sepY+r*z2ch+2
+        panelNum++
+        var x=c*cw, y=sepY+r*z2ch
         ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.fillRect(x+1,y+1,cw-2,z2ch-2)
-        ctx.strokeStyle='rgba(245,166,35,0.6)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,cw-2,z2ch-2)
-        if(cw>=14&&z2ch>=8){var n2=mc.z1.panels+r*cols+c+1;var fs2=Math.max(6,Math.min(10,cw*0.28));ctx.fillStyle='rgba(245,166,35,0.95)';ctx.font='bold '+fs2+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n2,x+cw/2,y+z2ch/2)}
+        ctx.strokeStyle='rgba(245,166,35,0.55)'; ctx.lineWidth=0.8; ctx.strokeRect(x+1,y+1,cw-2,z2ch-2)
+        if(cw>=16&&z2ch>=10){
+          var fs2=Math.max(6,Math.min(10,cw*0.26))
+          ctx.fillStyle='rgba(245,166,35,0.9)'; ctx.font='bold '+fs2+'px monospace'
+          ctx.textAlign='center'; ctx.textBaseline='middle'
+          var label2=viewMode==='port'?('P'+Math.ceil((panelNum-mc.z1.panels)/Math.ceil(mc.z2.panels/maxP))):String(panelNum)
+          ctx.fillText(label2,x+cw/2,y+z2ch/2)
+        }
       }
     }
 
-    // Zone labels on left edge
-    ctx.fillStyle='rgba(0,212,255,0.85)'; ctx.fillRect(0,0,4,sepY)
-    ctx.fillStyle='rgba(245,166,35,0.85)'; ctx.fillRect(0,sepY+2,4,mc.z2.rows*z2ch)
+    // ── Zone separator ──
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([10,5])
+    ctx.beginPath(); ctx.moveTo(0,sepY); ctx.lineTo(totalW,sepY); ctx.stroke()
+    ctx.setLineDash([])
+    // Zone bars left edge
+    ctx.fillStyle='rgba(0,212,255,0.9)'; ctx.fillRect(0,0,4,sepY)
+    ctx.fillStyle='rgba(245,166,35,0.9)'; ctx.fillRect(0,sepY,4,mc.z2.rows*z2ch)
 
-    // Grid lines
-    ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=0.5
-    for(var c=0;c<=cols;c++){ctx.beginPath();ctx.moveTo(c*cw,0);ctx.lineTo(c*cw,totalH);ctx.stroke()}
+    // ── Data wiring cables ──
+    if(SHOW_DATA && cw>=12){
+      // Calculate ports per panel for each zone
+      var z1ppanel=mc.z1.mpw*mc.z1.mph, z2ppanel=mc.z2.mpw*mc.z2.mph
+      var ppp2z1=Math.floor(ppp/z1ppanel)||1
+      var portColors2=PORT_COLORS
+      // Draw serpentine wiring for all panels combined
+      var allPanels=[]
+      // Build panel list in wiring order (h-snake by default)
+      var totalRows=mc.z1.rows+mc.z2.rows
+      for(var r=0;r<totalRows;r++){
+        var isZ1=r<mc.z1.rows
+        var ch_r=isZ1?z1ch:z2ch
+        var yBase=isZ1?r*z1ch:(sepY+((r-mc.z1.rows)*z2ch))
+        var evenRow=(r%2===0)
+        if(dir==='h-snake'||dir==='h-line'){
+          var colOrder=dir==='h-line'?Array.from({length:cols},function(_,i){return i}):(evenRow?Array.from({length:cols},function(_,i){return i}):Array.from({length:cols},function(_,i){return cols-1-i}))
+          colOrder.forEach(function(c){
+            allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c})
+          })
+        } else {
+          // v-snake: column by column
+          for(var c=0;c<cols;c++){
+            allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c})
+          }
+        }
+      }
+      // Draw cables port by port
+      var ppport=Math.ceil(mc.tot/maxP)
+      for(var p=0;p<maxP;p++){
+        var start=p*ppport, end2=Math.min(start+ppport,allPanels.length)
+        if(start>=allPanels.length) break
+        var pts=allPanels.slice(start,end2)
+        if(!pts.length) continue
+        var col=portColors2[p%portColors2.length]
+        ctx.strokeStyle=col; ctx.lineWidth=Math.max(1.5,cw*0.05)
+        ctx.setLineDash([6,3]); ctx.lineCap='round'; ctx.lineJoin='round'
+        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y)
+        for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y)
+        ctx.stroke(); ctx.setLineDash([])
+        // Arrows
+        if(cw>=18){
+          for(var i=0;i<pts.length-1;i++){
+            var mx=(pts[i].x+pts[i+1].x)/2, my=(pts[i].y+pts[i+1].y)/2
+            var angle=Math.atan2(pts[i+1].y-pts[i].y,pts[i+1].x-pts[i].x)
+            var aw=Math.max(3,cw*0.14)
+            ctx.fillStyle=col; ctx.save(); ctx.translate(mx,my); ctx.rotate(angle)
+            ctx.beginPath(); ctx.moveTo(aw,0); ctx.lineTo(-aw*0.6,-aw*0.4); ctx.lineTo(-aw*0.6,aw*0.4)
+            ctx.closePath(); ctx.fill(); ctx.restore()
+          }
+        }
+        // IN badge
+        var fs3=Math.max(6,Math.min(9,cw*0.22))
+        ctx.font='bold '+fs3+'px monospace'
+        var inLbl='P'+(p+1); var bW=ctx.measureText(inLbl).width+8, bH=Math.max(10,fs3*1.5)
+        var inX=pts[0].x-cw/2, inY=pts[0].y-bH/2
+        ctx.fillStyle=col; roundRect(ctx,inX,inY,bW,bH,3); ctx.fill()
+        ctx.fillStyle='#000'; ctx.textAlign='center'; ctx.textBaseline='middle'
+        ctx.fillText(inLbl,inX+bW/2,pts[0].y)
+        // OUT badge
+        var outX=pts[pts.length-1].x+cw/2-bW-2
+        ctx.fillStyle='rgba(0,0,0,0.8)'; roundRect(ctx,outX,pts[pts.length-1].y-bH/2,bW,bH,3); ctx.fill()
+        ctx.strokeStyle=col; ctx.lineWidth=1; roundRect(ctx,outX,pts[pts.length-1].y-bH/2,bW,bH,3); ctx.stroke()
+        ctx.fillStyle=col; ctx.textAlign='center'; ctx.textBaseline='middle'
+        ctx.fillText('OUT',outX+bW/2,pts[pts.length-1].y)
+      }
+    }
+
+    // Zone labels (small badges bottom-right)
+    ctx.fillStyle='rgba(0,212,255,0.7)'; ctx.font='bold 8px monospace'; ctx.textAlign='left'; ctx.textBaseline='top'
+    ctx.fillText('Z1: '+mc.z1.mw+'x'+mc.z1.mh+'cm',6,4)
+    ctx.fillStyle='rgba(245,166,35,0.7)'
+    ctx.fillText('Z2: '+mc.z2.mw+'x'+mc.z2.mh+'cm',6,sepY+4)
 
   } else {
-    // Columns mode
-    var z1ar2= mc.z1.mh/mc.z1.mw, z2ar2=mc.z2.mh/mc.z2.mw
-    var rows2 = mc.rows
-    var z1cw  = Math.max(8, Math.floor(availW*mc.z1.cols/mc.cols * z))
-    var z2cw  = Math.max(8, Math.floor(availW*mc.z2.cols/mc.cols * z))
-    var ch2   = Math.max(4, Math.floor(z1cw*z1ar2))
-    var totalW2= mc.z1.cols*z1cw + mc.z2.cols*z2cw
-    var totalH2= rows2*ch2
+    // ── COLUMNS MODE ──
+    var rows2=mc.rows
+    var baseW=Math.max(10,Math.floor(availW/mc.cols*z))
+    var z1cw2=Math.max(10,Math.floor(baseW))
+    var z2cw2=Math.max(10,Math.floor(baseW*(mc.z2.mw/mc.z1.mw)))
+    var ch2=Math.max(6,Math.floor(z1cw2*(mc.z1.mh/mc.z1.mw)))
+    var sepX=mc.z1.cols*z1cw2
+    var totalW2=sepX+mc.z2.cols*z2cw2, totalH2=rows2*ch2
 
     cv.width=totalW2; cv.height=totalH2
-    var ctx=cv.getContext('2d'); ctx.clearRect(0,0,totalW2,totalH2)
+    ctx.clearRect(0,0,totalW2,totalH2)
 
-    // Zone 1
+    var panelNum2=0
     for(var r=0;r<rows2;r++){
       for(var c=0;c<mc.z1.cols;c++){
-        var x=c*z1cw, y=r*ch2
-        ctx.fillStyle='rgba(0,212,255,0.2)'; ctx.fillRect(x+1,y+1,z1cw-2,ch2-2)
-        ctx.strokeStyle='rgba(0,212,255,0.55)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,z1cw-2,ch2-2)
-        if(z1cw>=14&&ch2>=8){var n3=r*mc.z1.cols+c+1;var fs3=Math.max(6,Math.min(10,z1cw*0.28));ctx.fillStyle='rgba(0,212,255,0.9)';ctx.font='bold '+fs3+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n3,x+z1cw/2,y+ch2/2)}
+        panelNum2++; var x=c*z1cw2, y=r*ch2
+        ctx.fillStyle='rgba(0,212,255,0.18)'; ctx.fillRect(x+1,y+1,z1cw2-2,ch2-2)
+        ctx.strokeStyle='rgba(0,212,255,0.5)'; ctx.lineWidth=0.8; ctx.strokeRect(x+1,y+1,z1cw2-2,ch2-2)
+        if(z1cw2>=16&&ch2>=10){var fs4=Math.max(6,Math.min(10,z1cw2*0.26));ctx.fillStyle='rgba(0,212,255,0.85)';ctx.font='bold '+fs4+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(panelNum2),x+z1cw2/2,y+ch2/2)}
       }
-    }
-
-    // Separator
-    var sepX=mc.z1.cols*z1cw
-    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=2; ctx.setLineDash([8,4])
-    ctx.beginPath(); ctx.moveTo(sepX,0); ctx.lineTo(sepX,totalH2); ctx.stroke()
-    ctx.setLineDash([])
-
-    // Zone 2
-    for(var r=0;r<rows2;r++){
       for(var c=0;c<mc.z2.cols;c++){
-        var x=sepX+2+c*z2cw, y=r*ch2
-        ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.fillRect(x+1,y+1,z2cw-2,ch2-2)
-        ctx.strokeStyle='rgba(245,166,35,0.6)'; ctx.lineWidth=1; ctx.strokeRect(x+1,y+1,z2cw-2,ch2-2)
-        if(z2cw>=14&&ch2>=8){var n4=mc.z1.panels+r*mc.z2.cols+c+1;var fs4=Math.max(6,Math.min(10,z2cw*0.28));ctx.fillStyle='rgba(245,166,35,0.95)';ctx.font='bold '+fs4+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(n4,x+z2cw/2,y+ch2/2)}
+        panelNum2++; var x2=sepX+c*z2cw2, y2=r*ch2
+        ctx.fillStyle='rgba(245,166,35,0.2)'; ctx.fillRect(x2+1,y2+1,z2cw2-2,ch2-2)
+        ctx.strokeStyle='rgba(245,166,35,0.55)'; ctx.lineWidth=0.8; ctx.strokeRect(x2+1,y2+1,z2cw2-2,ch2-2)
+        if(z2cw2>=16&&ch2>=10){var fs5=Math.max(6,Math.min(10,z2cw2*0.26));ctx.fillStyle='rgba(245,166,35,0.9)';ctx.font='bold '+fs5+'px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(panelNum2),x2+z2cw2/2,y2+ch2/2)}
       }
     }
-
-    // Zone bars
-    ctx.fillStyle='rgba(0,212,255,0.85)'; ctx.fillRect(0,0,sepX,4)
-    ctx.fillStyle='rgba(245,166,35,0.85)'; ctx.fillRect(sepX+2,0,mc.z2.cols*z2cw,4)
+    // Separator
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([10,5])
+    ctx.beginPath(); ctx.moveTo(sepX,0); ctx.lineTo(sepX,totalH2); ctx.stroke(); ctx.setLineDash([])
+    ctx.fillStyle='rgba(0,212,255,0.9)'; ctx.fillRect(0,0,sepX,4)
+    ctx.fillStyle='rgba(245,166,35,0.9)'; ctx.fillRect(sepX,0,mc.z2.cols*z2cw2,4)
+    ctx.fillStyle='rgba(0,212,255,0.7)'; ctx.font='bold 8px monospace'; ctx.textAlign='left'; ctx.textBaseline='top'
+    ctx.fillText('Z1: '+mc.z1.mw+'x'+mc.z1.mh+'cm',6,6)
+    ctx.fillStyle='rgba(245,166,35,0.7)'; ctx.fillText('Z2: '+mc.z2.mw+'x'+mc.z2.mh+'cm',sepX+6,6)
   }
 
   document.getElementById('zv').textContent=ZL+'%'
-  var info=document.getElementById('infobar')
-  if(info) info.textContent='Modulos mixtos · Zona 1: '+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Zona 2: '+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · Total: '+mc.tot+' paneles · '+mc.rw+'x'+mc.rh+' px'
+  var infobar=document.getElementById('infobar')
+  if(infobar) infobar.textContent='Mixto · Z1:'+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Z2:'+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · '+mc.rw+'x'+mc.rh+' px'
 }
 
 function compute(){
@@ -2659,46 +2740,36 @@ async function exportPDF(){
   '</div>'
   pages.push(page3)
 
-  // ── Capture 1: Solo cableado de DATOS (sin eléctrico) ──
-  var mapDataImg = ''
+  // ── Capture canvas images for PDF ──
+  var mapDataImg = '', mapElecImg = ''
   try {
     var srcCanvas = document.getElementById('map-canvas')
     if(srcCanvas){
       if(MIXED_MODE){
-        renderMixedMap()  // Mixed: render zones
+        // Mixed: just capture current canvas as-is (zones already drawn)
+        renderMixedMap()
+        mapDataImg = srcCanvas.toDataURL('image/png')
+        // No separate elec map for mixed mode yet
       } else {
-        var prevElec = SHOW_ELEC
-        var prevData = SHOW_DATA
+        // Normal mode: capture data-only version
+        var prevElec = SHOW_ELEC, prevData = SHOW_DATA
         SHOW_DATA = true; SHOW_ELEC = false
         renderMap()
         mapDataImg = srcCanvas.toDataURL('image/png')
-        SHOW_ELEC = prevElec; SHOW_DATA = prevData
-      }
-      mapDataImg = srcCanvas.toDataURL('image/png')
-    }
-  } catch(e){ console.log('Canvas data capture error:', e) }
 
-  // ── Capture 2: Solo cableado ELÉCTRICO (sin datos) ──
-  var mapElecImg = ''
-  if(_elecDrops && _elecDrops.length){
-    try {
-      var srcCanvas2 = document.getElementById('map-canvas')
-      if(srcCanvas2){
-        var prevElec2 = SHOW_ELEC
-        var prevData2 = SHOW_DATA
-        SHOW_DATA = false
-        SHOW_ELEC = true
-        renderMap()       // Base sin datos
-        renderElecMap()   // Solo eléctrico
-        mapElecImg = srcCanvas2.toDataURL('image/png')
-        SHOW_DATA = prevData2
-        SHOW_ELEC = prevElec2
-        // Restore original view
-        if(SHOW_DATA) renderMap()
-        if(SHOW_ELEC) renderElecMap()
+        // Capture elec-only version
+        if(_elecDrops && _elecDrops.length){
+          SHOW_DATA = false; SHOW_ELEC = true
+          renderMap(); renderElecMap()
+          mapElecImg = srcCanvas.toDataURL('image/png')
+        }
+
+        // Restore
+        SHOW_DATA = prevData; SHOW_ELEC = prevElec
+        if(SHOW_ELEC) renderElecMap(); else renderMap()
       }
-    } catch(e){ console.log('Canvas elec capture error:', e) }
-  }
+    }
+  } catch(e){ console.log('Canvas capture error:', e) }
 
   // ── Página: Mapa de cableado de DATOS ──
   if(mapDataImg){
