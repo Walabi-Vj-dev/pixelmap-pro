@@ -2771,34 +2771,29 @@ async function exportPDF(){
   '</div>'
   pages.push(page3)
 
-  // ── Capture canvas images for PDF ──
+  // Capture DATA only and ELEC only separately for PDF
   var mapDataImg = '', mapElecImg = ''
   try {
     var srcCanvas = document.getElementById('map-canvas')
     if(srcCanvas){
-      if(MIXED_MODE){
-        // Mixed: just capture current canvas as-is (zones already drawn)
-        renderMixedMap()
-        mapDataImg = srcCanvas.toDataURL('image/png')
-        // No separate elec map for mixed mode yet
-      } else {
-        // Normal mode: capture data-only version
-        var prevElec = SHOW_ELEC, prevData = SHOW_DATA
-        SHOW_DATA = true; SHOW_ELEC = false
-        renderMap()
-        mapDataImg = srcCanvas.toDataURL('image/png')
+      var prevElec = SHOW_ELEC, prevData = SHOW_DATA
 
-        // Capture elec-only version
-        if(_elecDrops && _elecDrops.length){
-          SHOW_DATA = false; SHOW_ELEC = true
-          renderMap(); renderElecMap()
-          mapElecImg = srcCanvas.toDataURL('image/png')
-        }
+      // Data only
+      SHOW_DATA = true; SHOW_ELEC = false
+      if(MIXED_MODE) renderMixedMap(); else renderMap()
+      mapDataImg = srcCanvas.toDataURL('image/png')
 
-        // Restore
-        SHOW_DATA = prevData; SHOW_ELEC = prevElec
-        if(SHOW_ELEC) renderElecMap(); else renderMap()
+      // Elec only
+      if(_elecDrops && _elecDrops.length){
+        SHOW_DATA = false; SHOW_ELEC = true
+        if(MIXED_MODE) renderMixedMap(); else { renderMap(); renderElecMap() }
+        mapElecImg = srcCanvas.toDataURL('image/png')
       }
+
+      // Restore
+      SHOW_DATA = prevData; SHOW_ELEC = prevElec
+      if(MIXED_MODE) renderMixedMap()
+      else if(SHOW_ELEC) renderElecMap(); else renderMap()
     }
   } catch(e){ console.log('Canvas capture error:', e) }
 
