@@ -3034,119 +3034,74 @@ function loadScreenColors(sc){
 }
 
 
+
+
 // ════ NOVASTAR .SCR EXPORT ════
-// Binary format reverse-engineered from DSCI file format
-// Compatible with NovaLCT screen configuration import
+// Reverse-engineered DSCI binary format — compatible with NovaLCT
+var _SCR_HDR = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='
+var _SCR_FTR = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
-var NOVA_SCR_HEADER_B64 = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='
-var NOVA_SCR_FOOTER_B64 = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
-
-function b64ToUint8Array(b64){
-  var bin = atob(b64), arr = new Uint8Array(bin.length)
-  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i)
-  return arr
+function _b64arr(b64){
+  var s=atob(b64),a=new Uint8Array(s.length)
+  for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i)
+  return a
 }
 
-function generateNovaStarSCR(cols, rows, ports, modWpx, modHpx, wiringMode){
-  wiringMode = wiringMode || 'h-snake'
-  var total = cols * rows
-  var ppp = Math.ceil(total / ports)  // panels per port
-
-  // Build serpentine wiring order
-  var wiring = []
+function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
+  wiring=wiring||'h-snake'
+  var total=cols*rows, ppp=Math.ceil(total/ports)
+  var wo=[]
   for(var r=0;r<rows;r++){
     var cs=[]
-    if(wiringMode==='h-snake' && r%2===1){
-      for(var c=cols-1;c>=0;c--) cs.push(c)
-    } else {
-      for(var c=0;c<cols;c++) cs.push(c)
-    }
-    cs.forEach(function(c){ wiring.push([c,r]) })
+    if(wiring==='h-snake'&&r%2===1){for(var c=cols-1;c>=0;c--)cs.push(c)}
+    else{for(var c=0;c<cols;c++)cs.push(c)}
+    cs.forEach(function(c){wo.push([c,r])})
   }
-
-  // Build panel entries (17 bytes each)
-  var panelData = []
-  for(var seq=0;seq<wiring.length;seq++){
-    var port = Math.floor(seq / ppp)
-    var e = new Uint8Array(17)
-    e[0]  = (seq + 2) % 3
-    e[1]  = Math.floor((seq + 2) / 3)
-    e[2]  = 0
-    e[3]  = (seq + 2) % 3
-    e[4]  = 0
-    e[5]  = modWpx & 0xFF
-    e[6]  = 0
-    e[7]  = modHpx & 0xFF
-    e[8]  = (modHpx >> 8) & 0xFF
-    e[9]  = 1
-    var b10pat = seq < cols ? [0,1,1] : [0,0,1]
-    e[10] = b10pat[seq % 3]
-    e[11] = 0
-    e[12] = seq % 12
-    e[13] = 0
-    e[14] = (Math.floor(seq/3) % 2 === 0) ? 128 : 0
-    e[15] = port & 0xFF
-    e[16] = (port >> 8) & 0xFF
-    panelData.push(e)
+  var nFull=Math.max(0,total-3), entries=[]
+  for(var seq=0;seq<wo.length;seq++){
+    var port=Math.floor(seq/ppp),e=new Uint8Array(17)
+    e[0]=(seq+2)%3; e[1]=Math.floor((seq+2)/3); e[2]=0; e[3]=(seq+2)%3
+    e[4]=0; e[5]=mwpx&0xFF; e[6]=0; e[7]=mhpx&0xFF; e[8]=(mhpx>>8)&0xFF; e[9]=1
+    e[10]=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
+    e[11]=0; e[12]=seq%12; e[13]=0
+    e[14]=Math.floor(seq/3)%2===0?128:0
+    e[15]=port&0xFF; e[16]=(port>>8)&0xFF
+    entries.push(e)
   }
-
-  // Patch header
-  var header = b64ToUint8Array(NOVA_SCR_HEADER_B64).slice()
-  header = new Uint8Array(header)
-  header[325] = cols & 0xFF
-  header[327] = rows & 0xFF
-  header[341] = modWpx & 0xFF
-  header[342] = (modWpx >> 8) & 0xFF
-  header[344]=1; header[345]=1; header[346]=1
-  header[348] = rows & 0xFF
-  header[353]=1; header[356]=1
-  header[358] = modWpx & 0xFF
-  header[361]=1; header[362]=1; header[363]=1
-  var screenWpx = cols * modWpx
-  header[364] = screenWpx & 0xFF
-  header[365] = (screenWpx >> 8) & 0xFF
-
-  var footer = b64ToUint8Array(NOVA_SCR_FOOTER_B64)
-
-  // JSON calibration (no calibration = all zeros)
-  var jsonStr = '[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]'
-  var jsonBytes = new TextEncoder().encode(jsonStr)
-  var jsonLen = new Uint8Array(2)
-  jsonLen[0] = jsonBytes.length & 0xFF
-  jsonLen[1] = (jsonBytes.length >> 8) & 0xFF
-
-  // Assemble final file
-  var totalBytes = header.length + total*17 + 2 + jsonBytes.length + footer.length
-  var result = new Uint8Array(totalBytes)
-  var offset = 0
-  result.set(header, offset); offset += header.length
-  panelData.forEach(function(e){ result.set(e, offset); offset += 17 })
-  result.set(jsonLen, offset); offset += 2
-  result.set(jsonBytes, offset); offset += jsonBytes.length
-  result.set(footer, offset)
-
-  return result
+  var hdr=new Uint8Array(_b64arr(_SCR_HDR))
+  hdr[325]=cols&0xFF; hdr[327]=rows&0xFF
+  hdr[341]=mwpx&0xFF; hdr[342]=(mwpx>>8)&0xFF
+  hdr[344]=1; hdr[345]=1; hdr[346]=1; hdr[348]=rows&0xFF
+  hdr[353]=1; hdr[356]=1; hdr[358]=mwpx&0xFF
+  hdr[361]=1; hdr[362]=1; hdr[363]=1
+  var sw=cols*mwpx; hdr[364]=sw&0xFF; hdr[365]=(sw>>8)&0xFF
+  var jb=new TextEncoder().encode('[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]')
+  var ftr=_b64arr(_SCR_FTR)
+  var sz=hdr.length+nFull*17+10+2+jb.length+ftr.length
+  var out=new Uint8Array(sz),off=0
+  out.set(hdr,off); off+=hdr.length
+  for(var i=0;i<nFull;i++){out.set(entries[i],off);off+=17}
+  if(entries[nFull]){out.set(entries[nFull].slice(0,10),off);off+=10}
+  out[off]=jb.length&0xFF; out[off+1]=(jb.length>>8)&0xFF; off+=2
+  out.set(jb,off); off+=jb.length
+  out.set(ftr,off)
+  return out
 }
 
 function exportSCR(){
   if(!S.cols||!S.rows){alert('Configura una pantalla primero');return}
-  var isPro = CU&&(CU.plan==='pro'||CU.plan==='superop')
-  if(!isPro){alert('Exportar .SCR requiere plan Pro');return}
-
-  var modWpx = S.mpw  // module width in pixels
-  var modHpx = S.mph  // module height in pixels
-  var wiringDir = S.dir || 'h-snake'
-  var wirMode = wiringDir==='h-line'?'h-line':'h-snake'
-
-  var scr = generateNovaStarSCR(S.cols, S.rows, S.pn, modWpx, modHpx, wirMode)
-
-  // Download
-  var blob = new Blob([scr], {type:'application/octet-stream'})
-  var a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  var title = (document.getElementById('p-title').value||'pantalla').replace(/[^a-z0-9]/gi,'_')
-  a.download = title + '_' + S.cols + 'x' + S.rows + '.scr'
-  a.click()
+  if(!(CU&&(CU.plan==='pro'||CU.plan==='superop'))){
+    if(!confirm('Exportar .SCR es una funcion Pro. Continuar de todas formas?')) return
+  }
+  var wDir=S.dir||'h-snake'
+  var scr=generateNovaStarSCR(S.cols,S.rows,S.pn,S.mpw,S.mph,wDir)
+  var blob=new Blob([scr],{type:'application/octet-stream'})
+  var a=document.createElement('a')
+  a.href=URL.createObjectURL(blob)
+  var nm=(document.getElementById('p-title').value||'pantalla').replace(/[^a-z0-9_\-]/gi,'_')
+  a.download=nm+'_'+S.cols+'x'+S.rows+'m_P'+S.pit+'.scr'
+  document.body.appendChild(a); a.click()
+  document.body.removeChild(a)
   URL.revokeObjectURL(a.href)
 }
 
