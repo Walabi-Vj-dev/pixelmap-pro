@@ -747,6 +747,9 @@ const SUPABASE_URL = 'https://psgwqrduggekuuorrfqk.supabase.co'
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZ3dxcmR1Z2dla3V1b3JyZnFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMTg2NDAsImV4cCI6MjA5Mjg5NDY0MH0.YhbhPaBJITVuHw7V89iAu2n2E41gzHtJh8C8cXtWk-E'
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
 let SB_SESSION = null  // Supabase session with JWT token
+var MIXED_MODE = false
+var MIX_DIR = 'rows'
+
 var PORT_COLORS = ['#00d4ff','#f5a623','#00e676','#ff4444','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800','#4caf50','#e91e63','#9c27b0','#03a9f4','#8bc34a','#ff5722','#607d8b']
 var PORT_COLORS_DEFAULT = PORT_COLORS.slice()
 const SCREEN_COLORS = ['#00d4ff','#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff9800']
@@ -1311,8 +1314,10 @@ function setPortLabel(portNum,label){
 // COMPUTE
 
 function computeMixed(){
+  console.log('[PMP] computeMixed() START, MIXED_MODE='+MIXED_MODE)
   var mc = getMixedConfig()
   window._mixedCfg = mc
+  console.log('[PMP] getMixedConfig done, mc.tot='+mc.tot)
   var ppp    = parseInt(document.getElementById('cf-ppp').value)||650000
   var maxP   = parseInt(document.getElementById('cf-ports').value)||8
   var dir2   = document.getElementById('cf-dir').value
@@ -1379,15 +1384,20 @@ function computeMixed(){
   renderProcView()
   if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
   if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
-  // Small delay to ensure DOM layout is complete before measuring clientWidth
-  setTimeout(function(){ renderMixedMap() }, 10)
+  console.log('[PMP] About to call renderMixedMap via setTimeout')
+  setTimeout(function(){
+    console.log('[PMP] renderMixedMap() called from setTimeout')
+    renderMixedMap()
+  }, 10)
 }
 
 function renderMixedMap(){
-  var mc = window._mixedCfg; if(!mc) return
+  console.log('[PMP] renderMixedMap() called, _mixedCfg='+!!window._mixedCfg)
+  var mc = window._mixedCfg; if(!mc){ console.log('[PMP] _mixedCfg is null!'); return }
   var wrap = document.querySelector('.canvas-wrap')
   var grid = document.getElementById('pixelgrid')
-  if(!wrap||!grid) return
+  if(!wrap||!grid){ console.log('[PMP] wrap or grid missing!'); return }
+  console.log('[PMP] canvas-wrap clientWidth='+wrap.clientWidth)
 
   var cv = document.getElementById('map-canvas')
   if(!cv){
@@ -1597,9 +1607,11 @@ function renderMixedMap(){
 function compute(){
   // Mixed modules mode: delegate to computeMixed() first
   if(MIXED_MODE){
+    console.log('[PMP] compute() -> MIXED_MODE=true, calling computeMixed()')
     computeMixed()
     return
   }
+  console.log('[PMP] compute() -> normal mode')
 
   var W=parseFloat(document.getElementById('cf-w').value)||4
   var H=parseFloat(document.getElementById('cf-h').value)||3
@@ -2385,9 +2397,6 @@ function toggleElecLayer(layer){
 
 
 // ════ MIXED MODULES ════
-var MIXED_MODE = false
-var MIX_DIR = 'rows'
-
 function toggleMixed(){
   MIXED_MODE = document.getElementById('cf-mixed').checked
   document.getElementById('mixed-label').textContent = MIXED_MODE ? 'ON' : 'OFF'
