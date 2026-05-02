@@ -1305,7 +1305,7 @@ function getPortLabel(portNum){
 function setPortLabel(portNum,label){
   if(!SCREENS.length) return
   var sc=SCREENS[CURRENT_SCREEN]; if(!sc.portLabels) sc.portLabels={}
-  sc.portLabels[portNum]=label.trim()||('P'+portNum); renderMap()
+  sc.portLabels[portNum]=label.trim()||('P'+portNum); if(MIXED_MODE) renderMixedMap(); else renderMap()
 }
 
 // COMPUTE
@@ -1375,14 +1375,11 @@ function computeMixed(){
     pn+'/'+maxP+' cables'
 
   if(SCREENS.length&&SCREENS[CURRENT_SCREEN]){SCREENS[CURRENT_SCREEN].S=Object.assign({},S);renderScreensList()}
-  // Use rAF to ensure DOM is ready before drawing
-  requestAnimationFrame(function(){
-    renderMixedMap()
-    renderPorts()
-    renderProcView()
-    if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
-    if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
-  })
+  renderMixedMap()
+  renderPorts()
+  renderProcView()
+  if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
+  if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
 }
 
 function renderMixedMap(){
@@ -1531,11 +1528,21 @@ function renderMixedMap(){
 
   // ── STEP 5: Electrical wiring (uses same allPanels serpentine) ──
   if(SHOW_ELEC && _elecDrops && _elecDrops.length){
-    var pdMap = window._panelDropMap
-    // Build drop→points map using allPanels order and elecY position
+    // Build pdMap directly from allPanels (don't depend on computeElec having run)
+    // Distribute allPanels evenly among drops by count
+    var nDrops = _elecDrops.length
+    var baseD = Math.floor(allPanels.length/nDrops), remD = allPanels.length%nDrops
+    var localPdMap = new Array(allPanels.length)
+    var pi2=0
+    for(var di2=0;di2<nDrops;di2++){
+      var cnt2=baseD+(di2<remD?1:0)
+      for(var k2=0;k2<cnt2;k2++) localPdMap[pi2++]=di2
+    }
+
+    // Build drop→points map
     var dropSegs = {}
     allPanels.forEach(function(pt, si){
-      var di = pdMap ? pdMap[si] : Math.floor(si * _elecDrops.length / allPanels.length)
+      var di = localPdMap[si]
       if(di===undefined || di>=_elecDrops.length) return
       if(!dropSegs[di]) dropSegs[di]=[]
       dropSegs[di].push({x:pt.x, y:pt.elecY})
