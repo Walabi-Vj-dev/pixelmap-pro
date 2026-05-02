@@ -1463,33 +1463,29 @@ function renderMixedMap(){
     ctx.fillStyle='rgba(0,212,255,0.9)'; ctx.fillRect(0,0,4,sepY)
     ctx.fillStyle='rgba(245,166,35,0.9)'; ctx.fillRect(0,sepY,4,mc.z2.rows*z2ch)
 
-    // ── Data wiring cables ──
-    if(SHOW_DATA && cw>=12){
-      // Calculate ports per panel for each zone
-      var z1ppanel=mc.z1.mpw*mc.z1.mph, z2ppanel=mc.z2.mpw*mc.z2.mph
-      var ppp2z1=Math.floor(ppp/z1ppanel)||1
-      var portColors2=PORT_COLORS
-      // Draw serpentine wiring for all panels combined
-      var allPanels=[]
-      // Build panel list in wiring order (h-snake by default)
-      var totalRows=mc.z1.rows+mc.z2.rows
-      for(var r=0;r<totalRows;r++){
-        var isZ1=r<mc.z1.rows
-        var ch_r=isZ1?z1ch:z2ch
-        var yBase=isZ1?r*z1ch:(sepY+((r-mc.z1.rows)*z2ch))
-        var evenRow=(r%2===0)
-        if(dir==='h-snake'||dir==='h-line'){
-          var colOrder=dir==='h-line'?Array.from({length:cols},function(_,i){return i}):(evenRow?Array.from({length:cols},function(_,i){return i}):Array.from({length:cols},function(_,i){return cols-1-i}))
-          colOrder.forEach(function(c){
-            allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c})
-          })
-        } else {
-          // v-snake: column by column
-          for(var c=0;c<cols;c++){
-            allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c})
-          }
+    // ── Build serpentine panel order (used for both data wiring AND electrical) ──
+    var allPanels=[]
+    var totalRows=mc.z1.rows+mc.z2.rows
+    for(var r=0;r<totalRows;r++){
+      var isZ1=r<mc.z1.rows
+      var ch_r=isZ1?z1ch:z2ch
+      var yBase=isZ1?r*z1ch:(sepY+((r-mc.z1.rows)*z2ch))
+      var evenRow=(r%2===0)
+      if(dir==='h-snake'||dir==='h-line'){
+        var colOrder=dir==='h-line'||evenRow?Array.from({length:cols},function(_,i){return i}):Array.from({length:cols},function(_,i){return cols-1-i})
+        colOrder.forEach(function(c){
+          allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c, elecY:yBase+ch_r*0.82})
+        })
+      } else {
+        for(var c=0;c<cols;c++){
+          allPanels.push({x:c*cw+cw/2, y:yBase+ch_r*0.42, row:r, col:c, elecY:yBase+ch_r*0.82})
         }
       }
+    }
+
+    // ── Data wiring cables ──
+    if(SHOW_DATA && cw>=12){
+      var portColors2=PORT_COLORS
       // Draw cables zone by zone (each zone gets its own port(s))
       var z1px2=mc.z1.mpw*mc.z1.mph, z2px2=mc.z2.mpw*mc.z2.mph
       var z1ports2=Math.max(1,Math.min(maxP-1,Math.ceil(mc.z1.panels*z1px2/ppp)))
@@ -1594,55 +1590,23 @@ function renderMixedMap(){
   var infobar=document.getElementById('infobar')
   if(infobar) infobar.textContent='Mixto · Z1:'+mc.z1.mw+'x'+mc.z1.mh+'cm ('+mc.z1.panels+' pan) · Z2:'+mc.z2.mw+'x'+mc.z2.mh+'cm ('+mc.z2.panels+' pan) · '+mc.rw+'x'+mc.rh+' px'
 
-  // Draw electrical overlay following the SAME SERPENTINE as data wiring
-  if(SHOW_ELEC && _elecDrops && _elecDrops.length){
+  // Draw electrical overlay using the SAME allPanels serpentine order
+  if(SHOW_ELEC && _elecDrops && _elecDrops.length && allPanels.length){
     var cv2=document.getElementById('map-canvas'); if(!cv2) return
     var ctx2=cv2.getContext('2d')
-    var cw2=Math.floor(cv2.width/mc.cols)
-    var z1ch2=Math.max(6,Math.floor(cw2*(mc.z1.mh/mc.z1.mw)))
-    var z2ch2=Math.max(6,Math.floor(cw2*(mc.z2.mh/mc.z2.mw)))
-    var sepY2=mc.z1.rows*z1ch2
-    var dirE=document.getElementById('cf-dir').value
-
-    // Build serpentine panel positions (same order as data wiring)
-    // Each point is at 82% height (lower than data wiring at 42%)
-    var serpPts=[]
-    var totalRows2=mc.z1.rows+mc.z2.rows
-    for(var _r=0;_r<totalRows2;_r++){
-      var isZ12=(_r<mc.z1.rows)
-      var ch_r2=isZ12?z1ch2:z2ch2
-      var yBase2=isZ12?_r*z1ch2:(sepY2+((_r-mc.z1.rows)*z2ch2))
-      var evenR2=(_r%2===0)
-      var cols2=mc.cols
-      if(dirE==='v-snake'){
-        // vertical: column by column
-        serpPts.push({row:_r})
-      } else {
-        // h-snake or h-line
-        var colArr=[]
-        if(dirE==='h-line'||evenR2){
-          for(var _c=0;_c<cols2;_c++) colArr.push(_c)
-        } else {
-          for(var _c=cols2-1;_c>=0;_c--) colArr.push(_c)
-        }
-        colArr.forEach(function(_c){
-          serpPts.push({x:_c*cw2+cw2/2, y:yBase2+ch_r2*0.82})
-        })
-      }
-    }
-
-    // Assign serpentine points to drops using _panelDropMap
     var pdMap2=window._panelDropMap
+
+    // Build drop segments using allPanels (already in correct serpentine order)
+    // Use elecY (82% height) instead of y (42% height used for data)
     var dropSegs={}
-    serpPts.forEach(function(pt,si){
-      if(!pt.x) return // skip placeholder
-      var di=pdMap2?pdMap2[si]:Math.floor(si/Math.ceil(serpPts.length/_elecDrops.length))
+    allPanels.forEach(function(pt,si){
+      var di=pdMap2?pdMap2[si]:undefined
       if(di===undefined||di>=_elecDrops.length) return
       if(!dropSegs[di]) dropSegs[di]=[]
-      dropSegs[di].push(pt)
+      dropSegs[di].push({x:pt.x, y:pt.elecY})
     })
 
-    // Draw each drop's cable following the serpentine path
+    // Draw each drop's cable
     Object.keys(dropSegs).forEach(function(dStr){
       var di=parseInt(dStr), d=_elecDrops[di]; if(!d) return
       var pts=dropSegs[di]; if(!pts||!pts.length) return
