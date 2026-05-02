@@ -461,6 +461,9 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
             <div class="exp-row" style="margin-bottom:8px">
               <button class="eb" onclick="exportPDF()" style="border-color:rgba(255,68,68,0.4);color:var(--red)">PDF Completo</button>
             </div>
+            <div class="exp-row" style="margin-bottom:8px">
+              <button class="eb" id="btn-scr" onclick="exportSCR()" style="border-color:rgba(245,166,35,0.4);color:var(--gold)" title="Exportar configuracion para NovaLCT">NovaLCT .SCR</button>
+            </div>
             <div style="font-size:10px;color:var(--txt3);line-height:1.5">PNG gratis · CSV y JSON requieren plan Pro</div>
           </div>
         </div>
@@ -3028,6 +3031,123 @@ function loadScreenColors(sc){
   } else {
     PORT_COLORS = PORT_COLORS_DEFAULT.slice()
   }
+}
+
+
+// ════ NOVASTAR .SCR EXPORT ════
+// Binary format reverse-engineered from DSCI file format
+// Compatible with NovaLCT screen configuration import
+
+var NOVA_SCR_HEADER_B64 = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='
+var NOVA_SCR_FOOTER_B64 = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+
+function b64ToUint8Array(b64){
+  var bin = atob(b64), arr = new Uint8Array(bin.length)
+  for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i)
+  return arr
+}
+
+function generateNovaStarSCR(cols, rows, ports, modWpx, modHpx, wiringMode){
+  wiringMode = wiringMode || 'h-snake'
+  var total = cols * rows
+  var ppp = Math.ceil(total / ports)  // panels per port
+
+  // Build serpentine wiring order
+  var wiring = []
+  for(var r=0;r<rows;r++){
+    var cs=[]
+    if(wiringMode==='h-snake' && r%2===1){
+      for(var c=cols-1;c>=0;c--) cs.push(c)
+    } else {
+      for(var c=0;c<cols;c++) cs.push(c)
+    }
+    cs.forEach(function(c){ wiring.push([c,r]) })
+  }
+
+  // Build panel entries (17 bytes each)
+  var panelData = []
+  for(var seq=0;seq<wiring.length;seq++){
+    var port = Math.floor(seq / ppp)
+    var e = new Uint8Array(17)
+    e[0]  = (seq + 2) % 3
+    e[1]  = Math.floor((seq + 2) / 3)
+    e[2]  = 0
+    e[3]  = (seq + 2) % 3
+    e[4]  = 0
+    e[5]  = modWpx & 0xFF
+    e[6]  = 0
+    e[7]  = modHpx & 0xFF
+    e[8]  = (modHpx >> 8) & 0xFF
+    e[9]  = 1
+    var b10pat = seq < cols ? [0,1,1] : [0,0,1]
+    e[10] = b10pat[seq % 3]
+    e[11] = 0
+    e[12] = seq % 12
+    e[13] = 0
+    e[14] = (Math.floor(seq/3) % 2 === 0) ? 128 : 0
+    e[15] = port & 0xFF
+    e[16] = (port >> 8) & 0xFF
+    panelData.push(e)
+  }
+
+  // Patch header
+  var header = b64ToUint8Array(NOVA_SCR_HEADER_B64).slice()
+  header = new Uint8Array(header)
+  header[325] = cols & 0xFF
+  header[327] = rows & 0xFF
+  header[341] = modWpx & 0xFF
+  header[342] = (modWpx >> 8) & 0xFF
+  header[344]=1; header[345]=1; header[346]=1
+  header[348] = rows & 0xFF
+  header[353]=1; header[356]=1
+  header[358] = modWpx & 0xFF
+  header[361]=1; header[362]=1; header[363]=1
+  var screenWpx = cols * modWpx
+  header[364] = screenWpx & 0xFF
+  header[365] = (screenWpx >> 8) & 0xFF
+
+  var footer = b64ToUint8Array(NOVA_SCR_FOOTER_B64)
+
+  // JSON calibration (no calibration = all zeros)
+  var jsonStr = '[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]'
+  var jsonBytes = new TextEncoder().encode(jsonStr)
+  var jsonLen = new Uint8Array(2)
+  jsonLen[0] = jsonBytes.length & 0xFF
+  jsonLen[1] = (jsonBytes.length >> 8) & 0xFF
+
+  // Assemble final file
+  var totalBytes = header.length + total*17 + 2 + jsonBytes.length + footer.length
+  var result = new Uint8Array(totalBytes)
+  var offset = 0
+  result.set(header, offset); offset += header.length
+  panelData.forEach(function(e){ result.set(e, offset); offset += 17 })
+  result.set(jsonLen, offset); offset += 2
+  result.set(jsonBytes, offset); offset += jsonBytes.length
+  result.set(footer, offset)
+
+  return result
+}
+
+function exportSCR(){
+  if(!S.cols||!S.rows){alert('Configura una pantalla primero');return}
+  var isPro = CU&&(CU.plan==='pro'||CU.plan==='superop')
+  if(!isPro){alert('Exportar .SCR requiere plan Pro');return}
+
+  var modWpx = S.mpw  // module width in pixels
+  var modHpx = S.mph  // module height in pixels
+  var wiringDir = S.dir || 'h-snake'
+  var wirMode = wiringDir==='h-line'?'h-line':'h-snake'
+
+  var scr = generateNovaStarSCR(S.cols, S.rows, S.pn, modWpx, modHpx, wirMode)
+
+  // Download
+  var blob = new Blob([scr], {type:'application/octet-stream'})
+  var a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  var title = (document.getElementById('p-title').value||'pantalla').replace(/[^a-z0-9]/gi,'_')
+  a.download = title + '_' + S.cols + 'x' + S.rows + '.scr'
+  a.click()
+  URL.revokeObjectURL(a.href)
 }
 
 // INIT
