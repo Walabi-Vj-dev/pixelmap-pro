@@ -1314,29 +1314,21 @@ function setPortLabel(portNum,label){
 // COMPUTE
 
 function computeMixed(){
-  console.log('[PMP] computeMixed() START, MIXED_MODE='+MIXED_MODE)
   var mc = getMixedConfig()
   window._mixedCfg = mc
-  console.log('[PMP] getMixedConfig done, mc.tot='+mc.tot)
   var ppp    = parseInt(document.getElementById('cf-ppp').value)||650000
   var maxP   = parseInt(document.getElementById('cf-ports').value)||8
   var dir2   = document.getElementById('cf-dir').value
-
-  // For stats: treat as combined screen
   var tot = mc.tot, rw = mc.rw, rh = mc.rh, pit = mc.pit
   var tpx = 0
   if(mc.z1) tpx += mc.z1.panels * mc.z1.mpw * mc.z1.mph
   if(mc.z2) tpx += mc.z2.panels * mc.z2.mpw * mc.z2.mph
   var mpx = (tpx/1e6).toFixed(2)
-
-  // Port distribution: respect zone boundaries
-  // Zone 1 gets its own port(s), Zone 2 gets its own port(s)
   var z1px = mc.z1.mpw * mc.z1.mph
   var z2px = mc.z2.mpw * mc.z2.mph
-  var z1ports = Math.max(1, Math.ceil(mc.z1.panels * z1px / ppp))
-  var z2ports = Math.max(1, Math.ceil(mc.z2.panels * z2px / ppp))
+  var z1ports = Math.max(1, Math.ceil(mc.z1.panels*z1px/ppp))
+  var z2ports = Math.max(1, Math.ceil(mc.z2.panels*z2px/ppp))
   var pn = Math.min(maxP, z1ports + z2ports)
-  // Build sizes: distribute z1 panels among z1ports, z2 panels among z2ports
   var sizes = []
   var z1base=Math.floor(mc.z1.panels/z1ports), z1rem=mc.z1.panels%z1ports
   for(var _i=0;_i<z1ports;_i++) sizes.push(z1base+(_i<z1rem?1:0))
@@ -1347,7 +1339,7 @@ function computeMixed(){
   S={W:mc.W,H:mc.H,pit:pit,mw:mc.z1.mw,mh:mc.z1.mh,ppp:ppp,maxP:maxP,
      cols:mc.cols,rows:mc.rows,tot:tot,
      mpw:mc.z1.mpw,mph:mc.z1.mph,ppp2:mc.z1.mpw*mc.z1.mph,
-     rw:rw,rh:rh,tpx:tpx,mpx:mpx,pn:pn,ppport:base,dir:dir2,
+     rw:rw,rh:rh,tpx:tpx,mpx:mpx,pn:pn,ppport:Math.ceil(mc.tot/pn),dir:dir2,
      ps:sizes.map(function(cnt,i){return{portNum:i+1,panelCount:cnt,totalPx:cnt*mc.z1.mpw*mc.z1.mph,usagePct:Math.round((cnt*mc.z1.mpw*mc.z1.mph/ppp)*100),color:PORT_COLORS[i%PORT_COLORS.length]}}),
      pi:{},po:[]}
 
@@ -1384,21 +1376,16 @@ function computeMixed(){
   renderProcView()
   if(document.getElementById('pane-elec')&&document.getElementById('pane-elec').classList.contains('active')) computeElec()
   if(document.getElementById('pane-colors')&&document.getElementById('pane-colors').classList.contains('active')) renderColorPickers()
-  console.log('[PMP] About to call renderMixedMap via setTimeout')
   setTimeout(function(){
-    console.log('[PMP] renderMixedMap() called from setTimeout')
     renderMixedMap()
   }, 10)
 }
 
 function renderMixedMap(){
-  console.log('[PMP] renderMixedMap() called, _mixedCfg='+!!window._mixedCfg)
-  var mc = window._mixedCfg; if(!mc){ console.log('[PMP] _mixedCfg is null!'); return }
+  var mc = window._mixedCfg; if(!mc) return
   var wrap = document.querySelector('.canvas-wrap')
   var grid = document.getElementById('pixelgrid')
-  if(!wrap||!grid){ console.log('[PMP] wrap or grid missing!'); return }
-  console.log('[PMP] canvas-wrap clientWidth='+wrap.clientWidth)
-
+  if(!wrap||!grid) return
   var cv = document.getElementById('map-canvas')
   if(!cv){
     grid.innerHTML=''
@@ -1406,7 +1393,7 @@ function renderMixedMap(){
     cv.id='map-canvas'; cv.style.cssText='display:block;cursor:crosshair'
     grid.appendChild(cv)
   }
-  var ctx = cv.getContext('2d')
+    var ctx = cv.getContext('2d')
   var availW = Math.max(400,(wrap.clientWidth||700)-32)
   var z = ZL/100
   var cols = mc.cols
@@ -1607,11 +1594,9 @@ function renderMixedMap(){
 function compute(){
   // Mixed modules mode: delegate to computeMixed() first
   if(MIXED_MODE){
-    console.log('[PMP] compute() -> MIXED_MODE=true, calling computeMixed()')
     computeMixed()
     return
   }
-  console.log('[PMP] compute() -> normal mode')
 
   var W=parseFloat(document.getElementById('cf-w').value)||4
   var H=parseFloat(document.getElementById('cf-h').value)||3
@@ -2064,7 +2049,6 @@ function renderProcView(){
   if(lb){var tpx=S.ps.reduce(function(a,p){return a+p.totalPx},0),over2=S.ps.filter(function(p){return p.totalPx>maxPPP}).length,ok=S.pn<=maxP2&&over2===0;lb.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="stat"><div class="sv '+(S.pn>maxP2?'err':'ok')+'">'+S.pn+'/'+maxP2+'</div><div class="sl">Puertos usados</div></div><div class="stat"><div class="sv '+(over2>0?'err':'ok')+'">'+over2+'</div><div class="sl">Sobrecargados</div></div><div class="stat"><div class="sv">'+(tpx/1e6).toFixed(2)+'</div><div class="sl">Megapixeles</div></div><div class="stat"><div class="sv '+(ok?'ok':'warn')+'">'+(ok?'OK':'REVISAR')+'</div><div class="sl">Estado</div></div></div>'}
 }
 
-
 // ════ ELECTRICAL MODULE ════
 var ELEC_COLORS = ['#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff5722','#4caf50','#e91e63','#03a9f4','#8bc34a','#607d8b']
 var SHOW_DATA = true
@@ -2395,7 +2379,6 @@ function toggleElecLayer(layer){
   renderElecMap()
 }
 
-
 // ════ MIXED MODULES ════
 function toggleMixed(){
   MIXED_MODE = document.getElementById('cf-mixed').checked
@@ -2550,7 +2533,6 @@ function renderAiSugs(){
   ss.forEach(function(s){var b=document.createElement('button');b.className='ai-sug';b.textContent=s;b.onclick=function(){document.getElementById('ai-input').value=s;sendAI()};sugs.appendChild(b)})
 }
 
-
 // MERCADOPAGO INTEGRATION
 async function startMercadoPago(){
   if(!CU){alert('Debes iniciar sesion primero');return}
@@ -2633,7 +2615,6 @@ async function restoreSession(){
     console.log('No session:', e.message)
   }
 }
-
 
 // ════ EXPORT PDF ════
 async function exportPDF(){
@@ -2911,7 +2892,6 @@ async function exportPDF(){
 }
 
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-
 
 // ════ COLOR CUSTOMIZATION ════
 var ELEC_COLORS_DEFAULT = ['#f5a623','#00e676','#b085f5','#ff6b9d','#26c6da','#ffb300','#ff5722','#4caf50','#e91e63','#03a9f4','#8bc34a','#607d8b']
