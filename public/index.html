@@ -3037,10 +3037,13 @@ function loadScreenColors(sc){
 
 
 
+
 // ════ NOVASTAR .SCR EXPORT ════
-// Reverse-engineered DSCI format — byte-for-byte compatible with NovaLCT
-var _SCR_HDR = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='
-var _SCR_FTR = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
+// Reverse-engineered DSCI binary format
+// Two templates: rows=3 (4x3m reference) and rows=2 (10x2m reference)
+var _SCR_HDR3 = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='  // template for rows>=3
+var _SCR_HDR2 = 'RFNDSUQ4gAAAAH8DAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA3QyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsgIAAAEAAAAAABQAAgAAAAAAAAAAAAAAAACAAAABAQACCwAAAAABAAABAIAAAAEBAAABAIAAAA=='  // template for rows=2
+var _SCR_FTR  = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
 function _b64arr(b64){
   var s=atob(b64),a=new Uint8Array(s.length)
@@ -3050,12 +3053,10 @@ function _b64arr(b64){
 
 function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
   wiring=wiring||'h-snake'
-  var total=cols*rows
-  var nFull=total-3
-  var ppp=Math.floor(total/ports)
-  var halfPpp=Math.floor(ppp/2)
+  var total=cols*rows, nFull=total-3
+  var b12mod=rows===2?14:12
 
-  // Serpentine wiring order
+  // Wiring order (serpentine)
   var wo=[]
   for(var r=0;r<rows;r++){
     var cs=[]
@@ -3067,33 +3068,47 @@ function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
   // Build entries
   var entries=[]
   for(var seq=0;seq<wo.length;seq++){
-    var k=Math.floor(seq/3), pos=seq%3
-    // B12: exact formula from reverse-engineering
-    var b12=[k+1,(2-k+1200)%12,k+5][pos]%256
-    // B10: threshold = cols
-    var b10=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
-    // B14: alternating 128/0 per group of 3
-    var b14=Math.floor(seq/3)%2===0?128:0
-    // Port: (seq+halfPpp)//ppp clamped to ports-1
-    var port=Math.min(ports-1,Math.floor((seq+halfPpp)/ppp))
+    var k=Math.floor(seq/rows), pos=seq%rows
+    var b0=(seq+2)%rows, b1=Math.floor((seq+2)/rows)
+
+    var b10,b12,b14,b11=0,port
+
+    if(rows===2){
+      b10=0
+      b12=(pos===0?(b12mod-4-k):(k+2))%b12mod
+      b14=seq%4===0||seq%4===3?128:0
+      port=seq===0?0:Math.min(ports-1,Math.floor((seq+3)/4))
+    } else {
+      b10=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
+      b12=[[k+1,(2-k%12+12)%12,k+5][pos]]%12
+      var kp=Math.floor(seq/3)%2
+      b14=kp===0?128:0
+      var ppp=Math.max(1,Math.floor(total/ports))
+      var hpp=Math.floor(ppp/2)
+      port=Math.min(ports-1,Math.floor((seq+hpp)/ppp))
+    }
 
     var e=new Uint8Array(17)
-    e[0]=(seq+2)%3; e[1]=Math.floor((seq+2)/3); e[2]=0; e[3]=(seq+2)%3
-    e[4]=0; e[5]=mwpx&0xFF; e[6]=0
-    e[7]=mhpx&0xFF; e[8]=(mhpx>>8)&0xFF; e[9]=1
-    e[10]=b10; e[11]=0; e[12]=b12; e[13]=0; e[14]=b14
-    e[15]=port&0xFF; e[16]=(port>>8)&0xFF
+    e[0]=b0;e[1]=b1;e[2]=0;e[3]=b0
+    e[4]=0;e[5]=mwpx&0xFF;e[6]=0
+    e[7]=mhpx&0xFF;e[8]=(mhpx>>8)&0xFF;e[9]=1
+    e[10]=b10;e[11]=b11;e[12]=b12;e[13]=0;e[14]=b14
+    e[15]=port&0xFF;e[16]=(port>>8)&0xFF
     entries.push(e)
   }
 
-  // Patch header
-  var hdr=new Uint8Array(_b64arr(_SCR_HDR))
+  // Patch header (use rows=2 template for rows=2, else rows=3 template)
+  var hdrSrc=rows===2?_SCR_HDR2:_SCR_HDR3
+  var hdr=new Uint8Array(_b64arr(hdrSrc))
   hdr[325]=cols&0xFF; hdr[327]=rows&0xFF
   hdr[341]=mwpx&0xFF; hdr[342]=(mwpx>>8)&0xFF
-  hdr[344]=1; hdr[345]=1; hdr[346]=1; hdr[348]=rows&0xFF
+  hdr[344]=1; hdr[345]=1
+  // [346],[347],[348] from template (complex encoding, not rows)
   hdr[353]=1; hdr[356]=1; hdr[358]=mwpx&0xFF
-  hdr[361]=1; hdr[362]=1; hdr[363]=1
-  var sw=cols*mwpx; hdr[364]=sw&0xFF; hdr[365]=(sw>>8)&0xFF
+  hdr[361]=1; hdr[362]=1
+  // [363],[364],[365] from template
+  var v1=17*nFull+266; hdr[10]=v1&0xFF; hdr[11]=(v1>>8)&0xFF
+  var v2=17*nFull+198; hdr[210]=v2&0xFF; hdr[211]=(v2>>8)&0xFF
 
   var jb=new TextEncoder().encode('[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]')
   var ftr=_b64arr(_SCR_FTR)
