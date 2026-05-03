@@ -3036,8 +3036,9 @@ function loadScreenColors(sc){
 
 
 
+
 // ════ NOVASTAR .SCR EXPORT ════
-// Reverse-engineered DSCI binary format — compatible with NovaLCT
+// Reverse-engineered DSCI format — byte-for-byte compatible with NovaLCT
 var _SCR_HDR = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='
 var _SCR_FTR = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
@@ -3049,7 +3050,12 @@ function _b64arr(b64){
 
 function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
   wiring=wiring||'h-snake'
-  var total=cols*rows, ppp=Math.ceil(total/ports)
+  var total=cols*rows
+  var nFull=total-3
+  var ppp=Math.floor(total/ports)
+  var halfPpp=Math.floor(ppp/2)
+
+  // Serpentine wiring order
   var wo=[]
   for(var r=0;r<rows;r++){
     var cs=[]
@@ -3057,17 +3063,30 @@ function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
     else{for(var c=0;c<cols;c++)cs.push(c)}
     cs.forEach(function(c){wo.push([c,r])})
   }
-  var nFull=Math.max(0,total-3), entries=[]
+
+  // Build entries
+  var entries=[]
   for(var seq=0;seq<wo.length;seq++){
-    var port=Math.floor(seq/ppp),e=new Uint8Array(17)
+    var k=Math.floor(seq/3), pos=seq%3
+    // B12: exact formula from reverse-engineering
+    var b12=[k+1,(2-k+1200)%12,k+5][pos]%256
+    // B10: threshold = cols
+    var b10=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
+    // B14: alternating 128/0 per group of 3
+    var b14=Math.floor(seq/3)%2===0?128:0
+    // Port: (seq+halfPpp)//ppp clamped to ports-1
+    var port=Math.min(ports-1,Math.floor((seq+halfPpp)/ppp))
+
+    var e=new Uint8Array(17)
     e[0]=(seq+2)%3; e[1]=Math.floor((seq+2)/3); e[2]=0; e[3]=(seq+2)%3
-    e[4]=0; e[5]=mwpx&0xFF; e[6]=0; e[7]=mhpx&0xFF; e[8]=(mhpx>>8)&0xFF; e[9]=1
-    e[10]=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
-    e[11]=0; e[12]=seq%12; e[13]=0
-    e[14]=Math.floor(seq/3)%2===0?128:0
+    e[4]=0; e[5]=mwpx&0xFF; e[6]=0
+    e[7]=mhpx&0xFF; e[8]=(mhpx>>8)&0xFF; e[9]=1
+    e[10]=b10; e[11]=0; e[12]=b12; e[13]=0; e[14]=b14
     e[15]=port&0xFF; e[16]=(port>>8)&0xFF
     entries.push(e)
   }
+
+  // Patch header
   var hdr=new Uint8Array(_b64arr(_SCR_HDR))
   hdr[325]=cols&0xFF; hdr[327]=rows&0xFF
   hdr[341]=mwpx&0xFF; hdr[342]=(mwpx>>8)&0xFF
@@ -3075,12 +3094,13 @@ function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
   hdr[353]=1; hdr[356]=1; hdr[358]=mwpx&0xFF
   hdr[361]=1; hdr[362]=1; hdr[363]=1
   var sw=cols*mwpx; hdr[364]=sw&0xFF; hdr[365]=(sw>>8)&0xFF
+
   var jb=new TextEncoder().encode('[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]')
   var ftr=_b64arr(_SCR_FTR)
   var sz=hdr.length+nFull*17+10+2+jb.length+ftr.length
   var out=new Uint8Array(sz),off=0
   out.set(hdr,off); off+=hdr.length
-  for(var i=0;i<nFull;i++){out.set(entries[i],off);off+=17}
+  for(var i=0;i<nFull&&i<entries.length;i++){out.set(entries[i],off);off+=17}
   if(entries[nFull]){out.set(entries[nFull].slice(0,10),off);off+=10}
   out[off]=jb.length&0xFF; out[off+1]=(jb.length>>8)&0xFF; off+=2
   out.set(jb,off); off+=jb.length
@@ -3090,20 +3110,19 @@ function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
 
 function exportSCR(){
   if(!S.cols||!S.rows){alert('Configura una pantalla primero');return}
-  if(!(CU&&(CU.plan==='pro'||CU.plan==='superop'))){
-    if(!confirm('Exportar .SCR es una funcion Pro. Continuar de todas formas?')) return
-  }
-  var wDir=S.dir||'h-snake'
-  var scr=generateNovaStarSCR(S.cols,S.rows,S.pn,S.mpw,S.mph,wDir)
+  var wDir=document.getElementById('cf-dir')?document.getElementById('cf-dir').value:'h-snake'
+  var wirMode=wDir==='h-line'?'h-line':'h-snake'
+  var scr=generateNovaStarSCR(S.cols,S.rows,S.pn,S.mpw,S.mph,wirMode)
   var blob=new Blob([scr],{type:'application/octet-stream'})
   var a=document.createElement('a')
   a.href=URL.createObjectURL(blob)
   var nm=(document.getElementById('p-title').value||'pantalla').replace(/[^a-z0-9_\-]/gi,'_')
-  a.download=nm+'_'+S.cols+'x'+S.rows+'m_P'+S.pit+'.scr'
+  a.download=nm+'_'+S.cols+'x'+S.rows+'_P'+S.pit+'.scr'
   document.body.appendChild(a); a.click()
   document.body.removeChild(a)
   URL.revokeObjectURL(a.href)
 }
+
 
 // INIT
 document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
