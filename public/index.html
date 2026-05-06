@@ -299,22 +299,75 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
 [data-theme="glassmorphism"] input,[data-theme="glassmorphism"] select,[data-theme="glassmorphism"] textarea{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.2)!important;color:#fff!important}
 [data-theme="glassmorphism"] input:focus,[data-theme="glassmorphism"] select:focus{border-color:rgba(255,255,255,.6)!important}
 
-[data-theme="synthwave"]{--bg:#120024;--s1:rgba(255,0,255,.06);--s2:rgba(0,255,255,.04);--s3:rgba(255,0,255,.09);--b1:rgba(255,0,255,.22);--b2:rgba(0,255,255,.22);--cyan:#ff00ff;--gold:#ff0;--green:#0ff;--red:#f44;--purple:#f0f;--txt:#fff;--txt2:rgba(0,255,255,.75);--txt3:rgba(255,0,255,.45)}
-[data-theme="synthwave"] body{background:#120024!important}
-[data-theme="synthwave"] body::before{content:'';position:fixed;bottom:0;left:0;right:0;height:40vh;background-image:linear-gradient(rgba(255,0,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,255,.12) 1px,transparent 1px);background-size:40px 40px;transform:perspective(250px) rotateX(55deg);transform-origin:bottom center;pointer-events:none;z-index:0}
+[data-theme="synthwave"]{
+  --bg:#0a0018;
+  --s1:#1a0035;
+  --s2:#150028;
+  --s3:#200040;
+  --b1:rgba(255,0,255,.35);
+  --b2:rgba(0,255,255,.35);
+  --cyan:#ff00ff;
+  --gold:#ffff00;
+  --green:#00ffff;
+  --red:#ff4466;
+  --purple:#ff00ff;
+  --txt:#ffffff;
+  --txt2:rgba(0,255,255,.9);
+  --txt3:rgba(255,0,255,.6);
+}
+[data-theme="synthwave"] body{background:#0a0018!important}
+[data-theme="synthwave"] body::before{
+  content:'';position:fixed;bottom:0;left:0;right:0;height:35vh;
+  background-image:linear-gradient(rgba(255,0,255,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,255,.18) 1px,transparent 1px);
+  background-size:40px 40px;
+  transform:perspective(250px) rotateX(55deg);transform-origin:bottom center;
+  pointer-events:none;z-index:0
+}
 [data-theme="synthwave"] #s-login,[data-theme="synthwave"] #s-app{position:relative;z-index:1}
 [data-theme="synthwave"] #s-login{background:transparent!important;background-image:none!important}
-[data-theme="synthwave"] .lc-btn{background:rgba(255,0,255,.25)!important;color:#f0f!important;border:1px solid rgba(255,0,255,.5)!important}
-[data-theme="synthwave"] .bo-cta{background:rgba(255,0,255,.3)!important;color:#f0f!important}
-[data-theme="synthwave"] .login-card{border:1px solid rgba(255,0,255,.3)!important;box-shadow:0 0 40px rgba(255,0,255,.1)!important}
-[data-theme="synthwave"] .topbar{border-bottom:1px solid rgba(255,0,255,.2)!important}
-[data-theme="synthwave"] .sidebar{border-right:1px solid rgba(0,255,255,.15)!important}
-[data-theme="synthwave"] .tb-logo span,[data-theme="synthwave"] .lc-logo span{color:#f0f!important}
-[data-theme="synthwave"] .sv{color:#f0f!important}
-[data-theme="synthwave"] .mh-res{color:#0ff!important}
-[data-theme="synthwave"] .sb-tab.active{color:#f0f!important;border-bottom-color:#f0f!important;background:rgba(255,0,255,.06)!important}
-[data-theme="synthwave"] input,[data-theme="synthwave"] select,[data-theme="synthwave"] textarea{background:rgba(0,255,255,.05)!important;border-color:rgba(0,255,255,.2)!important}
-[data-theme="synthwave"] input:focus,[data-theme="synthwave"] select:focus{border-color:#f0f!important;box-shadow:0 0 0 2px rgba(255,0,255,.15)!important}
+/* Login card */
+[data-theme="synthwave"] .login-card{background:#1a0035!important;border:1px solid rgba(255,0,255,.5)!important;box-shadow:0 0 40px rgba(255,0,255,.15),0 0 80px rgba(0,255,255,.05)!important}
+[data-theme="synthwave"] .lc-btn{background:rgba(255,0,255,.3)!important;color:#ff00ff!important;border:1px solid rgba(255,0,255,.6)!important;font-weight:700!important}
+[data-theme="synthwave"] .bo-cta{background:rgba(255,0,255,.3)!important;color:#ff00ff!important}
+/* Topbar y sidebar — fondos sólidos para legibilidad */
+[data-theme="synthwave"] .topbar{background:#1a0035!important;border-bottom:1px solid rgba(255,0,255,.4)!important}
+[data-theme="synthwave"] .sidebar{background:#150028!important;border-right:1px solid rgba(0,255,255,.25)!important}
+/* Paneles/cards — fondo sólido, sin transparencia */
+[data-theme="synthwave"] .panel-section,
+[data-theme="synthwave"] .config-section,
+[data-theme="synthwave"] .screen-card,
+[data-theme="synthwave"] .proj-card,
+[data-theme="synthwave"] .stat-row,
+[data-theme="synthwave"] .scr-item,
+[data-theme="synthwave"] .modal,
+[data-theme="synthwave"] [class*="modal-"]{background:#1a0035!important;border-color:rgba(255,0,255,.3)!important}
+/* Canvas del mapa — fondo sólido oscuro para que se vean los colores de los puertos */
+[data-theme="synthwave"] #canvas-container,
+[data-theme="synthwave"] .canvas-wrap,
+[data-theme="synthwave"] .map-wrap{background:#0a0018!important}
+/* Inputs legibles */
+[data-theme="synthwave"] input,[data-theme="synthwave"] select,[data-theme="synthwave"] textarea{
+  background:#200040!important;border-color:rgba(0,255,255,.3)!important;color:#fff!important
+}
+[data-theme="synthwave"] input:focus,[data-theme="synthwave"] select:focus{
+  border-color:#ff00ff!important;box-shadow:0 0 0 2px rgba(255,0,255,.2)!important
+}
+[data-theme="synthwave"] input::placeholder,[data-theme="synthwave"] textarea::placeholder{color:rgba(255,0,255,.4)!important}
+/* Textos y acentos */
+[data-theme="synthwave"] .tb-logo span,[data-theme="synthwave"] .lc-logo span{color:#ff00ff!important}
+[data-theme="synthwave"] .sv{color:#ff00ff!important}
+[data-theme="synthwave"] .mh-res{color:#00ffff!important}
+[data-theme="synthwave"] .sb-tab.active{color:#ff00ff!important;border-bottom-color:#ff00ff!important;background:rgba(255,0,255,.1)!important}
+[data-theme="synthwave"] .scr-tab.active{border-bottom-color:#ff00ff!important;color:#ff00ff!important}
+[data-theme="synthwave"] .lang-btn.active,[data-theme="synthwave"] .tl-btn.active{border-color:#ff00ff!important;color:#ff00ff!important}
+/* Info tooltip del canvas — fondo sólido */
+[data-theme="synthwave"] .panel-tooltip,
+[data-theme="synthwave"] #panel-info,
+[data-theme="synthwave"] .cell-info{background:#1a0035!important;border:1px solid rgba(0,255,255,.4)!important;color:#fff!important}
+/* Scrollbars */
+[data-theme="synthwave"] ::-webkit-scrollbar-track{background:#0a0018}
+[data-theme="synthwave"] ::-webkit-scrollbar-thumb{background:rgba(255,0,255,.4);border-radius:3px}
+[data-theme="synthwave"] ::-webkit-scrollbar-thumb:hover{background:rgba(255,0,255,.6)}
 </style>
 </head>
 <body>
