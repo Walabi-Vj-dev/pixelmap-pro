@@ -614,117 +614,70 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
       </div>
 
       
-      <!-- CALC PANE - Professional LED Calculator (Wefone-inspired) -->
+      <!-- CALC PANE - Professional LED Calculator -->
       <div class="sb-pane" id="pane-calc">
         <div style="padding:0;overflow-y:auto;height:100%">
 
           <!-- Header -->
           <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:16px;margin-bottom:0;position:relative;overflow:hidden">
             <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(245,158,11,0.08);border-radius:50%"></div>
-            <div style="position:absolute;bottom:-30px;left:-10px;width:80px;height:80px;background:rgba(245,158,11,0.05);border-radius:50%"></div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;position:relative">
               <div style="width:32px;height:32px;background:#f59e0b;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(245,158,11,0.3)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               </div>
               <div>
                 <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;letter-spacing:.5px">LED CALCULATOR</div>
-                <div style="font-size:8px;color:#f59e0b;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">id="calc-t-grade">Professional Grade</div>
+                <div id="calc-t-grade" style="font-size:8px;color:#f59e0b;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Grado Profesional</div>
               </div>
             </div>
-            <div id="calc-summary-bar" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 10px;font-size:9px;color:#f59e0b;font-weight:700;letter-spacing:.5px;display:none">
-              — configure below —
-            </div>
+            <div id="calc-summary-bar" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 10px;font-size:9px;color:#f59e0b;font-weight:700;letter-spacing:.5px;display:none">— configurar abajo —</div>
           </div>
 
-          <!-- Environment Toggle -->
+          <!-- Environment -->
           <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-env">Environment</div>
+            <div id="calc-h-env" style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Entorno</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button id="calc-env-indoor" onclick="calcSetEnv('indoor')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(59,130,246,0.5);background:rgba(59,130,246,0.15);color:#60a5fa;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s" id="calc-btn-indoor">
-                🏢 Indoor
-              </button>
-              <button id="calc-env-outdoor" onclick="calcSetEnv('outdoor')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s" id="calc-btn-outdoor">
-                ☀️ Outdoor
-              </button>
+              <button id="calc-env-indoor" onclick="calcSetEnv('indoor')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(59,130,246,0.5);background:rgba(59,130,246,0.15);color:#60a5fa;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer">🏢 Interior</button>
+              <button id="calc-env-outdoor" onclick="calcSetEnv('outdoor')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer">☀️ Exterior</button>
             </div>
           </div>
 
-          <!-- Pixel Pitch -->
+          <!-- Pitch -->
           <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-pitch">Pixel Pitch</div>
+            <div id="calc-h-pitch" style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Paso de Pixel</div>
             <div id="calc-pitch-list" style="display:flex;flex-direction:column;gap:4px"></div>
           </div>
 
-          <!-- Module Orientation -->
+          <!-- Orientation -->
           <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-orient">Module Orientation</div>
+            <div id="calc-h-orient" style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Orientacion del Modulo</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <button id="calc-orient-land" onclick="calcSetOrient('landscape')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(245,158,11,0.5);background:rgba(245,158,11,0.1);color:#f59e0b;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer" id="calc-btn-land">
-                ⬛ <span id="calc-t-land">Landscape</span>
-              </button>
-              <button id="calc-orient-port" onclick="calcSetOrient('portrait')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer" id="calc-btn-port">
-                ▯ <span id="calc-t-port">Portrait</span>
-              </button>
+              <button id="calc-orient-land" onclick="calcSetOrient('landscape')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(245,158,11,0.5);background:rgba(245,158,11,0.1);color:#f59e0b;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer">⬛ <span id="calc-t-land">Horizontal</span></button>
+              <button id="calc-orient-port" onclick="calcSetOrient('portrait')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer">▯ <span id="calc-t-port">Vertical</span></button>
             </div>
           </div>
 
           <!-- Dimensions -->
           <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-dims">Screen Dimensions (meters)</div>
+            <div id="calc-h-dims" style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Dimensiones de Pantalla (metros)</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
               <div>
-                <label style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px" id="calc-lbl-w">Width (m)</label>
-                <input id="calc-w" type="number" step="0.1" min="0.1" value="4.8" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
+                <label id="calc-lbl-w" style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Ancho (m)</label>
+                <input id="calc-w" type="number" step="0.1" min="0.1" value="4" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
               </div>
               <div>
-                <label style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px" id="calc-lbl-h">Height (m)</label>
-                <input id="calc-h" type="number" step="0.1" min="0.1" value="2.7" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
+                <label id="calc-lbl-h" style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Alto (m)</label>
+                <input id="calc-h" type="number" step="0.1" min="0.1" value="3" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
               </div>
             </div>
-            <!-- Aspect ratio quick buttons -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
-              <button onclick="calcAspect(16/9)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">16:9</button>
-              <button onclick="calcAspect(21/9)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">21:9</button>
-              <button onclick="calcAspect(4/3)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">4:3</button>
-              <button onclick="calcAspect(1)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">1:1</button>
-            </div>
+
           </div>
 
-          <!-- Price per sqm -->
-          <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-price">Price (AED/m²) <span style="opacity:.5;font-size:8px">id="calc-t-opt">optional</span></div>
-            <input id="calc-price" type="number" min="0" value="0" oninput="runCalc()" placeholder="0" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
-          </div>
-
-          <!-- Presets -->
-          <div style="padding:12px 14px 0">
-            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-presets">Quick Presets</div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <button onclick="calcPreset(2.4,1.35)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-                <span>110" LED Wall (FHD)</span><span style="color:var(--txt3);font-family:monospace">2.4×1.35m</span>
-              </button>
-              <button onclick="calcPreset(3.0,1.68)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-                <span>138" LED Wall (FHD)</span><span style="color:var(--txt3);font-family:monospace">3.0×1.68m</span>
-              </button>
-              <button onclick="calcPreset(4.8,2.7)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-                <span>220" LED Wall (4K)</span><span style="color:var(--txt3);font-family:monospace">4.8×2.7m</span>
-              </button>
-              <button onclick="calcPreset(6.4,3.6)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-                <span>Grand Ballroom</span><span style="color:var(--txt3);font-family:monospace">6.4×3.6m</span>
-              </button>
-              <button onclick="calcPreset(9.6,3.2)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
-                <span>Command Center</span><span style="color:var(--txt3);font-family:monospace">9.6×3.2m</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- RESULTS -->
+          <!-- Results -->
           <div id="calc-results" style="padding:14px;display:none">
-            
-            <!-- Resolution Hero Card -->
+            <!-- Resolution Hero -->
             <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden">
-              <div style="position:absolute;top:-15px;right:-15px;width:80px;height:80px;background:rgba(245,158,11,0.06);border-radius:50%"></div>
-              <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px" id="calc-h-res">Resolution</div>
+              <div id="calc-h-res" style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">Resolucion</div>
               <div id="calc-res-display" style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1"></div>
               <div id="calc-mp-display" style="margin-top:6px;display:flex;align-items:center;gap:8px">
                 <span id="calc-mp-badge" style="background:#f59e0b;color:#000;padding:3px 8px;border-radius:20px;font-size:8px;font-weight:900;letter-spacing:.5px"></span>
@@ -734,64 +687,51 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
 
             <!-- Stats Grid -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-              
               <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
-                <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-dimstat">Dimensions</div>
+                <div id="calc-h-dimstat" style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Dimensiones</div>
                 <div id="calc-dim-val" style="font-size:13px;font-weight:900;color:var(--txt);font-family:monospace"></div>
                 <div id="calc-area-val" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
               </div>
-
               <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
-                <div id="calc-h-mods-wrapper" style="font-size:8px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-mods">Modules</div>
+                <div id="calc-h-mods" style="font-size:8px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Modulos</div>
                 <div id="calc-mods-val" style="font-size:13px;font-weight:900;color:var(--txt);font-family:monospace"></div>
                 <div id="calc-mods-total" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
               </div>
-
               <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
-                <div style="font-size:8px;font-weight:700;color:#34d399;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-pow">Power</div>
+                <div id="calc-h-pow" style="font-size:8px;font-weight:700;color:#34d399;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Potencia</div>
                 <div id="calc-pow-avg" style="font-size:12px;font-weight:900;color:var(--txt);font-family:monospace"></div>
                 <div id="calc-pow-max" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
               </div>
-
               <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
-                <div style="font-size:8px;font-weight:700;color:#a78bfa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-infra">Infrastructure</div>
+                <div id="calc-h-infra" style="font-size:8px;font-weight:700;color:#a78bfa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Infraestructura</div>
                 <div id="calc-infra-val" style="font-size:11px;font-weight:700;color:var(--txt);line-height:1.6"></div>
               </div>
-
             </div>
 
-            <!-- Viewing Distance Card -->
+            <!-- Viewing Distance -->
             <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px;margin-bottom:10px">
-              <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-vd">👁 Viewing Distance</div>
+              <div id="calc-h-vd" style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">👁 Distancia de Vision</div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
                 <div style="text-align:center">
-                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-min">Minimum</div>
+                  <div id="calc-t-min" style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px">Minima</div>
                   <div id="calc-vd-min" style="font-size:13px;font-weight:900;color:#60a5fa;font-family:monospace"></div>
                 </div>
                 <div style="text-align:center;border-left:1px solid var(--b1);border-right:1px solid var(--b1)">
-                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-opt2">Optimal</div>
+                  <div id="calc-t-opt2" style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px">Optima</div>
                   <div id="calc-vd-opt" style="font-size:13px;font-weight:900;color:#34d399;font-family:monospace"></div>
                 </div>
                 <div style="text-align:center">
-                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-max">Max</div>
+                  <div id="calc-t-max" style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px">Max</div>
                   <div id="calc-vd-max" style="font-size:13px;font-weight:900;color:var(--txt2);font-family:monospace"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Cost Card (if price set) -->
-            <div id="calc-cost-card" style="background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05));border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px;margin-bottom:10px;display:none">
-              <div style="font-size:8px;font-weight:700;color:#34d399;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px" id="calc-h-cost">💰 Estimated Cost</div>
-              <div id="calc-cost-val" style="font-size:22px;font-weight:900;color:#34d399;font-family:monospace"></div>
-              <div id="calc-cost-sub" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
-            </div>
-
-            <!-- Apply to PixelMap Button -->
-            <button onclick="calcApplyToPixelMap()" style="width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#000;font-size:10px;font-weight:900;font-family:inherit;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(245,158,11,0.3);transition:all .2s">
-              ⚡ Apply to PixelMap Pro
+            <!-- Apply button -->
+            <button onclick="calcApplyToPixelMap()" style="width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#000;font-size:10px;font-weight:900;font-family:inherit;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(245,158,11,0.3)">
+              <span id="calc-t-apply">⚡ Aplicar a PixelMap Pro</span>
             </button>
-            <div style="font-size:8px;color:var(--txt3);text-align:center;margin-top:6px;font-weight:600" id="calc-t-apply-sub">Transfers dimensions & pitch to the main calculator</div>
-
+            <div id="calc-t-apply-sub" style="font-size:8px;color:var(--txt3);text-align:center;margin-top:6px;font-weight:600">Transfiere dimensiones y pitch al calculador principal</div>
           </div>
 
           <div style="height:40px"></div>
@@ -3400,16 +3340,31 @@ function loadScreenColors(sc){
 // ════ LED CALCULATOR (Wefone-inspired) ════
 var CALC_STATE = {
   env: 'indoor',
-  pitch: 1.86,
+  pitch: 3.9,
   orient: 'landscape',
-  w: 4.8,   // meters
-  h: 2.7,
+  w: 4,
+  h: 3,
   price: 0
 }
 
 var CALC_PITCHES = {
-  indoor:  [{v:1.25,res:'256×128'},{v:1.53,res:'208×104'},{v:1.86,res:'172×86'},{v:2.5,res:'128×64'}],
-  outdoor: [{v:2.5,res:'128×64'},{v:4,res:'80×40'},{v:5,res:'64×32'}]
+  indoor:  [
+    {v:1.25, res:'400×400 / 400×800'},
+    {v:1.53, res:'327×327 / 327×654'},
+    {v:1.86, res:'269×269 / 269×538'},
+    {v:2.5,  res:'200×200 / 200×400'},
+    {v:2.6,  res:'192×192 / 192×385'},
+    {v:3,    res:'167×167 / 167×333'},
+    {v:3.9,  res:'128×128 / 128×256'},
+    {v:4,    res:'125×125 / 125×250'}
+  ],
+  outdoor: [
+    {v:2.5,  res:'200×200 / 200×400'},
+    {v:3.9,  res:'128×128 / 128×256'},
+    {v:4,    res:'125×125 / 125×250'},
+    {v:5,    res:'100×100 / 100×200'},
+    {v:6.25, res:'80×80 / 80×160'}
+  ]
 }
 
 var CALC_POWER = {
@@ -3420,7 +3375,7 @@ var CALC_POWER = {
 function calcSetEnv(env) {
   CALC_STATE.env = env
   // Default pitch per env
-  CALC_STATE.pitch = env==='indoor' ? 1.86 : 2.5
+  CALC_STATE.pitch = 3.9
   document.getElementById('calc-env-indoor').style.background = env==='indoor' ? 'rgba(59,130,246,0.15)' : 'transparent'
   document.getElementById('calc-env-indoor').style.borderColor = env==='indoor' ? 'rgba(59,130,246,0.5)' : 'var(--b1)'
   document.getElementById('calc-env-indoor').style.color = env==='indoor' ? '#60a5fa' : 'var(--txt3)'
@@ -3466,7 +3421,7 @@ function renderCalcPitches() {
     var active = p.v === CALC_STATE.pitch
     return '<button onclick="calcSelectPitch(' + p.v + ')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;border:1.5px solid ' + (active?'rgba(245,158,11,0.5)':'var(--b1)') + ';background:' + (active?'rgba(245,158,11,0.08)':'transparent') + ';color:' + (active?'#f59e0b':'var(--txt2)') + ';font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;width:100%;transition:all .15s">' +
       '<span>P' + p.v + '</span>' +
-      '<span style="font-size:9px;opacity:.7;font-family:monospace">' + p.res + ' px/module</span>' +
+      '<span style="font-size:8px;opacity:.65;font-family:monospace">' + p.res + ' px</span>' +
       (active ? '<span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;box-shadow:0 0 8px rgba(245,158,11,0.6);flex-shrink:0"></span>' : '<span style="width:8px;height:8px;flex-shrink:0"></span>') +
       '</button>'
   }).join('')
@@ -3479,25 +3434,31 @@ function calcSelectPitch(v) {
 }
 
 function runCalc() {
-  var w = parseFloat(document.getElementById('calc-w').value) || 4.8
-  var h = parseFloat(document.getElementById('calc-h').value) || 2.7
-  var price = parseFloat(document.getElementById('calc-price').value) || 0
-  CALC_STATE.w = w; CALC_STATE.h = h; CALC_STATE.price = price
+  var w = parseFloat(document.getElementById('calc-w').value) || 4
+  var h = parseFloat(document.getElementById('calc-h').value) || 3
+  CALC_STATE.w = w; CALC_STATE.h = h
 
-  var MOD_W_LAND = 320, MOD_H_LAND = 160 // mm
-  var modW = CALC_STATE.orient==='landscape' ? MOD_W_LAND : MOD_H_LAND
-  var modH = CALC_STATE.orient==='landscape' ? MOD_H_LAND : MOD_W_LAND
+  // Standard LED modules: 50x50cm (landscape) or 50x100cm (portrait)
+  // In landscape: width=50cm, height=50cm (square module) → 50x50
+  // In landscape with tall modules: width=50cm, height=100cm → 50x100
+  // Use same logic as main app: mw/mh from standard sizes
+  // Default: 50cm wide, 100cm tall (landscape orientation = wider screen)
+  var MOD_W_CM = 50  // module width in cm (always 50cm wide)
+  var MOD_H_CM = CALC_STATE.orient==='landscape' ? 100 : 50  // 100cm tall in landscape, 50cm in portrait
+
+  var modW = MOD_W_CM * 10   // mm
+  var modH = MOD_H_CM * 10   // mm
 
   var wMM = w * 1000, hMM = h * 1000
-  var cols = Math.max(1, Math.floor(wMM / modW))
-  var rows = Math.max(1, Math.floor(hMM / modH))
+  var cols = Math.max(1, Math.round(wMM / modW))
+  var rows = Math.max(1, Math.round(hMM / modH))
   var actualW = cols * modW   // mm
   var actualH = rows * modH   // mm
   var total = cols * rows
 
   var pitch = CALC_STATE.pitch
-  var resX = Math.round(actualW / pitch)
-  var resY = Math.round(actualH / pitch)
+  var resX = Math.round((MOD_W_CM * 10) / pitch) * cols
+  var resY = Math.round((MOD_H_CM * 10) / pitch) * rows
   var totalPx = resX * resY
   var mp = (totalPx / 1e6).toFixed(2)
 
@@ -3528,12 +3489,12 @@ function runCalc() {
   document.getElementById('calc-res-display').textContent = resX + ' × ' + resY
   document.getElementById('calc-mp-badge').textContent = mp + ' MP'
   var tc=T[LANG]||T.es; document.getElementById('calc-pitch-badge').textContent = 'P' + pitch + ' · ' + (CALC_STATE.env==='indoor'?tc.calcIndoor:tc.calcOutdoor)
-  document.getElementById('calc-dim-val').textContent = (actualW/1000).toFixed(3) + ' × ' + (actualH/1000).toFixed(3) + ' m'
-  document.getElementById('calc-area-val').textContent = area + ' m² ' + (T[LANG]||T.es).tTotalArea || area + ' m²'
+  document.getElementById('calc-dim-val').textContent = (actualW/1000).toFixed(2) + ' × ' + (actualH/1000).toFixed(2) + ' m'
+  document.getElementById('calc-area-val').textContent = area + ' m²'
   document.getElementById('calc-mods-val').textContent = cols + ' × ' + rows
   document.getElementById('calc-mods-total').textContent = total + ' ' + (T[LANG]||T.es).calcModsTotal
   var tp=T[LANG]||T.es; document.getElementById('calc-pow-avg').textContent = fmtP(avgP) + ' ' + tp.calcAvg
-  document.getElementById('calc-pow-max').textContent = fmtP(maxP) + ' max draw'
+  document.getElementById('calc-pow-max').textContent = fmtP(maxP) + ' max'
   var ti = T[LANG]||T.es
   document.getElementById('calc-infra-val').innerHTML =
     '<div>' + psuCount + ' ' + ti.calcPsuUnits + '</div>' +
@@ -3543,23 +3504,14 @@ function runCalc() {
   document.getElementById('calc-vd-opt').textContent = vdOpt.toFixed(1) + 'm'
   document.getElementById('calc-vd-max').textContent = vdMax.toFixed(0) + 'm'
 
-  // Cost
-  if(price > 0) {
-    var cost = parseFloat(area) * price
-    document.getElementById('calc-cost-card').style.display = 'block'
-    document.getElementById('calc-cost-val').textContent = 'AED ' + cost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})
-    document.getElementById('calc-cost-sub').textContent = price.toLocaleString() + ' AED/m² × ' + area + ' m²'
-  } else {
-    document.getElementById('calc-cost-card').style.display = 'none'
-  }
-
   // Summary bar
   var bar = document.getElementById('calc-summary-bar')
   if(bar) {
     bar.style.display = 'block'
-    bar.textContent = resX+'×'+resY+' · '+mp+' MP · '+total+' modules · '+area+'m²'
+    bar.textContent = resX+'×'+resY+' · '+mp+' MP · '+total+' módulos · '+area+'m²'
   }
 }
+
 
 function calcApplyToPixelMap() {
   // Transfer calc values to PixelMap Pro main calculator
