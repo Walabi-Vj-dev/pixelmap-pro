@@ -317,6 +317,7 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
         <button class="sb-tab" id="sbt-saves" onclick="sbTab('saves')" style="color:var(--gold)">💾</button>
         <button class="sb-tab" id="sbt-elec" onclick="sbTab('elec')" style="color:#ff9800">🔌 Elec.</button>
         <button class="sb-tab" id="sbt-colors" onclick="sbTab('colors')" style="color:#ff6b9d">🎨</button>
+<button class="sb-tab" id="sbt-calc" onclick="sbTab('calc')" style="color:#f59e0b;font-size:9px;font-weight:700">📐 CALC</button>
         <button class="sb-tab" id="sbt-soon" onclick="sbTab('soon')" style="color:var(--purple)">★</button>
       </div>
 
@@ -460,9 +461,6 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
             </div>
             <div class="exp-row" style="margin-bottom:8px">
               <button class="eb" onclick="exportPDF()" style="border-color:rgba(255,68,68,0.4);color:var(--red)">PDF Completo</button>
-            </div>
-            <div class="exp-row" style="margin-bottom:8px">
-              <button class="eb" id="btn-scr" onclick="exportSCR()" style="border-color:rgba(245,166,35,0.4);color:var(--gold)" title="Exportar configuracion para NovaLCT">NovaLCT .SCR</button>
             </div>
             <div style="font-size:10px;color:var(--txt3);line-height:1.5">PNG gratis · CSV y JSON requieren plan Pro</div>
           </div>
@@ -612,6 +610,191 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
           <div class="cp-b">
             <div style="display:flex;flex-direction:column;gap:6px" id="palette-presets"></div>
           </div>
+        </div>
+      </div>
+
+      
+      <!-- CALC PANE - Professional LED Calculator (Wefone-inspired) -->
+      <div class="sb-pane" id="pane-calc">
+        <div style="padding:0;overflow-y:auto;height:100%">
+
+          <!-- Header -->
+          <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:16px;margin-bottom:0;position:relative;overflow:hidden">
+            <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(245,158,11,0.08);border-radius:50%"></div>
+            <div style="position:absolute;bottom:-30px;left:-10px;width:80px;height:80px;background:rgba(245,158,11,0.05);border-radius:50%"></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;position:relative">
+              <div style="width:32px;height:32px;background:#f59e0b;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(245,158,11,0.3)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div>
+                <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:900;color:#fff;letter-spacing:.5px">LED CALCULATOR</div>
+                <div style="font-size:8px;color:#f59e0b;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">id="calc-t-grade">Professional Grade</div>
+              </div>
+            </div>
+            <div id="calc-summary-bar" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:6px;padding:6px 10px;font-size:9px;color:#f59e0b;font-weight:700;letter-spacing:.5px;display:none">
+              — configure below —
+            </div>
+          </div>
+
+          <!-- Environment Toggle -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-env">Environment</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button id="calc-env-indoor" onclick="calcSetEnv('indoor')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(59,130,246,0.5);background:rgba(59,130,246,0.15);color:#60a5fa;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s" id="calc-btn-indoor">
+                🏢 Indoor
+              </button>
+              <button id="calc-env-outdoor" onclick="calcSetEnv('outdoor')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s" id="calc-btn-outdoor">
+                ☀️ Outdoor
+              </button>
+            </div>
+          </div>
+
+          <!-- Pixel Pitch -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-pitch">Pixel Pitch</div>
+            <div id="calc-pitch-list" style="display:flex;flex-direction:column;gap:4px"></div>
+          </div>
+
+          <!-- Module Orientation -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-orient">Module Orientation</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button id="calc-orient-land" onclick="calcSetOrient('landscape')" style="padding:8px;border-radius:8px;border:1.5px solid rgba(245,158,11,0.5);background:rgba(245,158,11,0.1);color:#f59e0b;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer" id="calc-btn-land">
+                ⬛ <span id="calc-t-land">Landscape</span>
+              </button>
+              <button id="calc-orient-port" onclick="calcSetOrient('portrait')" style="padding:8px;border-radius:8px;border:1.5px solid var(--b1);background:transparent;color:var(--txt3);font-size:10px;font-weight:700;font-family:inherit;cursor:pointer" id="calc-btn-port">
+                ▯ <span id="calc-t-port">Portrait</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dimensions -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-dims">Screen Dimensions (meters)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px" id="calc-lbl-w">Width (m)</label>
+                <input id="calc-w" type="number" step="0.1" min="0.1" value="4.8" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
+              </div>
+              <div>
+                <label style="font-size:8px;color:var(--txt3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px" id="calc-lbl-h">Height (m)</label>
+                <input id="calc-h" type="number" step="0.1" min="0.1" value="2.7" oninput="runCalc()" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px;font-weight:900;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
+              </div>
+            </div>
+            <!-- Aspect ratio quick buttons -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+              <button onclick="calcAspect(16/9)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">16:9</button>
+              <button onclick="calcAspect(21/9)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">21:9</button>
+              <button onclick="calcAspect(4/3)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">4:3</button>
+              <button onclick="calcAspect(1)" style="padding:5px 2px;border-radius:6px;border:1px solid var(--b1);background:transparent;color:var(--txt3);font-size:8px;font-weight:700;font-family:inherit;cursor:pointer">1:1</button>
+            </div>
+          </div>
+
+          <!-- Price per sqm -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-price">Price (AED/m²) <span style="opacity:.5;font-size:8px">id="calc-t-opt">optional</span></div>
+            <input id="calc-price" type="number" min="0" value="0" oninput="runCalc()" placeholder="0" style="width:100%;background:var(--bg2);border:1.5px solid var(--b1);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;outline:none;box-sizing:border-box">
+          </div>
+
+          <!-- Presets -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:9px;font-weight:700;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-presets">Quick Presets</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button onclick="calcPreset(2.4,1.35)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+                <span>110" LED Wall (FHD)</span><span style="color:var(--txt3);font-family:monospace">2.4×1.35m</span>
+              </button>
+              <button onclick="calcPreset(3.0,1.68)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+                <span>138" LED Wall (FHD)</span><span style="color:var(--txt3);font-family:monospace">3.0×1.68m</span>
+              </button>
+              <button onclick="calcPreset(4.8,2.7)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+                <span>220" LED Wall (4K)</span><span style="color:var(--txt3);font-family:monospace">4.8×2.7m</span>
+              </button>
+              <button onclick="calcPreset(6.4,3.6)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+                <span>Grand Ballroom</span><span style="color:var(--txt3);font-family:monospace">6.4×3.6m</span>
+              </button>
+              <button onclick="calcPreset(9.6,3.2)" style="padding:7px 10px;border-radius:7px;border:1px solid var(--b1);background:transparent;color:var(--txt2);font-size:9px;font-weight:700;font-family:inherit;cursor:pointer;text-align:left;display:flex;justify-content:space-between">
+                <span>Command Center</span><span style="color:var(--txt3);font-family:monospace">9.6×3.2m</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- RESULTS -->
+          <div id="calc-results" style="padding:14px;display:none">
+            
+            <!-- Resolution Hero Card -->
+            <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden">
+              <div style="position:absolute;top:-15px;right:-15px;width:80px;height:80px;background:rgba(245,158,11,0.06);border-radius:50%"></div>
+              <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px" id="calc-h-res">Resolution</div>
+              <div id="calc-res-display" style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:900;color:#fff;letter-spacing:-1px;line-height:1"></div>
+              <div id="calc-mp-display" style="margin-top:6px;display:flex;align-items:center;gap:8px">
+                <span id="calc-mp-badge" style="background:#f59e0b;color:#000;padding:3px 8px;border-radius:20px;font-size:8px;font-weight:900;letter-spacing:.5px"></span>
+                <span id="calc-pitch-badge" style="color:rgba(255,255,255,0.5);font-size:8px;font-weight:700;letter-spacing:.5px"></span>
+              </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+              
+              <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
+                <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-dimstat">Dimensions</div>
+                <div id="calc-dim-val" style="font-size:13px;font-weight:900;color:var(--txt);font-family:monospace"></div>
+                <div id="calc-area-val" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
+              </div>
+
+              <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
+                <div id="calc-h-mods-wrapper" style="font-size:8px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-mods">Modules</div>
+                <div id="calc-mods-val" style="font-size:13px;font-weight:900;color:var(--txt);font-family:monospace"></div>
+                <div id="calc-mods-total" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
+              </div>
+
+              <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
+                <div style="font-size:8px;font-weight:700;color:#34d399;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-pow">Power</div>
+                <div id="calc-pow-avg" style="font-size:12px;font-weight:900;color:var(--txt);font-family:monospace"></div>
+                <div id="calc-pow-max" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
+              </div>
+
+              <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px">
+                <div style="font-size:8px;font-weight:700;color:#a78bfa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px" id="calc-h-infra">Infrastructure</div>
+                <div id="calc-infra-val" style="font-size:11px;font-weight:700;color:var(--txt);line-height:1.6"></div>
+              </div>
+
+            </div>
+
+            <!-- Viewing Distance Card -->
+            <div style="background:var(--bg2);border:1px solid var(--b1);border-radius:10px;padding:10px;margin-bottom:10px">
+              <div style="font-size:8px;font-weight:700;color:#f59e0b;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="calc-h-vd">👁 Viewing Distance</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+                <div style="text-align:center">
+                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-min">Minimum</div>
+                  <div id="calc-vd-min" style="font-size:13px;font-weight:900;color:#60a5fa;font-family:monospace"></div>
+                </div>
+                <div style="text-align:center;border-left:1px solid var(--b1);border-right:1px solid var(--b1)">
+                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-opt2">Optimal</div>
+                  <div id="calc-vd-opt" style="font-size:13px;font-weight:900;color:#34d399;font-family:monospace"></div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-size:8px;color:var(--txt3);font-weight:700;margin-bottom:3px" id="calc-t-max">Max</div>
+                  <div id="calc-vd-max" style="font-size:13px;font-weight:900;color:var(--txt2);font-family:monospace"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cost Card (if price set) -->
+            <div id="calc-cost-card" style="background:linear-gradient(135deg,rgba(52,211,153,0.1),rgba(52,211,153,0.05));border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:10px;margin-bottom:10px;display:none">
+              <div style="font-size:8px;font-weight:700;color:#34d399;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px" id="calc-h-cost">💰 Estimated Cost</div>
+              <div id="calc-cost-val" style="font-size:22px;font-weight:900;color:#34d399;font-family:monospace"></div>
+              <div id="calc-cost-sub" style="font-size:8px;color:var(--txt3);font-weight:700;margin-top:2px"></div>
+            </div>
+
+            <!-- Apply to PixelMap Button -->
+            <button onclick="calcApplyToPixelMap()" style="width:100%;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:10px;color:#000;font-size:10px;font-weight:900;font-family:inherit;cursor:pointer;letter-spacing:1px;text-transform:uppercase;box-shadow:0 4px 15px rgba(245,158,11,0.3);transition:all .2s">
+              ⚡ Apply to PixelMap Pro
+            </button>
+            <div style="font-size:8px;color:var(--txt3);text-align:center;margin-top:6px;font-weight:600" id="calc-t-apply-sub">Transfers dimensions & pitch to the main calculator</div>
+
+          </div>
+
+          <div style="height:40px"></div>
         </div>
       </div>
 
@@ -780,6 +963,20 @@ function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 // TRANSLATIONS
 var T = {
   es:{
+    calcTitle:'Calculadora LED', calcSubtitle:'Grado Profesional', calcConfigure:'— configurar abajo —',
+    calcEnv:'Entorno', calcIndoor:'Interior', calcOutdoor:'Exterior',
+    calcPitch:'Paso de Pixel', calcOrient:'Orientacion del Modulo',
+    calcLandscape:'Horizontal', calcPortrait:'Vertical',
+    calcDims:'Dimensiones de Pantalla (metros)', calcWidth:'Ancho (m)', calcHeight:'Alto (m)',
+    calcPresets:'Presets Rapidos', calcPrice:'Precio (AED/m²)', calcPriceOpt:'opcional',
+    calcResolution:'Resolucion', calcDimensions:'Dimensiones', calcModules:'Modulos',
+    calcPower:'Potencia', calcInfra:'Infraestructura', calcViewDist:'Distancia de Vision',
+    calcMinDist:'Minima', calcOptDist:'Optima', calcMaxDist:'Maxima',
+    calcCost:'Costo Estimado', calcApply:'Aplicar a PixelMap Pro',
+    calcApplySub:'Transfiere dimensiones y pitch al calculador principal',
+    calcModsTotal:'modulos totales', calcPsuUnits:'unidades PSU',
+    calcRcCards:'tarjetas receptoras', calcLanPorts:'puerto LAN',
+    calcAvg:'prom', calcMax:'max',
     tabLogin:'Iniciar Sesion', tabReg:'Crear Cuenta', authBtn:'Iniciar Sesion', regBtn:'Crear Cuenta',
     regInfo:'Las cuentas nuevas tienen 2 exportaciones PNG completas gratuitas.',
     errFields:'Completa todos los campos.', errShort:'Minimo 6 caracteres.',
@@ -818,6 +1015,20 @@ var T = {
     aiSugs:['Cuantos paneles necesito?','Como calcular la resolucion?','Que pitch me conviene?','Explicame los puertos','Como reducir la carga?']
   },
   en:{
+    calcTitle:'LED Calculator', calcSubtitle:'Professional Grade', calcConfigure:'— configure below —',
+    calcEnv:'Environment', calcIndoor:'Indoor', calcOutdoor:'Outdoor',
+    calcPitch:'Pixel Pitch', calcOrient:'Module Orientation',
+    calcLandscape:'Landscape', calcPortrait:'Portrait',
+    calcDims:'Screen Dimensions (meters)', calcWidth:'Width (m)', calcHeight:'Height (m)',
+    calcPresets:'Quick Presets', calcPrice:'Price (AED/m²)', calcPriceOpt:'optional',
+    calcResolution:'Resolution', calcDimensions:'Dimensions', calcModules:'Modules',
+    calcPower:'Power', calcInfra:'Infrastructure', calcViewDist:'Viewing Distance',
+    calcMinDist:'Minimum', calcOptDist:'Optimal', calcMaxDist:'Max',
+    calcCost:'Estimated Cost', calcApply:'Apply to PixelMap Pro',
+    calcApplySub:'Transfers dimensions & pitch to the main calculator',
+    calcModsTotal:'modules total', calcPsuUnits:'PSU units',
+    calcRcCards:'receiving cards', calcLanPorts:'LAN port',
+    calcAvg:'avg', calcMax:'max',
     tabLogin:'Sign In', tabReg:'Create Account', authBtn:'Sign In', regBtn:'Create Account',
     regInfo:'New accounts get 2 complete free PNG exports.',
     errFields:'Please fill in all fields.', errShort:'Minimum 6 characters.',
@@ -856,6 +1067,20 @@ var T = {
     aiSugs:['How many panels do I need?','How to calculate resolution?','Which pitch is best?','Explain port mapping','How to reduce processor load?']
   },
   pt:{
+    calcTitle:'Calculadora LED', calcSubtitle:'Nivel Profissional', calcConfigure:'— configurar abaixo —',
+    calcEnv:'Ambiente', calcIndoor:'Interior', calcOutdoor:'Exterior',
+    calcPitch:'Passo de Pixel', calcOrient:'Orientacao do Modulo',
+    calcLandscape:'Horizontal', calcPortrait:'Vertical',
+    calcDims:'Dimensoes da Tela (metros)', calcWidth:'Largura (m)', calcHeight:'Altura (m)',
+    calcPresets:'Presets Rapidos', calcPrice:'Preco (AED/m²)', calcPriceOpt:'opcional',
+    calcResolution:'Resolucao', calcDimensions:'Dimensoes', calcModules:'Modulos',
+    calcPower:'Consumo', calcInfra:'Infraestrutura', calcViewDist:'Distancia de Visao',
+    calcMinDist:'Minima', calcOptDist:'Otima', calcMaxDist:'Max',
+    calcCost:'Custo Estimado', calcApply:'Aplicar ao PixelMap Pro',
+    calcApplySub:'Transfere dimensoes e pitch para o calculador principal',
+    calcModsTotal:'modulos total', calcPsuUnits:'unidades PSU',
+    calcRcCards:'placas receptoras', calcLanPorts:'porta LAN',
+    calcAvg:'med', calcMax:'max',
     tabLogin:'Entrar', tabReg:'Criar Conta', authBtn:'Entrar', regBtn:'Criar Conta',
     regInfo:'Contas novas tem 2 exportacoes PNG completas gratuitas.',
     errFields:'Preencha todos os campos.', errShort:'Minimo 6 caracteres.',
@@ -899,6 +1124,7 @@ var LANG = 'es'
 function setLang(l){
   LANG = l
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
+  updateCalcLang()
   document.querySelectorAll('.tl-btn').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()))
   applyT()
 }
@@ -1143,6 +1369,7 @@ function showApp(){
 function sbTab(name){
   document.querySelectorAll('.sb-tab').forEach(function(t){t.classList.remove('active')})
   document.querySelectorAll('.sb-pane').forEach(function(p){p.classList.remove('active')})
+  if(name==='calc') setTimeout(initCalc,50)
   var tab=document.getElementById('sbt-'+name), pane=document.getElementById('pane-'+name)
   if(tab) tab.classList.add('active')
   if(pane) pane.classList.add('active')
@@ -1183,7 +1410,8 @@ window.addEventListener('resize',function(){if(window.innerWidth>=1024)closeSide
 function makeScreen(num){
   return{id:Date.now()+Math.random(),name:'Pantalla '+num,color:SCREEN_COLORS[(num-1)%SCREEN_COLORS.length],
     pitch:'3.9',w:'4',h:'3',mw:'50',mh:'100',elMaxMod:12,ppp:'650000',ports:'8',dir:'h-snake',
-    title:'',client:'',location:'',date:new Date().toISOString().slice(0,10),notes:'',logo:null,portLabels:{},S:{}}
+    title:'',client:'',location:'',date:new Date().toISOString().slice(0,10),notes:'',logo:null,portLabels:{},S:{},
+    processorPort:1}
 }
 function saveCurrentScreenState(){
   if(!SCREENS.length) return
@@ -1287,6 +1515,13 @@ function renderScreensList(){
       '<div class="scr-item-name">'+escH(sc.name)+'</div>'+
       '<div class="scr-item-info">'+escH(info)+'</div>'+
       '<div class="scr-item-info">'+(st.rw&&st.rh?st.rw+'x'+st.rh+' px':'')+' - '+(st.pn||0)+' cables</div>'+
+      '<div style="display:flex;align-items:center;gap:6px;margin:4px 0 2px;padding:4px 8px;background:rgba(0,212,255,0.04);border-radius:6px">'+
+        '<span style="font-size:9px;color:var(--txt3);font-weight:700;white-space:nowrap">Puerto procesador:</span>'+
+        '<input type="number" min="1" max="64" value="'+(sc.processorPort||1)+'"'+
+          ' onclick="event.stopPropagation()"'+
+          ' onchange="event.stopPropagation();SCREENS['+i+'].processorPort=parseInt(this.value)||1;renderScreensList()"'+
+          ' style="width:44px;background:var(--bg2);border:1px solid var(--b1);border-radius:4px;color:var(--cyan);font-size:11px;font-weight:700;font-family:monospace;padding:2px 4px;outline:none;text-align:center">'+
+      '</div>'+
       '<div class="scr-item-actions">'+
         '<button class="scr-action" onclick="event.stopPropagation();switchScreen('+i+')">Editar</button>'+
         '<button class="scr-action" onclick="event.stopPropagation();renameScreen('+i+')">Renombrar</button>'+
@@ -2676,27 +2911,58 @@ async function exportPDF(){
     '</div>'+
     '<h2>Datos del proyecto</h2>'+
     '<table>'+
-      '<tr><th style="width:35%">Campo</th><th>Valor</th></tr>'+
-      '<tr><td>Titulo</td><td><strong>'+escHtml(title)+'</strong></td></tr>'+
+            '<tr><td>Titulo</td><td><strong>'+escHtml(title)+'</strong></td></tr>'+
       (client?'<tr><td>Cliente</td><td>'+escHtml(client)+'</td></tr>':'')+
       (loc?'<tr><td>Ubicacion</td><td>'+escHtml(loc)+'</td></tr>':'')+
       '<tr><td>Fecha</td><td>'+escHtml(date2)+'</td></tr>'+
       (notes?'<tr><td>Notas</td><td>'+escHtml(notes)+'</td></tr>':'')+
     '</table>'+
-    '<h2>Configuracion de pantalla</h2>'+
-    '<div class="grid">'+
-      '<div class="card"><div class="card-title">Resolucion</div><div class="card-value">'+S.rw+'x'+S.rh+'</div><div style="font-size:11px;color:#666">pixeles</div></div>'+
-      '<div class="card"><div class="card-title">Dimension</div><div class="card-value">'+S.W+'x'+S.H+'m</div><div style="font-size:11px;color:#666">metros</div></div>'+
-      '<div class="card"><div class="card-title">Total paneles</div><div class="card-value">'+S.tot+'</div><div style="font-size:11px;color:#666">'+S.cols+'x'+S.rows+' modulos</div></div>'+
-      '<div class="card"><div class="card-title">Megapixeles</div><div class="card-value">'+S.mpx+'</div><div style="font-size:11px;color:#666">MP</div></div>'+
-    '</div>'+
-    '<table>'+
-      '<tr><td style="width:50%">Pitch</td><td><strong>P'+S.pit+'</strong></td></tr>'+
-      '<tr><td>Modulo</td><td>'+S.mw+'x'+S.mh+' cm ('+S.mpw+'x'+S.mph+' px)</td></tr>'+
-      '<tr><td>Puertos de datos</td><td>'+S.pn+' de '+S.maxP+' disponibles</td></tr>'+
-      '<tr><td>Cableado</td><td>'+({'h-snake':'Serpentina Horizontal','h-line':'Lineas Horizontal','v-snake':'Serpentina Vertical'}[S.dir]||S.dir)+'</td></tr>'+
-    '</table>'+
-    '<div style="margin-top:20px;padding:12px;background:#e8f4fd;border-left:4px solid #00d4ff;border-radius:4px;font-size:11px;color:#555">'+
+    (function(){
+    var html = '<h2>Configuracion de pantalla'+(SCREENS&&SCREENS.length>1?' ('+SCREENS.length+' pantallas)':'')+'</h2>'
+    var screensToShow = (SCREENS&&SCREENS.length>0) ? SCREENS : null
+    if(!screensToShow){
+      // single screen fallback
+      html += '<div class="grid">'+
+        '<div class="card"><div class="card-title">Resolucion</div><div class="card-value">'+S.rw+'x'+S.rh+'</div><div style="font-size:11px;color:#666">pixeles</div></div>'+
+        '<div class="card"><div class="card-title">Dimension</div><div class="card-value">'+S.W+'x'+S.H+'m</div><div style="font-size:11px;color:#666">metros</div></div>'+
+        '<div class="card"><div class="card-title">Total paneles</div><div class="card-value">'+S.tot+'</div><div style="font-size:11px;color:#666">'+S.cols+'x'+S.rows+' modulos</div></div>'+
+        '<div class="card"><div class="card-title">Megapixeles</div><div class="card-value">'+S.mpx+'</div><div style="font-size:11px;color:#666">MP</div></div>'+
+        '</div>'+
+        '<table>'+
+        '<tr><td style="width:50%">Pitch</td><td><strong>P'+S.pit+'</strong></td></tr>'+
+        '<tr><td>Modulo</td><td>'+S.mw+'x'+S.mh+' cm ('+S.mpw+'x'+S.mph+' px)</td></tr>'+
+        '<tr><td>Puertos de datos</td><td>'+S.pn+' de '+S.maxP+' disponibles</td></tr>'+
+        '<tr><td>Cableado</td><td>'+({'h-snake':'Serpentina Horizontal','h-line':'Lineas Horizontales','v-snake':'Serpentina Vertical'}[S.dir]||S.dir)+'</td></tr>'+
+        '</table>'
+    } else {
+      screensToShow.forEach(function(sc, si){
+        var st = sc.S || {}
+        var sep = si>0?'border-top:2px dashed #e5e7eb;margin-top:18px;padding-top:18px;':''
+        html += '<div style="'+sep+'">'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+            '<span style="background:#00d4ff;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">'+(si+1)+'</span>'+
+            '<span style="font-size:13px;font-weight:700;color:#1a1a2e">'+escHtml(sc.name||('Pantalla '+(si+1)))+'</span>'+
+            (sc.processorPort?'<span style="margin-left:auto;font-size:10px;background:#e8f4fd;color:#0c5460;padding:2px 10px;border-radius:10px;font-weight:700">Puerto procesador: '+sc.processorPort+'</span>':'')+
+          '</div>'+
+          '<div class="grid">'+
+            '<div class="card"><div class="card-title">Resolucion</div><div class="card-value">'+(st.rw||'—')+'x'+(st.rh||'—')+'</div><div style="font-size:11px;color:#666">pixeles</div></div>'+
+            '<div class="card"><div class="card-title">Dimension</div><div class="card-value">'+(st.W||'—')+'x'+(st.H||'—')+'m</div><div style="font-size:11px;color:#666">metros</div></div>'+
+            '<div class="card"><div class="card-title">Total paneles</div><div class="card-value">'+(st.tot||'—')+'</div><div style="font-size:11px;color:#666">'+(st.cols||'—')+'x'+(st.rows||'—')+' modulos</div></div>'+
+            '<div class="card"><div class="card-title">Megapixeles</div><div class="card-value">'+(st.mpx||'—')+'</div><div style="font-size:11px;color:#666">MP</div></div>'+
+          '</div>'+
+          '<table>'+
+            '<tr><td style="width:50%">Pitch</td><td><strong>P'+(sc.pitch||st.pit||'—')+'</strong></td></tr>'+
+            '<tr><td>Modulo</td><td>'+(st.mw||'—')+'x'+(st.mh||'—')+' cm ('+(st.mpw||'—')+'x'+(st.mph||'—')+' px)</td></tr>'+
+            '<tr><td>Puertos de datos</td><td>'+(st.pn||'—')+' de '+(st.maxP||'—')+' disponibles</td></tr>'+
+            '<tr><td>Cableado</td><td>'+({'h-snake':'Serpentina Horizontal','h-line':'Lineas Horizontales','v-snake':'Serpentina Vertical'}[st.dir]||st.dir||'—')+'</td></tr>'+
+          '</table>'+
+        '</div>'
+      })
+    }
+    return html
+  })()+
+
+  '<div style="margin-top:20px;padding:12px;background:#e8f4fd;border-left:4px solid #00d4ff;border-radius:4px;font-size:11px;color:#555">'+
       'Generado con PixelMap Pro &middot; pixelmap-pro.vercel.app &middot; @walabi_vj &middot; '+new Date().toLocaleDateString('es-AR')+
     '</div>'+
   '</div>'
@@ -2755,124 +3021,215 @@ async function exportPDF(){
       '<td class="'+(over?'warn':'ok')+'">'+p.usagePct+'%</td>'+
     '</tr>'
   })
+    // Build port detail for ALL screens
+  var allPortsHtml = ''
+  var screensForPorts = (SCREENS&&SCREENS.length>0) ? SCREENS : null
+  if(screensForPorts){
+    screensForPorts.forEach(function(sc, si){
+      var st = sc.S || {}
+      if(!st.ps||!st.ps.length) return
+      var procPort = sc.processorPort || (si+1)
+      allPortsHtml += '<tr style="background:'+(si%2===0?'#f0f9ff':'#fff')+'">' +
+        '<td colspan="6" style="font-weight:700;color:#00d4ff;font-size:12px;padding:8px 8px 4px;border-bottom:2px solid #00d4ff">' +
+          '<span style="background:#00d4ff;color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;margin-right:6px">'+(si+1)+'</span>'+
+          escHtml(sc.name)+' &nbsp;·&nbsp; Puerto procesador: '+procPort+' &nbsp;·&nbsp; Capacidad: '+((st.ppp||650000)).toLocaleString()+' px/puerto'+
+        '</td></tr>'
+      st.ps.forEach(function(p){
+        var lbl = (sc.portLabels&&sc.portLabels[p.portNum]) ? sc.portLabels[p.portNum] : ('P'+p.portNum)
+        var over = p.totalPx > (st.ppp||650000)
+        var pxStart = (st.ps.slice(0,p.portNum-1).reduce(function(a,x){return a+x.panelCount},0)) * (st.ppp2||0)
+        var pxEnd = (((st.ps.slice(0,p.portNum).reduce(function(a,x){return a+x.panelCount},0))-1)*(st.ppp2||0)+(st.ppp2||0)-1)
+        allPortsHtml += '<tr>'+
+          '<td><strong>Puerto '+p.portNum+'</strong></td>'+
+          '<td>'+escHtml(lbl)+'</td>'+
+          '<td>'+p.panelCount+'</td>'+
+          '<td>'+pxStart.toLocaleString()+'</td>'+
+          '<td>'+pxEnd.toLocaleString()+'</td>'+
+          '<td class="'+(over?'warn':'ok')+'">'+p.usagePct+'%</td>'+
+        '</tr>'
+      })
+    })
+  } else {
+    allPortsHtml = portsHtml
+  }
+
   var page3='<div class="page">'+
-    '<h2><span class="badge badge-data">Datos</span> Mapa de puertos</h2>'+
-    '<p style="font-size:12px;color:#666;margin-bottom:12px">Distribucion de paneles por puerto de procesador. Capacidad: '+S.ppp.toLocaleString()+' px/puerto.</p>'+
-    '<table>'+portsHtml+'</table>'+
+    '<h2><span class="badge badge-data">Datos</span> Resumen de configuracion</h2>'+
     (SCREENS&&SCREENS.length>1?
-      '<h2>Resumen multi-pantalla</h2>'+
-      '<table><tr><th>Pantalla</th><th>Nombre</th><th>Config</th><th>Cables</th><th>Paneles</th></tr>'+
+      '<table><tr><th>#</th><th>Pantalla</th><th>Config</th><th>Puerto proc.</th><th>Cables</th><th>Paneles</th><th>Resolucion</th></tr>'+
       SCREENS.map(function(sc,i){
         var st=sc.S||{}
-        return '<tr><td>'+(i+1)+'</td><td><strong>'+escHtml(sc.name)+'</strong></td><td>P'+(sc.pitch||'-')+' '+( sc.w||'-')+'x'+(sc.h||'-')+'m</td><td>'+(st.pn||'-')+'</td><td>'+(st.tot||'-')+'</td></tr>'
+        return '<tr>'+
+          '<td>'+(i+1)+'</td>'+
+          '<td><strong>'+escHtml(sc.name)+'</strong></td>'+
+          '<td>P'+(sc.pitch||'-')+' '+(sc.w||'-')+'x'+(sc.h||'-')+'m</td>'+
+          '<td><strong style="color:#00d4ff">'+(sc.processorPort||i+1)+'</strong></td>'+
+          '<td>'+(st.pn||'-')+'</td>'+
+          '<td>'+(st.tot||'-')+'</td>'+
+          '<td style="font-family:monospace;font-size:11px">'+(st.rw&&st.rh?st.rw+'x'+st.rh:'—')+'</td>'+
+        '</tr>'
       }).join('')+
       '</table>'
     :'')+
-    '<div style="margin-top:20px;padding:12px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:4px;font-size:11px;color:#555">'+
-      '<strong>Nota:</strong> El mapa visual del pixel map se incluye en la exportacion PNG. Este PDF contiene el reporte tecnico completo.'+
-    '</div>'+
+    '<h2>Detalle de puertos de datos</h2>'+
+    '<table><tr><th>Puerto</th><th>Etiqueta</th><th>Paneles</th><th>Px inicio</th><th>Px fin</th><th>Uso %</th></tr>'+allPortsHtml+'</table>'+
   '</div>'
   pages.push(page3)
 
-  // Capture DATA only and ELEC only separately for PDF
-  var mapDataImg = '', mapElecImg = ''
-  try {
-    var srcCanvas = document.getElementById('map-canvas')
-    if(srcCanvas){
-      var prevElec = SHOW_ELEC, prevData = SHOW_DATA
+  // ── Multi-screen canvas capture ──
+  // For each screen: switch to it, capture data map + elec map, then restore
+  var screenCaptures = []  // [{sc, S, dataImg, elecImg, drops}]
 
-      // Data only
-      SHOW_DATA = true; SHOW_ELEC = false
-      if(MIXED_MODE) renderMixedMap(); else renderMap()
-      mapDataImg = srcCanvas.toDataURL('image/png')
+  var prevScreen = CURRENT_SCREEN
+  var prevElec = SHOW_ELEC, prevData = SHOW_DATA
 
-      // Elec only
-      if(_elecDrops && _elecDrops.length){
-        SHOW_DATA = false; SHOW_ELEC = true
-        if(MIXED_MODE) renderMixedMap(); else { renderMap(); renderElecMap() }
-        mapElecImg = srcCanvas.toDataURL('image/png')
+  var screensToExport = SCREENS.length > 0 ? SCREENS : [null]
+
+  for(var si=0; si<SCREENS.length; si++){
+    try{
+      switchScreen(si)
+      // Small sync compute
+      compute()
+      computeElec()
+
+      var sc = SCREENS[si]
+      var scS = Object.assign({}, S)
+      var scDrops = _elecDrops ? _elecDrops.slice() : []
+      var srcCanvas = document.getElementById('map-canvas')
+      var dImg='', eImg=''
+
+      if(srcCanvas){
+        // Data only
+        SHOW_DATA=true; SHOW_ELEC=false
+        if(MIXED_MODE) renderMixedMap(); else renderMap()
+        dImg = srcCanvas.toDataURL('image/png')
+        // Elec only
+        if(scDrops.length){
+          SHOW_DATA=false; SHOW_ELEC=true
+          if(MIXED_MODE) renderMixedMap(); else { renderMap(); renderElecMap() }
+          eImg = srcCanvas.toDataURL('image/png')
+        }
+        // Restore display
+        SHOW_DATA=true; SHOW_ELEC=true
+        if(MIXED_MODE) renderMixedMap(); else { renderMap(); if(scDrops.length) renderElecMap() }
       }
 
-      // Restore
-      SHOW_DATA = prevData; SHOW_ELEC = prevElec
-      if(MIXED_MODE) renderMixedMap()
-      else if(SHOW_ELEC) renderElecMap(); else renderMap()
-    }
-  } catch(e){ console.log('Canvas capture error:', e) }
-
-  // ── Página: Mapa de cableado de DATOS ──
-  if(mapDataImg){
-    var mapDataPage =
-      '<div class="page">'+
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
-          '<div style="width:18px;height:4px;border-radius:2px;background:#00d4ff;border-top:2px dashed #00d4ff"></div>'+
-          '<h2 style="margin:0;border:none;padding:0">Mapa de cableado de datos</h2>'+
-        '</div>'+
-        '<p style="font-size:11px;color:#666;margin-bottom:10px">'+
-          'Pantalla: '+S.rw+'x'+S.rh+' px &middot; '+S.cols+'x'+S.rows+' modulos &middot; P'+S.pit+' &middot; '+S.W+'x'+S.H+'m &middot; '+
-          S.pn+' cable'+(S.pn>1?'s':'')+' de datos'+
-        '</p>'+
-        '<div style="text-align:center;margin-bottom:14px">'+
-          '<img src="'+mapDataImg+'" style="max-width:100%;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'+
-        '</div>'+
-        '<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:#333">Leyenda de puertos:</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px">'+
-        S.ps.map(function(p){
-          var lbl=getPortLabel(p.portNum)
-          var col=PORT_COLORS[p.portIdx%PORT_COLORS.length]
-          return '<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid '+col+';border-radius:6px;background:rgba(0,0,0,0.02)">'+
-            '<div style="width:14px;height:14px;border-radius:50%;background:'+col+'"></div>'+
-            '<div>'+
-              '<div style="font-weight:700;color:#333">'+escHtml(lbl)+'</div>'+
-              '<div style="color:#666;font-size:10px">'+p.panelCount+' paneles &middot; '+p.usagePct+'% carga</div>'+
-            '</div>'+
-          '</div>'
-        }).join('')+
-        '</div>'+
-        '<div style="margin-top:14px;padding:10px 12px;background:#e8f4fd;border-left:4px solid #00d4ff;border-radius:4px;font-size:10px;color:#555">'+
-          '&#9472;&#9472; Linea punteada = recorrido del cableado de datos &middot; IN = entrada del cable &middot; OUT = salida del cable'+
-        '</div>'+
-      '</div>'
-    pages.splice(2, 0, mapDataPage)
+      screenCaptures.push({sc:sc, S:scS, dataImg:dImg, elecImg:eImg, drops:scDrops})
+    } catch(e){ console.log('Screen '+si+' capture error:', e) }
   }
 
-  // ── Página: Mapa de cableado ELÉCTRICO ──
-  if(mapElecImg){
-    var mapElecPage =
-      '<div class="page">'+
-        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
-          '<div style="width:18px;height:4px;border-radius:2px;background:#ff9800"></div>'+
-          '<h2 style="margin:0;border:none;padding:0">Mapa de instalacion electrica</h2>'+
-        '</div>'+
-        '<p style="font-size:11px;color:#666;margin-bottom:10px">'+
-          'Pantalla: '+S.W+'x'+S.H+'m &middot; '+_elecDrops.length+' bajada'+(_elecDrops.length>1?'s':'')+
-          ' &middot; Tension: '+voltTxt+
-        '</p>'+
-        '<div style="text-align:center;margin-bottom:14px">'+
-          '<img src="'+mapElecImg+'" style="max-width:100%;border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'+
-        '</div>'+
-        '<div style="margin-bottom:8px;font-size:11px;font-weight:700;color:#333">Leyenda de bajadas:</div>'+
-        '<div style="display:flex;flex-direction:column;gap:8px">'+
-        _elecDrops.map(function(d){
-          return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid '+d.color+';border-left:4px solid '+d.color+';border-radius:6px;background:rgba(0,0,0,0.02)">'+
-            '<div style="min-width:60px;font-weight:700;color:'+d.color+'">Bajada '+(d.d+1)+'</div>'+
-            '<div style="flex:1;font-size:10px;color:#555">'+
-              'Filas '+(d.rowStart+1)+' a '+d.rowEnd+' &middot; '+
-              d.panels+' paneles &middot; '+
-              d.wMax.toLocaleString()+'W max. / '+d.wAvg.toLocaleString()+'W prom.'+
-            '</div>'+
-            '<div style="font-size:11px;text-align:right">'+
-              '<div style="font-weight:700;color:'+d.color+'">'+d.amps+'A</div>'+
-              '<div style="color:#4caf50;font-size:10px">Disj. '+d.breaker+'A / '+d.cable+'</div>'+
-            '</div>'+
-          '</div>'
-        }).join('')+
-        '</div>'+
-        '<div style="margin-top:14px;padding:10px 12px;background:#fff3e0;border-left:4px solid #ff9800;border-radius:4px;font-size:10px;color:#555">'+
-          '&#9644; Linea solida = cable de tension &middot; B1/B2/B3 = numero de bajada &middot; Calcular instalacion sobre consumo MAXIMO'+
-        '</div>'+
-      '</div>'
-    pages.splice(3, 0, mapElecPage)
+  // Restore original screen
+  SHOW_DATA=prevData; SHOW_ELEC=prevElec
+  switchScreen(prevScreen)
+
+  // ── Generate map pages for each screen ──
+  // Data maps: 1 or 2 screens per page (2 if both are small enough)
+  // Elec maps: 1 or 2 screens per page similarly
+
+  function makeDataPage(captures){
+    // captures: array of 1 or 2 screen captures
+    var pageHtml = '<div class="page">'
+    captures.forEach(function(cap, ci){
+      var scS=cap.S, sc=cap.sc
+      var procPort = sc && sc.processorPort ? sc.processorPort : (SCREENS.indexOf(sc)+1)
+      var isLast = ci===captures.length-1
+      var dividerStyle = !isLast ? 'border-bottom:2px dashed #e0e0e0;margin-bottom:16px;padding-bottom:16px;' : ''
+      pageHtml +=
+        '<div style="'+dividerStyle+'">'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+            '<div style="width:14px;height:4px;border-radius:2px;background:#00d4ff"></div>'+
+            '<h2 style="margin:0;border:none;padding:0;font-size:'+(captures.length>1?'13':'16')+'px">'+
+              'Mapa de datos — '+escHtml(sc?sc.name:'Pantalla')+
+            '</h2>'+
+            '<span style="margin-left:auto;font-size:10px;font-weight:700;color:#00d4ff;background:#e8f4fd;padding:2px 8px;border-radius:10px">'+
+              'Puerto procesador: '+procPort+
+            '</span>'+
+          '</div>'+
+          '<p style="font-size:10px;color:#666;margin-bottom:8px">'+
+            (scS.rw&&scS.rh?scS.rw+'×'+scS.rh+' px &middot; ':'')+
+            (scS.cols&&scS.rows?scS.cols+'×'+scS.rows+' módulos &middot; ':'')+
+            'P'+(scS.pit||'-')+' &middot; '+(scS.W||'-')+'×'+(scS.H||'-')+'m &middot; '+
+            (scS.pn||0)+' cable'+((scS.pn>1)?'s':'')+' de datos'+
+          '</p>'+
+          '<div style="text-align:center;margin-bottom:8px">'+
+            '<img src="'+cap.dataImg+'" style="max-width:100%;max-height:'+(captures.length>1?'320px':'520px')+';border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'+
+          '</div>'+
+          (scS.ps&&scS.ps.length?
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px">'+
+            scS.ps.map(function(p){
+              var lbl = (sc&&sc.portLabels&&sc.portLabels[p.portNum]) ? sc.portLabels[p.portNum] : ('P'+p.portNum)
+              var col = PORT_COLORS[(p.portNum-1)%PORT_COLORS.length]
+              return '<div style="display:flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid '+col+';border-radius:5px">'+
+                '<div style="width:10px;height:10px;border-radius:50%;background:'+col+'"></div>'+
+                '<span style="font-weight:700;color:#333">'+escHtml(lbl)+'</span>'+
+                '<span style="color:#666">'+p.panelCount+' pan. &middot; '+p.usagePct+'%</span>'+
+              '</div>'
+            }).join('')+
+            '</div>'
+          :'')+
+        '</div>'
+    })
+    pageHtml += '</div>'
+    return pageHtml
+  }
+
+  function makeElecPage(captures){
+    var pageHtml = '<div class="page">'
+    captures.forEach(function(cap, ci){
+      var scS=cap.S, sc=cap.sc
+      var isLast = ci===captures.length-1
+      var dividerStyle = !isLast ? 'border-bottom:2px dashed #e0e0e0;margin-bottom:16px;padding-bottom:16px;' : ''
+      pageHtml +=
+        '<div style="'+dividerStyle+'">'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+            '<div style="width:14px;height:4px;border-radius:2px;background:#ff9800"></div>'+
+            '<h2 style="margin:0;border:none;padding:0;font-size:'+(captures.length>1?'13':'16')+'px">'+
+              'Mapa eléctrico — '+escHtml(sc?sc.name:'Pantalla')+
+            '</h2>'+
+          '</div>'+
+          '<p style="font-size:10px;color:#666;margin-bottom:8px">'+
+            (scS.W||'-')+'×'+(scS.H||'-')+'m &middot; '+
+            cap.drops.length+' bajada'+(cap.drops.length>1?'s':'')+
+            ' &middot; Tensión: '+voltTxt+
+          '</p>'+
+          '<div style="text-align:center;margin-bottom:8px">'+
+            '<img src="'+cap.elecImg+'" style="max-width:100%;max-height:'+(captures.length>1?'300px':'500px')+';border:1px solid #ddd;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'+
+          '</div>'+
+          (cap.drops.length?
+            '<div style="display:flex;flex-direction:column;gap:5px">'+
+            cap.drops.map(function(d){
+              return '<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid '+d.color+';border-left:3px solid '+d.color+';border-radius:5px;font-size:10px">'+
+                '<span style="font-weight:700;color:'+d.color+';min-width:55px">Bajada '+(d.d+1)+'</span>'+
+                '<span style="flex:1;color:#555">'+(d.panels||'-')+' pan. &middot; '+(d.wMax||0).toLocaleString()+'W max / '+(d.wAvg||0).toLocaleString()+'W avg</span>'+
+                '<span style="font-weight:700;color:'+d.color+'">'+(d.amps||'-')+'A</span>'+
+                '<span style="color:#4caf50">Disj. '+(d.breaker||'-')+'A / '+(d.cable||'-')+'</span>'+
+              '</div>'
+            }).join('')+
+            '</div>'
+          :'')+
+        '</div>'
+    })
+    pageHtml += '</div>'
+    return pageHtml
+  }
+
+  // Group screens into pages: 2 per page if multiple, 1 if single
+  var dataCaptures = screenCaptures.filter(function(c){ return c.dataImg })
+  var elecCaptures = screenCaptures.filter(function(c){ return c.elecImg })
+
+  var groupSize = dataCaptures.length > 1 ? 2 : 1
+
+  // Add data map pages
+  for(var gi=0; gi<dataCaptures.length; gi+=groupSize){
+    var group = dataCaptures.slice(gi, gi+groupSize)
+    pages.push(makeDataPage(group))
+  }
+
+  // Add elec pages
+  var elecGroupSize = elecCaptures.length > 1 ? 2 : 1
+  for(var gi=0; gi<elecCaptures.length; gi+=elecGroupSize){
+    var group = elecCaptures.slice(gi, gi+elecGroupSize)
+    pages.push(makeElecPage(group))
   }
 
   // ── Open PDF print window ──
@@ -3038,106 +3395,282 @@ function loadScreenColors(sc){
 
 
 
-// ════ NOVASTAR .SCR EXPORT ════
-// Reverse-engineered DSCI binary format
-// Two templates: rows=3 (4x3m reference) and rows=2 (10x2m reference)
-var _SCR_HDR3 = 'RFNDSQ4qgAAAAG8CAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA+kjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKwIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABogEAAAEAAAAAAAgAAwAAAAAAAAAAAAAAAACAAAABAQEAAwAAAAABAAABAIAAAAEBAQAEAAAAAA=='  // template for rows>=3
-var _SCR_HDR2 = 'RFNDSUQ4gAAAAH8DAACtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6QPPAAEBQAaEAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADuA3QyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOwMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABsgIAAAEAAAAAABQAAgAAAAAAAAAAAAAAAACAAAABAQACCwAAAAABAAABAIAAAAEBAAABAIAAAA=='  // template for rows=2
-var _SCR_FTR  = '6gPnAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQABAAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 
-function _b64arr(b64){
-  var s=atob(b64),a=new Uint8Array(s.length)
-  for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i)
-  return a
+
+// ════ LED CALCULATOR (Wefone-inspired) ════
+var CALC_STATE = {
+  env: 'indoor',
+  pitch: 1.86,
+  orient: 'landscape',
+  w: 4.8,   // meters
+  h: 2.7,
+  price: 0
 }
 
-function generateNovaStarSCR(cols,rows,ports,mwpx,mhpx,wiring){
-  wiring=wiring||'h-snake'
-  var total=cols*rows, nFull=total-3
-  var b12mod=rows===2?14:12
+var CALC_PITCHES = {
+  indoor:  [{v:1.25,res:'256×128'},{v:1.53,res:'208×104'},{v:1.86,res:'172×86'},{v:2.5,res:'128×64'}],
+  outdoor: [{v:2.5,res:'128×64'},{v:4,res:'80×40'},{v:5,res:'64×32'}]
+}
 
-  // Wiring order (serpentine)
-  var wo=[]
-  for(var r=0;r<rows;r++){
-    var cs=[]
-    if(wiring==='h-snake'&&r%2===1){for(var c=cols-1;c>=0;c--)cs.push(c)}
-    else{for(var c=0;c<cols;c++)cs.push(c)}
-    cs.forEach(function(c){wo.push([c,r])})
+var CALC_POWER = {
+  indoor:  {max:30, avg:15},
+  outdoor: {max:40, avg:20}
+}
+
+function calcSetEnv(env) {
+  CALC_STATE.env = env
+  // Default pitch per env
+  CALC_STATE.pitch = env==='indoor' ? 1.86 : 2.5
+  document.getElementById('calc-env-indoor').style.background = env==='indoor' ? 'rgba(59,130,246,0.15)' : 'transparent'
+  document.getElementById('calc-env-indoor').style.borderColor = env==='indoor' ? 'rgba(59,130,246,0.5)' : 'var(--b1)'
+  document.getElementById('calc-env-indoor').style.color = env==='indoor' ? '#60a5fa' : 'var(--txt3)'
+  document.getElementById('calc-env-outdoor').style.background = env==='outdoor' ? 'rgba(251,146,60,0.15)' : 'transparent'
+  document.getElementById('calc-env-outdoor').style.borderColor = env==='outdoor' ? 'rgba(251,146,60,0.5)' : 'var(--b1)'
+  document.getElementById('calc-env-outdoor').style.color = env==='outdoor' ? '#fb923c' : 'var(--txt3)'
+  renderCalcPitches()
+  runCalc()
+}
+
+function calcSetOrient(orient) {
+  CALC_STATE.orient = orient
+  var isLand = orient === 'landscape'
+  document.getElementById('calc-orient-land').style.background = isLand ? 'rgba(245,158,11,0.1)' : 'transparent'
+  document.getElementById('calc-orient-land').style.borderColor = isLand ? 'rgba(245,158,11,0.5)' : 'var(--b1)'
+  document.getElementById('calc-orient-land').style.color = isLand ? '#f59e0b' : 'var(--txt3)'
+  document.getElementById('calc-orient-port').style.background = !isLand ? 'rgba(245,158,11,0.1)' : 'transparent'
+  document.getElementById('calc-orient-port').style.borderColor = !isLand ? 'rgba(245,158,11,0.5)' : 'var(--b1)'
+  document.getElementById('calc-orient-port').style.color = !isLand ? '#f59e0b' : 'var(--txt3)'
+  runCalc()
+}
+
+function calcAspect(ratio) {
+  var w = parseFloat(document.getElementById('calc-w').value) || 4.8
+  var newH = Math.round(w / ratio * 100) / 100
+  document.getElementById('calc-h').value = newH
+  CALC_STATE.h = newH
+  runCalc()
+}
+
+function calcPreset(w, h) {
+  document.getElementById('calc-w').value = w
+  document.getElementById('calc-h').value = h
+  CALC_STATE.w = w; CALC_STATE.h = h
+  runCalc()
+}
+
+function renderCalcPitches() {
+  var list = document.getElementById('calc-pitch-list')
+  if(!list) return
+  var pitches = CALC_PITCHES[CALC_STATE.env]
+  list.innerHTML = pitches.map(function(p) {
+    var active = p.v === CALC_STATE.pitch
+    return '<button onclick="calcSelectPitch(' + p.v + ')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;border:1.5px solid ' + (active?'rgba(245,158,11,0.5)':'var(--b1)') + ';background:' + (active?'rgba(245,158,11,0.08)':'transparent') + ';color:' + (active?'#f59e0b':'var(--txt2)') + ';font-size:11px;font-weight:800;font-family:inherit;cursor:pointer;width:100%;transition:all .15s">' +
+      '<span>P' + p.v + '</span>' +
+      '<span style="font-size:9px;opacity:.7;font-family:monospace">' + p.res + ' px/module</span>' +
+      (active ? '<span style="width:8px;height:8px;background:#f59e0b;border-radius:50%;box-shadow:0 0 8px rgba(245,158,11,0.6);flex-shrink:0"></span>' : '<span style="width:8px;height:8px;flex-shrink:0"></span>') +
+      '</button>'
+  }).join('')
+}
+
+function calcSelectPitch(v) {
+  CALC_STATE.pitch = v
+  renderCalcPitches()
+  runCalc()
+}
+
+function runCalc() {
+  var w = parseFloat(document.getElementById('calc-w').value) || 4.8
+  var h = parseFloat(document.getElementById('calc-h').value) || 2.7
+  var price = parseFloat(document.getElementById('calc-price').value) || 0
+  CALC_STATE.w = w; CALC_STATE.h = h; CALC_STATE.price = price
+
+  var MOD_W_LAND = 320, MOD_H_LAND = 160 // mm
+  var modW = CALC_STATE.orient==='landscape' ? MOD_W_LAND : MOD_H_LAND
+  var modH = CALC_STATE.orient==='landscape' ? MOD_H_LAND : MOD_W_LAND
+
+  var wMM = w * 1000, hMM = h * 1000
+  var cols = Math.max(1, Math.floor(wMM / modW))
+  var rows = Math.max(1, Math.floor(hMM / modH))
+  var actualW = cols * modW   // mm
+  var actualH = rows * modH   // mm
+  var total = cols * rows
+
+  var pitch = CALC_STATE.pitch
+  var resX = Math.round(actualW / pitch)
+  var resY = Math.round(actualH / pitch)
+  var totalPx = resX * resY
+  var mp = (totalPx / 1e6).toFixed(2)
+
+  var pow = CALC_POWER[CALC_STATE.env]
+  var avgP = total * pow.avg
+  var maxP = total * pow.max
+
+  // PSU (6 modules each)
+  var psuCount = Math.ceil(total / 6)
+  // LAN ports (600k px each)
+  var lanPorts = Math.ceil(totalPx / 600000)
+  // Receiving cards
+  var rcCap = CALC_STATE.env==='indoor' ? 6 : (pitch<=2.5?9:18)
+  var rcCount = Math.ceil(total / rcCap)
+  // Viewing distance (in meters)
+  var vdMin = Math.round(pitch * 1000) / 1000
+  var vdOpt = Math.round(pitch * 2000) / 1000
+  var vdMax = Math.round(pitch * 5000) / 1000
+
+  var area = (actualW * actualH / 1e6).toFixed(2)
+
+  function fmtP(w) {
+    return w >= 1000 ? (w/1000).toFixed(2)+' kW' : w+' W'
   }
 
-  // Build entries
-  var entries=[]
-  for(var seq=0;seq<wo.length;seq++){
-    var k=Math.floor(seq/rows), pos=seq%rows
-    var b0=(seq+2)%rows, b1=Math.floor((seq+2)/rows)
+  // Update UI
+  document.getElementById('calc-results').style.display = 'block'
+  document.getElementById('calc-res-display').textContent = resX + ' × ' + resY
+  document.getElementById('calc-mp-badge').textContent = mp + ' MP'
+  var tc=T[LANG]||T.es; document.getElementById('calc-pitch-badge').textContent = 'P' + pitch + ' · ' + (CALC_STATE.env==='indoor'?tc.calcIndoor:tc.calcOutdoor)
+  document.getElementById('calc-dim-val').textContent = (actualW/1000).toFixed(3) + ' × ' + (actualH/1000).toFixed(3) + ' m'
+  document.getElementById('calc-area-val').textContent = area + ' m² ' + (T[LANG]||T.es).tTotalArea || area + ' m²'
+  document.getElementById('calc-mods-val').textContent = cols + ' × ' + rows
+  document.getElementById('calc-mods-total').textContent = total + ' ' + (T[LANG]||T.es).calcModsTotal
+  var tp=T[LANG]||T.es; document.getElementById('calc-pow-avg').textContent = fmtP(avgP) + ' ' + tp.calcAvg
+  document.getElementById('calc-pow-max').textContent = fmtP(maxP) + ' max draw'
+  var ti = T[LANG]||T.es
+  document.getElementById('calc-infra-val').innerHTML =
+    '<div>' + psuCount + ' ' + ti.calcPsuUnits + '</div>' +
+    '<div>' + rcCount + ' ' + ti.calcRcCards + '</div>' +
+    '<div>' + lanPorts + ' ' + ti.calcLanPorts + (lanPorts>1?'s':'') + '</div>'
+  document.getElementById('calc-vd-min').textContent = vdMin.toFixed(1) + 'm'
+  document.getElementById('calc-vd-opt').textContent = vdOpt.toFixed(1) + 'm'
+  document.getElementById('calc-vd-max').textContent = vdMax.toFixed(0) + 'm'
 
-    var b10,b12,b14,b11=0,port
+  // Cost
+  if(price > 0) {
+    var cost = parseFloat(area) * price
+    document.getElementById('calc-cost-card').style.display = 'block'
+    document.getElementById('calc-cost-val').textContent = 'AED ' + cost.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})
+    document.getElementById('calc-cost-sub').textContent = price.toLocaleString() + ' AED/m² × ' + area + ' m²'
+  } else {
+    document.getElementById('calc-cost-card').style.display = 'none'
+  }
 
-    if(rows===2){
-      b10=0
-      b12=(pos===0?(b12mod-4-k):(k+2))%b12mod
-      b14=seq%4===0||seq%4===3?128:0
-      port=seq===0?0:Math.min(ports-1,Math.floor((seq+3)/4))
-    } else {
-      b10=seq<cols?[0,1,1][seq%3]:[0,0,1][seq%3]
-      b12=[[k+1,(2-k%12+12)%12,k+5][pos]]%12
-      var kp=Math.floor(seq/3)%2
-      b14=kp===0?128:0
-      var ppp=Math.max(1,Math.floor(total/ports))
-      var hpp=Math.floor(ppp/2)
-      port=Math.min(ports-1,Math.floor((seq+hpp)/ppp))
+  // Summary bar
+  var bar = document.getElementById('calc-summary-bar')
+  if(bar) {
+    bar.style.display = 'block'
+    bar.textContent = resX+'×'+resY+' · '+mp+' MP · '+total+' modules · '+area+'m²'
+  }
+}
+
+function calcApplyToPixelMap() {
+  // Transfer calc values to PixelMap Pro main calculator
+  var w = CALC_STATE.w, h = CALC_STATE.h, pitch = CALC_STATE.pitch
+
+  // Set width/height inputs (in meters)
+  var cfW = document.getElementById('cf-w')
+  var cfH = document.getElementById('cf-h')
+  var cfPitch = document.getElementById('cf-pitch')
+  if(cfW) cfW.value = w
+  if(cfH) cfH.value = h
+
+  // Match pitch to PixelMap Pro format
+  if(cfPitch) {
+    // Find option that matches
+    var opts = cfPitch.options
+    for(var i=0;i<opts.length;i++) {
+      if(parseFloat(opts[i].value) === pitch) {
+        cfPitch.selectedIndex = i
+        break
+      }
     }
-
-    var e=new Uint8Array(17)
-    e[0]=b0;e[1]=b1;e[2]=0;e[3]=b0
-    e[4]=0;e[5]=mwpx&0xFF;e[6]=0
-    e[7]=mhpx&0xFF;e[8]=(mhpx>>8)&0xFF;e[9]=1
-    e[10]=b10;e[11]=b11;e[12]=b12;e[13]=0;e[14]=b14
-    e[15]=port&0xFF;e[16]=(port>>8)&0xFF
-    entries.push(e)
   }
 
-  // Patch header (use rows=2 template for rows=2, else rows=3 template)
-  var hdrSrc=rows===2?_SCR_HDR2:_SCR_HDR3
-  var hdr=new Uint8Array(_b64arr(hdrSrc))
-  hdr[325]=cols&0xFF; hdr[327]=rows&0xFF
-  hdr[341]=mwpx&0xFF; hdr[342]=(mwpx>>8)&0xFF
-  hdr[344]=1; hdr[345]=1
-  // [346],[347],[348] from template (complex encoding, not rows)
-  hdr[353]=1; hdr[356]=1; hdr[358]=mwpx&0xFF
-  hdr[361]=1; hdr[362]=1
-  // [363],[364],[365] from template
-  var v1=17*nFull+266; hdr[10]=v1&0xFF; hdr[11]=(v1>>8)&0xFF
-  var v2=17*nFull+198; hdr[210]=v2&0xFF; hdr[211]=(v2>>8)&0xFF
+  // Trigger compute
+  compute()
+  markUnsaved()
 
-  var jb=new TextEncoder().encode('[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]')
-  var ftr=_b64arr(_SCR_FTR)
-  var sz=hdr.length+nFull*17+10+2+jb.length+ftr.length
-  var out=new Uint8Array(sz),off=0
-  out.set(hdr,off); off+=hdr.length
-  for(var i=0;i<nFull&&i<entries.length;i++){out.set(entries[i],off);off+=17}
-  if(entries[nFull]){out.set(entries[nFull].slice(0,10),off);off+=10}
-  out[off]=jb.length&0xFF; out[off+1]=(jb.length>>8)&0xFF; off+=2
-  out.set(jb,off); off+=jb.length
-  out.set(ftr,off)
-  return out
+  // Switch to config tab to show result
+  sbTab('cfg')
+
+  // Flash feedback
+  var btn = event.target
+  var orig = btn.textContent
+  btn.textContent = '✅ Applied!'
+  btn.style.background = 'linear-gradient(135deg,#34d399,#059669)'
+  setTimeout(function(){ btn.textContent=orig; btn.style.background='linear-gradient(135deg,#f59e0b,#d97706)' }, 1500)
 }
 
-function exportSCR(){
-  if(!S.cols||!S.rows){alert('Configura una pantalla primero');return}
-  var wDir=document.getElementById('cf-dir')?document.getElementById('cf-dir').value:'h-snake'
-  var wirMode=wDir==='h-line'?'h-line':'h-snake'
-  var scr=generateNovaStarSCR(S.cols,S.rows,S.pn,S.mpw,S.mph,wirMode)
-  var blob=new Blob([scr],{type:'application/octet-stream'})
-  var a=document.createElement('a')
-  a.href=URL.createObjectURL(blob)
-  var nm=(document.getElementById('p-title').value||'pantalla').replace(/[^a-z0-9_\-]/gi,'_')
-  a.download=nm+'_'+S.cols+'x'+S.rows+'_P'+S.pit+'.scr'
-  document.body.appendChild(a); a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(a.href)
+// Initialize calc on first load
+function initCalc() {
+  updateCalcLang()
+  renderCalcPitches()
+  runCalc()
 }
 
+
+function updateCalcLang() {
+  var t = T[LANG] || T.es
+  var s = function(id, val) { var el=document.getElementById(id); if(el && val) el.textContent=val }
+  var sh = function(id, val) { var el=document.getElementById(id); if(el && val) el.innerHTML=val }
+  
+  // Header
+  s('calc-t-grade', t.calcSubtitle)
+  var bar = document.getElementById('calc-summary-bar')
+  if(bar && bar.textContent.includes('configure')) bar.textContent = t.calcConfigure
+
+  // Section labels
+  s('calc-h-env', t.calcEnv)
+  s('calc-h-pitch', t.calcPitch)
+  s('calc-h-orient', t.calcOrient)
+  s('calc-h-dims', t.calcDims)
+  s('calc-h-presets', t.calcPresets)
+  s('calc-h-price', t.calcPrice + ' ')  // keep optional span
+  s('calc-t-opt', t.calcPriceOpt)
+  
+  // Buttons
+  var ib = document.getElementById('calc-btn-indoor')
+  var ob = document.getElementById('calc-btn-outdoor')
+  if(ib) ib.textContent = '🏢 ' + t.calcIndoor
+  if(ob) ob.textContent = '☀️ ' + t.calcOutdoor
+  s('calc-t-land', t.calcLandscape)
+  s('calc-t-port', t.calcPortrait)
+
+  // Input labels
+  s('calc-lbl-w', t.calcWidth)
+  s('calc-lbl-h', t.calcHeight)
+
+  // Results section labels
+  s('calc-h-res', t.calcResolution)
+  s('calc-h-dimstat', t.calcDimensions)
+  s('calc-h-mods', t.calcModules)
+  s('calc-h-pow', t.calcPower)
+  s('calc-h-infra', t.calcInfra)
+  s('calc-h-vd', '👁 ' + t.calcViewDist)
+  s('calc-t-min', t.calcMinDist)
+  s('calc-t-opt2', t.calcOptDist)
+  s('calc-t-max', t.calcMaxDist)
+  s('calc-h-cost', '💰 ' + t.calcCost)
+  s('calc-t-apply', '⚡ ' + t.calcApply)
+  s('calc-t-apply-sub', t.calcApplySub)
+  
+  // Re-run calc to refresh dynamic text with new lang
+  if(document.getElementById('pane-calc') && 
+     document.getElementById('pane-calc').classList.contains('active')) {
+    runCalcLangUpdate()
+  }
+}
+
+function runCalcLangUpdate() {
+  // Update dynamic elements that are set by runCalc()
+  var t = T[LANG] || T.es
+  var env = CALC_STATE.env
+  var pb = document.getElementById('calc-pitch-badge')
+  if(pb) {
+    var pitch = CALC_STATE.pitch
+    pb.textContent = 'P' + pitch + ' · ' + (env==='indoor' ? t.calcIndoor : t.calcOutdoor)
+  }
+  // Re-render pitch list with new lang
+  renderCalcPitches()
+}
 
 // INIT
 document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
