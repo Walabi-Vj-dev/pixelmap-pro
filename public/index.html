@@ -249,6 +249,191 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- ════ PIXELMAP THEMES — Anti-flash: aplica el tema guardado antes del primer paint ════ -->
+<script>
+(function(){
+  var t=localStorage.getItem('pmp_theme')||'dark-pro';
+  if(t!=='dark-pro') document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
+
+<style>
+/* ════════════════════════════════════════════════════════════
+   PIXELMAP PRO — SISTEMA DE 6 TEMAS
+   Uso: data-theme en <html> o <body>
+   Default (sin atributo) = dark-pro (compatible con estilos actuales)
+   ════════════════════════════════════════════════════════════ */
+
+/* ── TEMA 2: MINIMAL LIGHT ── */
+[data-theme="minimal-light"] {
+  --bg:#f1f5f9; --s1:#ffffff; --s2:#f8fafc; --s3:#f1f5f9;
+  --b1:#e2e8f0; --b2:#cbd5e1;
+  --cyan:#2563eb; --gold:#d97706; --green:#16a34a; --red:#dc2626; --purple:#7c3aed;
+  --txt:#0f172a; --txt2:#475569; --txt3:#94a3b8;
+}
+[data-theme="minimal-light"] body {
+  background:#f1f5f9 !important;
+  color:#0f172a !important;
+}
+[data-theme="minimal-light"] input:focus,
+[data-theme="minimal-light"] select:focus,
+[data-theme="minimal-light"] textarea:focus { border-color:#2563eb; }
+[data-theme="minimal-light"] .lc-btn,
+[data-theme="minimal-light"] .bo-cta { background:#2563eb !important; color:#fff !important; }
+[data-theme="minimal-light"] .login-card { box-shadow:0 8px 40px rgba(0,0,0,0.10); }
+[data-theme="minimal-light"] #s-login {
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(37,99,235,0.07),transparent) !important;
+}
+[data-theme="minimal-light"] .sb-tab.active { color:#2563eb !important; border-bottom-color:#2563eb !important; background:rgba(37,99,235,0.04) !important; }
+[data-theme="minimal-light"] .lc-tab.active { color:#2563eb !important; border-bottom-color:#2563eb !important; }
+[data-theme="minimal-light"] .lang-btn.active,
+[data-theme="minimal-light"] .tl-btn.active { border-color:#2563eb !important; color:#2563eb !important; }
+[data-theme="minimal-light"] .scr-tab.active { color:#0f172a !important; border-bottom-color:#2563eb !important; }
+[data-theme="minimal-light"] .sv { color:#2563eb !important; }
+[data-theme="minimal-light"] .mh-res { color:#2563eb !important; }
+[data-theme="minimal-light"] .tb-logo span,
+[data-theme="minimal-light"] .lc-logo span { color:#2563eb !important; }
+[data-theme="minimal-light"] ::-webkit-scrollbar-thumb { background:#cbd5e1; }
+
+/* ── TEMA 3: TERMINAL ── */
+[data-theme="terminal"] {
+  --bg:#0d1117; --s1:#161b22; --s2:#21262d; --s3:#2d333b;
+  --b1:#30363d; --b2:#3d444d;
+  --cyan:#39d353; --gold:#ffa657; --green:#39d353; --red:#ff7b72; --purple:#d2a8ff;
+  --txt:#c9d1d9; --txt2:#8b949e; --txt3:#484f58;
+}
+[data-theme="terminal"] body {
+  font-family:'Courier New','Consolas',monospace !important;
+}
+[data-theme="terminal"] .lc-logo,
+[data-theme="terminal"] .tb-logo { font-family:'Courier New','Consolas',monospace !important; letter-spacing:0.05em; }
+[data-theme="terminal"] input:focus,
+[data-theme="terminal"] select:focus { border-color:#39d353; }
+[data-theme="terminal"] .lc-btn { background:#238636 !important; color:#39d353 !important; }
+[data-theme="terminal"] .bo-cta { background:#238636 !important; color:#39d353 !important; }
+[data-theme="terminal"] #s-login {
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(57,211,83,0.06),transparent) !important;
+}
+[data-theme="terminal"] .sv { color:#39d353 !important; }
+[data-theme="terminal"] .mh-res { color:#39d353 !important; }
+[data-theme="terminal"] .tb-logo span,
+[data-theme="terminal"] .lc-logo span { color:#39d353 !important; }
+[data-theme="terminal"] .lc-logo::after { content:'_'; animation:tmr-blink 1s step-end infinite; color:#39d353; }
+@keyframes tmr-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+[data-theme="terminal"] .sb-tab.active { color:#39d353 !important; border-bottom-color:#39d353 !important; }
+[data-theme="terminal"] .scr-tab.active { border-bottom-color:#39d353 !important; }
+
+/* ── TEMA 4: INDUSTRIAL ── */
+[data-theme="industrial"] {
+  --bg:#1c1c1e; --s1:#2c2c2e; --s2:#3a3a3c; --s3:#48484a;
+  --b1:#48484a; --b2:#636366;
+  --cyan:#f5a623; --gold:#f5a623; --green:#30d158; --red:#ff453a; --purple:#bf5af2;
+  --txt:#ebebf0; --txt2:#8e8e93; --txt3:#636366;
+}
+[data-theme="industrial"] body { background:#1c1c1e !important; }
+[data-theme="industrial"] .lc-btn { background:#f5a623 !important; color:#000 !important; font-weight:900 !important; letter-spacing:0.1em !important; }
+[data-theme="industrial"] .bo-cta { background:#f5a623 !important; color:#000 !important; }
+[data-theme="industrial"] .login-card { border:2px solid #f5a623 !important; }
+[data-theme="industrial"] .topbar { border-bottom:2px solid #f5a623 !important; }
+[data-theme="industrial"] .lc-logo,
+[data-theme="industrial"] .tb-logo { letter-spacing:0.08em !important; text-transform:uppercase; }
+[data-theme="industrial"] .tb-logo span,
+[data-theme="industrial"] .lc-logo span { color:#f5a623 !important; }
+[data-theme="industrial"] .sv { color:#f5a623 !important; }
+[data-theme="industrial"] .mh-res { color:#f5a623 !important; }
+[data-theme="industrial"] .sb-tab.active { color:#f5a623 !important; border-bottom-color:#f5a623 !important; background:rgba(245,166,35,0.05) !important; }
+[data-theme="industrial"] .scr-tab.active { border-bottom-color:#f5a623 !important; }
+[data-theme="industrial"] input:focus,
+[data-theme="industrial"] select:focus { border-color:#f5a623; }
+[data-theme="industrial"] #s-login {
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(245,166,35,0.06),transparent) !important;
+}
+
+/* ── TEMA 5: GLASSMORPHISM ── */
+[data-theme="glassmorphism"] {
+  --bg:#2d1b69; --s1:rgba(255,255,255,0.10); --s2:rgba(255,255,255,0.07); --s3:rgba(255,255,255,0.13);
+  --b1:rgba(255,255,255,0.18); --b2:rgba(255,255,255,0.28);
+  --cyan:#c4b5fd; --gold:#fbbf24; --green:#34d399; --red:#f87171; --purple:#e879f9;
+  --txt:#ffffff; --txt2:rgba(255,255,255,0.65); --txt3:rgba(255,255,255,0.35);
+}
+[data-theme="glassmorphism"] body {
+  background: linear-gradient(135deg,#1a0533 0%,#2d1b69 40%,#4c1d95 70%,#6d28d9 100%) !important;
+  background-attachment:fixed !important;
+}
+[data-theme="glassmorphism"] #s-login {
+  background:transparent !important;
+  background-image:none !important;
+}
+[data-theme="glassmorphism"] .login-card,
+[data-theme="glassmorphism"] .sidebar,
+[data-theme="glassmorphism"] .topbar {
+  backdrop-filter:blur(12px) !important;
+  -webkit-backdrop-filter:blur(12px) !important;
+}
+[data-theme="glassmorphism"] .lc-btn { background:rgba(255,255,255,0.25) !important; color:#fff !important; border:1px solid rgba(255,255,255,0.4) !important; }
+[data-theme="glassmorphism"] .bo-cta { background:rgba(196,181,253,0.3) !important; color:#fff !important; }
+[data-theme="glassmorphism"] .tb-logo span,
+[data-theme="glassmorphism"] .lc-logo span { color:#c4b5fd !important; }
+[data-theme="glassmorphism"] .sv { color:#ffffff !important; }
+[data-theme="glassmorphism"] .mh-res { color:#c4b5fd !important; }
+[data-theme="glassmorphism"] .sb-tab.active { color:#c4b5fd !important; border-bottom-color:#c4b5fd !important; }
+[data-theme="glassmorphism"] input:focus,
+[data-theme="glassmorphism"] select:focus { border-color:rgba(255,255,255,0.6) !important; }
+[data-theme="glassmorphism"] input,
+[data-theme="glassmorphism"] select,
+[data-theme="glassmorphism"] textarea {
+  background:rgba(255,255,255,0.08) !important;
+  border-color:rgba(255,255,255,0.2) !important;
+  color:#fff !important;
+}
+
+/* ── TEMA 6: SYNTHWAVE ── */
+[data-theme="synthwave"] {
+  --bg:#120024; --s1:rgba(255,0,255,0.06); --s2:rgba(0,255,255,0.04); --s3:rgba(255,0,255,0.09);
+  --b1:rgba(255,0,255,0.22); --b2:rgba(0,255,255,0.22);
+  --cyan:#ff00ff; --gold:#ffff00; --green:#00ffff; --red:#ff4444; --purple:#ff00ff;
+  --txt:#ffffff; --txt2:rgba(0,255,255,0.75); --txt3:rgba(255,0,255,0.45);
+}
+[data-theme="synthwave"] body { background:#120024 !important; }
+[data-theme="synthwave"] body::before {
+  content:'';
+  position:fixed; bottom:0; left:0; right:0; height:40vh;
+  background-image:linear-gradient(rgba(255,0,255,0.12) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,0,255,0.12) 1px,transparent 1px);
+  background-size:40px 40px;
+  transform:perspective(250px) rotateX(55deg);
+  transform-origin:bottom center;
+  pointer-events:none; z-index:0;
+}
+[data-theme="synthwave"] #s-login,
+[data-theme="synthwave"] #s-app { position:relative; z-index:1; }
+[data-theme="synthwave"] #s-login {
+  background:transparent !important;
+  background-image:none !important;
+}
+[data-theme="synthwave"] .lc-btn { background:rgba(255,0,255,0.25) !important; color:#ff00ff !important; border:1px solid rgba(255,0,255,0.5) !important; }
+[data-theme="synthwave"] .bo-cta { background:rgba(255,0,255,0.3) !important; color:#ff00ff !important; }
+[data-theme="synthwave"] .login-card { border:1px solid rgba(255,0,255,0.3) !important; box-shadow:0 0 40px rgba(255,0,255,0.1) !important; }
+[data-theme="synthwave"] .topbar { border-bottom:1px solid rgba(255,0,255,0.2) !important; }
+[data-theme="synthwave"] .sidebar { border-right:1px solid rgba(0,255,255,0.15) !important; }
+[data-theme="synthwave"] .tb-logo span,
+[data-theme="synthwave"] .lc-logo span { color:#ff00ff !important; }
+[data-theme="synthwave"] .sv { color:#ff00ff !important; }
+[data-theme="synthwave"] .mh-res { color:#00ffff !important; }
+[data-theme="synthwave"] .sb-tab.active { color:#ff00ff !important; border-bottom-color:#ff00ff !important; background:rgba(255,0,255,0.06) !important; }
+[data-theme="synthwave"] .scr-tab.active { border-bottom-color:#ff00ff !important; }
+[data-theme="synthwave"] input:focus,
+[data-theme="synthwave"] select:focus { border-color:#ff00ff !important; box-shadow:0 0 0 2px rgba(255,0,255,0.15) !important; }
+[data-theme="synthwave"] input,
+[data-theme="synthwave"] select,
+[data-theme="synthwave"] textarea {
+  background:rgba(0,255,255,0.05) !important;
+  border-color:rgba(0,255,255,0.2) !important;
+}
+[data-theme="synthwave"] .lc-logo { letter-spacing:0.1em !important; }
+[data-theme="synthwave"] .tb-logo { letter-spacing:0.06em !important; }
+</style>
 </head>
 <body>
 
@@ -281,6 +466,12 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
       </div>
     </div>
     <div style="text-align:center;margin-top:16px;font-size:10px;color:var(--txt3)">PixelMap Pro v3.0 · Hecho con ❤ en Argentina 🇦🇷</div>
+
+    <!-- ════ THEME PICKER ════ -->
+    <div id="theme-picker-wrap" style="margin-top:14px">
+      <div style="text-align:center;font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">Estilo visual</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px" id="theme-picker-grid"></div>
+    </div>
   </div>
 </div>
 
@@ -796,6 +987,18 @@ button{cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparen
       <button class="bn-btn" id="bn-elec" onclick="bnTab('elec')" style="color:#ff9800"><span class="bn-icon" style="font-size:15px">🔌</span><span style="font-size:7px">Elec.</span></button>
     </div>
   </nav>
+
+  <!-- ════ THEME SWITCHER FLOTANTE ════ -->
+  <div id="theme-fab-wrap" style="position:fixed;bottom:72px;right:16px;z-index:9800;display:none;flex-direction:column;align-items:flex-end;gap:8px">
+    <div id="theme-fab-panel" style="display:none;background:var(--s1);border:1px solid var(--b2);border-radius:14px;padding:14px;width:230px;box-shadow:0 8px 32px rgba(0,0,0,0.5)">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--txt3);margin-bottom:10px">Tema visual</div>
+      <div id="theme-fab-list"></div>
+    </div>
+    <button id="theme-fab-btn" onclick="toggleThemeFab()"
+      style="width:42px;height:42px;border-radius:50%;background:var(--s1);border:1px solid var(--b2);color:var(--txt2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,color .2s"
+      title="Cambiar tema">🎨</button>
+  </div>
+
 </div>
 
 <div id="modal-pricing">
@@ -1276,6 +1479,8 @@ async function doLogout(){
   document.getElementById('l-err').classList.remove('show')
   document.getElementById('l-err').style.color='var(--red)'
   closeSidebar()
+  pmpHideFab()
+  pmpRenderPicker()
 }
 
 function showApp(){
@@ -1303,6 +1508,7 @@ function showApp(){
   renderLogoPan()
   initScreens()
   if(blocked) setTimeout(showBlockOverlay,300)
+  pmpShowFab()
 }
 
 // SIDEBAR
@@ -3624,8 +3830,106 @@ function runCalcLangUpdate() {
   renderCalcPitches()
 }
 
+
+// ════════════════════════════════════════════════════════════
+// PIXELMAP PRO — THEME SYSTEM v1.0
+// ════════════════════════════════════════════════════════════
+var PMP_THEMES = [
+  { id:'dark-pro',       name:'Dark Pro',    desc:'Oscuro · cian',        dot:'#00d4ff', bg:'#1a1d27' },
+  { id:'minimal-light',  name:'Light',       desc:'Claro · azul',         dot:'#2563eb', bg:'#ffffff' },
+  { id:'terminal',       name:'Terminal',    desc:'Hacker · verde',       dot:'#39d353', bg:'#161b22' },
+  { id:'industrial',     name:'Industrial',  desc:'Robusto · amarillo',   dot:'#f5a623', bg:'#2c2c2e' },
+  { id:'glassmorphism',  name:'Glass',       desc:'Translúcido · violeta',dot:'#c4b5fd', bg:'#4c1d95' },
+  { id:'synthwave',      name:'Synthwave',   desc:'Neon · magenta',       dot:'#ff00ff', bg:'#120024' }
+]
+var PMP_THEME_KEY = 'pmp_theme'
+
+function pmpGetTheme(){ return localStorage.getItem(PMP_THEME_KEY)||'dark-pro' }
+
+function pmpApplyTheme(id, save){
+  var theme = PMP_THEMES.find(function(t){return t.id===id}) || PMP_THEMES[0]
+  // Aplicar al html element para máxima compatibilidad con el anti-flash
+  document.documentElement.setAttribute('data-theme', id)
+  if(save!==false) localStorage.setItem(PMP_THEME_KEY, id)
+  // Actualizar meta theme-color
+  var metaColors = {
+    'dark-pro':'#00d4ff','minimal-light':'#2563eb','terminal':'#39d353',
+    'industrial':'#f5a623','glassmorphism':'#c4b5fd','synthwave':'#ff00ff'
+  }
+  var mc = document.querySelector('meta[name="theme-color"]')
+  if(mc) mc.setAttribute('content', metaColors[id]||'#00d4ff')
+  // Refrescar ambos paneles
+  pmpRenderPicker()
+  pmpRenderFab()
+}
+
+function pmpThemeOptionHTML(t, currentId, compact){
+  var isCurrent = t.id === currentId
+  var base = 'display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;transition:background .15s;'
+  var style = base + (isCurrent ? 'background:rgba(255,255,255,0.06);border-color:var(--b2);' : '')
+  return '<div style="'+style+'" onclick="pmpApplyTheme(\''+t.id+'\')">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:'+t.bg+';border:1.5px solid '+t.dot+'40;display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<div style="width:10px;height:10px;border-radius:50%;background:'+t.dot+'"></div></div>'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--txt)">' + t.name + (isCurrent?' <span style="font-size:9px;color:var(--txt3)">(actual)</span>':'') + '</div>'
+    +'<div style="font-size:10px;color:var(--txt2)">'+t.desc+'</div>'
+    +'</div></div>'
+}
+
+function pmpRenderPicker(){
+  // Picker del login
+  var grid = document.getElementById('theme-picker-grid')
+  if(!grid) return
+  var cur = pmpGetTheme()
+  grid.innerHTML = PMP_THEMES.map(function(t){
+    var isCurrent = t.id === cur
+    return '<div onclick="pmpApplyTheme(\''+t.id+'\')" style="'
+      +'display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;border-radius:8px;cursor:pointer;'
+      +'border:1.5px solid '+(isCurrent?t.dot:'var(--b1)')+';'
+      +'background:'+(isCurrent?'rgba(255,255,255,0.04)':'transparent')+';'
+      +'transition:border-color .15s,background .15s">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:'+t.bg+';border:1.5px solid '+t.dot+'50;display:flex;align-items:center;justify-content:center">'
+      +'<div style="width:12px;height:12px;border-radius:50%;background:'+t.dot+'"></div></div>'
+      +'<div style="font-size:9px;font-weight:700;color:'+(isCurrent?t.dot:'var(--txt2)')+';text-align:center;line-height:1.2">'+t.name+'</div>'
+      +'</div>'
+  }).join('')
+}
+
+function pmpRenderFab(){
+  var list = document.getElementById('theme-fab-list')
+  if(!list) return
+  var cur = pmpGetTheme()
+  list.innerHTML = PMP_THEMES.map(function(t){ return pmpThemeOptionHTML(t, cur) }).join('')
+}
+
+function toggleThemeFab(){
+  var panel = document.getElementById('theme-fab-panel')
+  if(!panel) return
+  var isOpen = panel.style.display !== 'none'
+  panel.style.display = isOpen ? 'none' : 'block'
+  if(!isOpen) pmpRenderFab()
+}
+
+// Cerrar el panel de temas al hacer click afuera
+document.addEventListener('click', function(e){
+  var wrap = document.getElementById('theme-fab-wrap')
+  if(wrap && !wrap.contains(e.target)){
+    var panel = document.getElementById('theme-fab-panel')
+    if(panel) panel.style.display = 'none'
+  }
+})
+
+// Mostrar/ocultar el FAB según si el usuario está logueado
+function pmpShowFab(){ var w=document.getElementById('theme-fab-wrap'); if(w) w.style.display='flex' }
+function pmpHideFab(){ var w=document.getElementById('theme-fab-wrap'); if(w) w.style.display='none'; var p=document.getElementById('theme-fab-panel'); if(p) p.style.display='none' }
+
+// ════════════════════════════════════════════════════════════
+
 // INIT
 document.getElementById('p-date').value=new Date().toISOString().slice(0,10)
+// Inicializar tema guardado y el picker del login
+pmpApplyTheme(pmpGetTheme(), false)
+pmpRenderPicker()
 applyT()
 renderProjectsList()
 renderAiSugs()
