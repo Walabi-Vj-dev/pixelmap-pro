@@ -9,7 +9,7 @@
 /* ── CSS ─────────────────────────────────────────────────────── */
 var styleEl = document.createElement('style');
 styleEl.textContent = `
-:root { --sb-tabs-w:58px; --sb-pane-w:278px; }
+:root { --sb-tabs-w:58px; --sb-pane-w:300px; }
 
 #sidebar {
   flex-direction:row !important;
