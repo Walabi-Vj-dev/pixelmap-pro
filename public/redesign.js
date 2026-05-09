@@ -122,6 +122,33 @@ styleEl.textContent = `
 .sv.warn { color:var(--gold) !important; }
 .sv.err  { color:var(--red) !important; }
 .sl { font-size:8.5px !important; text-transform:uppercase !important; letter-spacing:.06em !important; color:var(--txt3) !important; margin-top:2px !important; }
+
+/* ── Mobile: sidebar se abre como drawer, pane ocupa todo el ancho ── */
+@media (max-width: 639px) {
+  #sidebar {
+    width: min(358px, 95vw) !important;
+    min-width: unset !important;
+    flex-direction: row !important;
+  }
+  .sb-tabs {
+    width: 50px !important;
+    min-width: 50px !important;
+  }
+  .sb-pane {
+    width: calc(min(358px, 95vw) - 50px) !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+}
+
+/* ── Tablet: mismo layout pero sidebar fixed ── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  #sidebar {
+    width: calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+    min-width: calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+    flex-direction: row !important;
+  }
+}
 `;
 document.head.appendChild(styleEl);
 
