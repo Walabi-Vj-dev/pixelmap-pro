@@ -123,30 +123,45 @@ styleEl.textContent = `
 .sv.err  { color:var(--red) !important; }
 .sl { font-size:8.5px !important; text-transform:uppercase !important; letter-spacing:.06em !important; color:var(--txt3) !important; margin-top:2px !important; }
 
-/* ── Mobile: sidebar se abre como drawer, pane ocupa todo el ancho ── */
+/* ── Mobile (<640px): sidebar es drawer superpuesto, NO empuja el mapa ── */
 @media (max-width: 639px) {
+  /* Respetar el drawer original: position fixed, transform oculto */
   #sidebar {
-    width: min(358px, 95vw) !important;
+    position: fixed !important;
+    width: min(340px, 92vw) !important;
     min-width: unset !important;
     flex-direction: row !important;
   }
   .sb-tabs {
-    width: 50px !important;
-    min-width: 50px !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    flex-shrink: 0 !important;
   }
   .sb-pane {
-    width: calc(min(358px, 95vw) - 50px) !important;
+    width: calc(min(340px, 92vw) - 46px) !important;
     min-width: unset !important;
     max-width: unset !important;
+    flex: 1 !important;
+  }
+  /* El mapa NO se ve afectado porque el sidebar está en position:fixed */
+  .map-area {
+    width: 100% !important;
+    margin-left: 0 !important;
   }
 }
 
-/* ── Tablet: mismo layout pero sidebar fixed ── */
+/* ── Tablet (640–1023px): drawer fixed con layout de íconos ── */
 @media (min-width: 640px) and (max-width: 1023px) {
   #sidebar {
+    position: fixed !important;
     width: calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
-    min-width: calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+    min-width: unset !important;
     flex-direction: row !important;
+  }
+  .sb-pane {
+    width: var(--sb-pane-w) !important;
+    min-width: var(--sb-pane-w) !important;
+    max-width: var(--sb-pane-w) !important;
   }
 }
 `;
