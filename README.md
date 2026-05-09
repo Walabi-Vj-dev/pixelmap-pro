@@ -47,7 +47,7 @@
 - 📦 Componentes reutilizables
 
 ## 🌐 Demo en Vivo
-
+    "Crea tu cuenta con tu correo real para recibir la activación"
 **[Prueba PixelMap Pro Aquí →](https://pixelmap-pro.vercel.app)**
 
 ## 📦 Instalación
@@ -218,7 +218,7 @@ pixelmap-pro/
 | Característica | Free | Pro | SuperOp |
 |---|---|---|---|
 | Proyectos | 3 | 20 | Ilimitados |
-| Exportaciones | 5/mes | 100/mes | Ilimitadas |
+| Exportaciones | 2 | 100/mes | Ilimitadas |
 | Tamaño máximo | 32x32 | 64x64 | 128x128+ |
 | APIs | ✅ | ✅ | ✅ |
 | Soporte | Comunidad | Email | Prioritario |
@@ -297,7 +297,7 @@ Este proyecto está bajo la Licencia MIT - ver [LICENSE](./LICENSE) para detalle
 
 ## 📞 Contacto
 
-- **Email**: walabi@pixelmappro.com
+- **Email**: pixelmappro@gmail.com
 - **Web**: https://pixelmap-pro.vercel.app
 - **GitHub Issues**: [Abre una issue](https://github.com/Walabi-Vj-dev/pixelmap-pro/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Walabi-Vj-dev/pixelmap-pro/discussions)
