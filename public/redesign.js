@@ -9,19 +9,17 @@
 /* ── CSS ─────────────────────────────────────────────────────── */
 var styleEl = document.createElement('style');
 styleEl.textContent = `
-:root { --sb-tabs-w:58px; --sb-pane-w:300px; }
-
 #sidebar {
   flex-direction:row !important;
-  width:calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
-  min-width:calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+  width:calc(58px + 300px) !important;
+  min-width:calc(58px + 300px) !important;
   overflow:hidden !important;
   flex-shrink:0 !important;
 }
 .sb-tabs {
   flex-direction:column !important;
-  width:var(--sb-tabs-w) !important;
-  min-width:var(--sb-tabs-w) !important;
+  width:58px !important;
+  min-width:58px !important;
   flex-shrink:0 !important;
   border-bottom:none !important;
   border-right:1px solid var(--b1) !important;
@@ -63,7 +61,7 @@ styleEl.textContent = `
 .sb-spacer { flex:1; min-height:4px; }
 .sb-pane {
   display:none !important;
-  width:var(--sb-pane-w) !important; min-width:var(--sb-pane-w) !important; max-width:var(--sb-pane-w) !important;
+  width:300px !important; min-width:300px !important; max-width:300px !important;
   flex-shrink:0 !important; overflow:hidden auto !important; box-sizing:border-box !important;
 }
 .sb-pane.active { display:flex !important; }
@@ -123,39 +121,7 @@ styleEl.textContent = `
 .sv.err  { color:var(--red) !important; }
 .sl { font-size:8.5px !important; text-transform:uppercase !important; letter-spacing:.06em !important; color:var(--txt3) !important; margin-top:2px !important; }
 
-/* ── Mobile y tablet (<1024px): sidebar es drawer, NO empuja el mapa ── */
-@media (max-width: 1023px) {
-  /* Sidebar vuelve a position:fixed para que flote sobre el mapa */
-  html body #sidebar {
-    position: fixed !important;
-    top: var(--topbar) !important;
-    left: 0 !important;
-    height: calc(100% - var(--topbar)) !important;
-    z-index: 50 !important;
-    transform: translateX(-100%) !important;
-    flex-direction: row !important;
-    width: min(340px, 92vw) !important;
-    min-width: unset !important;
-  }
-  html body #sidebar.open {
-    transform: translateX(0) !important;
-  }
-  html body .sb-tabs {
-    width: 46px !important;
-    min-width: 46px !important;
-  }
-  html body .sb-pane {
-    width: calc(min(340px, 92vw) - 46px) !important;
-    min-width: unset !important;
-    max-width: unset !important;
-    flex: 1 !important;
-  }
-  /* El mapa ocupa todo el ancho — el sidebar flota encima */
-  html body .map-area {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-}
+
 `;
 document.head.appendChild(styleEl);
 
