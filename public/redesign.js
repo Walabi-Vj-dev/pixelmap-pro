@@ -1,280 +1,249 @@
-/* =============================================================
-   PixelMap Pro — Rediseño de interfaz
-   Archivo: redesign.js
-   Instrucciones: agregar este <script> al final del <body>,
-   DESPUÉS de todos los scripts existentes:
+/* PixelMap Pro — Rediseño v2
+   Un solo archivo. Agregar al final del <body> en index.html:
    <script src="redesign.js"></script>
-   ============================================================= */
-
+   No tocar nada más. ¡Listo!
+*/
 (function () {
-  "use strict";
+"use strict";
 
-  /* ── 1. Íconos SVG para cada tab del sidebar ─────────────────
-     Reemplaza los emojis/texto por SVG + etiqueta legible.
-     La función sbTab() original sigue funcionando igual porque
-     no tocamos los id ni el onclick de los botones.
-  ──────────────────────────────────────────────────────────── */
-  var TAB_CONFIG = [
-    {
-      id: "sbt-screens",
-      label: "Pantallas",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
-    },
-    {
-      id: "sbt-cfg",
-      label: "Config",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-    },
-    {
-      id: "sbt-prj",
-      label: "Proyecto",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
-    },
-    {
-      id: "sbt-pts",
-      label: "Puertos",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>',
-    },
-    {
-      id: "sbt-exp",
-      label: "Exportar",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-    },
-    {
-      id: "sbt-proc",
-      label: "Proc.",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    },
-    {
-      id: "sbt-ai",
-      label: "AI",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>',
-    },
-    {
-      id: "sbt-saves",
-      label: "Guardados",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>',
-    },
-    {
-      id: "sbt-elec",
-      label: "Elec.",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>',
-    },
-    {
-      id: "sbt-colors",
-      label: "Colores",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg>',
-    },
-    {
-      id: "sbt-calc",
-      label: "Calc",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>',
-    },
-    {
-      id: "sbt-soon",
-      label: "Próx.",
-      svg: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-    },
+/* ── CSS ─────────────────────────────────────────────────────── */
+var styleEl = document.createElement('style');
+styleEl.textContent = `
+:root { --sb-tabs-w:58px; --sb-pane-w:278px; }
+
+#sidebar {
+  flex-direction:row !important;
+  width:calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+  min-width:calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
+  overflow:hidden !important;
+  flex-shrink:0 !important;
+}
+.sb-tabs {
+  flex-direction:column !important;
+  width:var(--sb-tabs-w) !important;
+  min-width:var(--sb-tabs-w) !important;
+  flex-shrink:0 !important;
+  border-bottom:none !important;
+  border-right:1px solid var(--b1) !important;
+  overflow:hidden auto !important;
+  scrollbar-width:none !important;
+  padding:8px 0 !important;
+  gap:2px !important;
+  align-items:center !important;
+  box-sizing:border-box !important;
+}
+.sb-tabs::-webkit-scrollbar { display:none !important; }
+.sb-tab {
+  width:42px !important; min-width:42px !important;
+  height:42px !important; min-height:42px !important;
+  flex:none !important;
+  border:none !important;
+  border-left:2px solid transparent !important;
+  border-radius:8px !important;
+  padding:4px 2px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  font-size:7px !important;
+  cursor:pointer !important;
+  transition:background .15s,color .15s,border-left-color .15s !important;
+  white-space:nowrap !important;
+}
+.sb-tab:hover { background:rgba(255,255,255,.05) !important; color:var(--txt2) !important; }
+.sb-tab.active {
+  background:rgba(0,212,255,.1) !important;
+  color:var(--cyan) !important;
+  border-left-color:var(--cyan) !important;
+  border-radius:0 8px 8px 0 !important;
+}
+.sb-tab svg { width:18px !important; height:18px !important; color:inherit !important; flex-shrink:0 !important; }
+.sb-sep { width:26px; height:1px; background:var(--b1); margin:5px auto; flex-shrink:0; }
+.sb-spacer { flex:1; min-height:4px; }
+.sb-pane {
+  display:none !important;
+  width:var(--sb-pane-w) !important; min-width:var(--sb-pane-w) !important; max-width:var(--sb-pane-w) !important;
+  flex-shrink:0 !important; overflow:hidden auto !important; box-sizing:border-box !important;
+}
+.sb-pane.active { display:flex !important; }
+
+.topbar { position:relative !important; }
+#rd-proj-badge {
+  position:absolute; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:6px;
+  background:var(--s2); border:1px solid var(--b1); border-radius:7px;
+  padding:5px 13px; font-size:12px; color:var(--txt2);
+  pointer-events:none; white-space:nowrap; z-index:1;
+}
+#rd-proj-badge b { color:var(--txt); font-weight:500; }
+
+#rd-stats-bar {
+  display:flex; align-items:center; gap:7px;
+  padding:0 14px; height:46px; flex-shrink:0;
+  background:var(--s1); border-bottom:1px solid var(--b1);
+  overflow-x:auto; scrollbar-width:none;
+}
+#rd-stats-bar::-webkit-scrollbar { display:none; }
+.rd-stat {
+  display:flex; flex-direction:column; justify-content:center;
+  padding:0 10px; height:34px;
+  background:var(--s2); border:1px solid var(--b1); border-radius:7px; flex-shrink:0;
+}
+.rd-stat-val { font-size:13px; font-weight:600; color:var(--txt); line-height:1; }
+.rd-stat-val.cyan  { color:var(--cyan) !important; }
+.rd-stat-val.amber { color:var(--gold) !important; }
+.rd-stat-val.green { color:var(--green) !important; }
+.rd-stat-lbl { font-size:8px; color:var(--txt3); text-transform:uppercase; letter-spacing:.07em; margin-top:3px; }
+
+.map-header { display:none !important; }
+
+#infobar, .infobar {
+  height:28px !important; flex-shrink:0 !important;
+  background:var(--s1) !important; border-top:1px solid var(--b1) !important;
+  font-size:10px !important; color:var(--txt3) !important;
+  display:flex !important; align-items:center !important;
+  padding:0 14px !important; gap:16px !important;
+}
+#scr-tabs-bar { background:var(--s1) !important; border-bottom:1px solid var(--b1) !important; padding:6px 8px !important; }
+.scr-tab {
+  border-radius:7px !important; border:1px solid var(--b1) !important;
+  background:var(--s2) !important; font-size:10px !important;
+  padding:4px 9px !important; color:var(--txt2) !important; height:auto !important;
+}
+.scr-tab.active {
+  border-color:rgba(0,212,255,.4) !important;
+  background:rgba(0,212,255,.08) !important; color:var(--cyan) !important;
+}
+.stat-grid { display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px !important; }
+.stat { background:var(--s2) !important; border:1px solid var(--b1) !important; border-radius:7px !important; padding:8px 10px !important; }
+.sv { font-size:15px !important; font-weight:600 !important; color:var(--cyan) !important; }
+.sv.ok   { color:var(--green) !important; }
+.sv.warn { color:var(--gold) !important; }
+.sv.err  { color:var(--red) !important; }
+.sl { font-size:8.5px !important; text-transform:uppercase !important; letter-spacing:.06em !important; color:var(--txt3) !important; margin-top:2px !important; }
+`;
+document.head.appendChild(styleEl);
+
+/* ── Íconos ──────────────────────────────────────────────────── */
+var TABS = [
+  {id:'sbt-screens',lbl:'Pantallas',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>'},
+  {id:'sbt-cfg',    lbl:'Config',   svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>'},
+  {id:'sbt-prj',    lbl:'Proyecto', svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'},
+  {id:'sbt-pts',    lbl:'Puertos',  svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>'},
+  {id:'sbt-exp',    lbl:'Exportar', svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'},
+  {id:'sbt-proc',   lbl:'Proc.',    svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>'},
+  {id:'sbt-ai',     lbl:'AI',       svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>'},
+  {id:'sbt-saves',  lbl:'Guardados',svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'},
+  {id:'sbt-elec',   lbl:'Elec.',    svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg>'},
+  {id:'sbt-colors', lbl:'Colores',  svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg>'},
+  {id:'sbt-calc',   lbl:'Calc',     svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>'},
+  {id:'sbt-soon',   lbl:'Próx.',    svg:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'},
+];
+
+function applyIcons() {
+  TABS.forEach(function(t) {
+    var b = document.getElementById(t.id);
+    if (b) b.innerHTML = t.svg + '<span style="font-size:6.5px;letter-spacing:.04em;text-transform:uppercase;line-height:1">' + t.lbl + '</span>';
+  });
+}
+
+function applySeparators() {
+  document.querySelectorAll('.sb-sep,.sb-spacer').forEach(function(e){ e.remove(); });
+  function sep()    { var d=document.createElement('div'); d.className='sb-sep'; return d; }
+  function spacer() { var d=document.createElement('div'); d.className='sb-spacer'; return d; }
+  var exp = document.getElementById('sbt-exp');
+  if (exp) exp.after(sep());
+  var saves = document.getElementById('sbt-saves');
+  if (saves) { saves.before(spacer()); saves.before(sep()); }
+}
+
+function applyBadge() {
+  var prev = document.getElementById('rd-proj-badge');
+  if (prev) prev.remove();
+  var topbar = document.querySelector('.topbar');
+  if (!topbar) return;
+  var inp = document.getElementById('cf-prj-title') || document.getElementById('cf-prj-name');
+  var name = inp ? (inp.value || 'Sin título') : 'Mi proyecto';
+  var badge = document.createElement('div');
+  badge.id = 'rd-proj-badge';
+  badge.innerHTML =
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
+    '<b id="rd-proj-name">' + name + '</b>' +
+    '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  topbar.appendChild(badge);
+  if (inp) inp.addEventListener('input', function() {
+    var el = document.getElementById('rd-proj-name');
+    if (el) el.textContent = inp.value || 'Sin título';
+  });
+}
+
+function buildStatsBar() {
+  var prev = document.getElementById('rd-stats-bar');
+  if (prev) prev.remove();
+
+  var svEls = document.querySelectorAll('.sv');
+  var pitchInp = document.getElementById('cf-pitch');
+  var pitchVal = pitchInp ? (pitchInp.value || 'P?') : 'P?';
+  var pxPortInp = document.querySelector('#cf-pxport, [id*="pxport"]');
+  var pxPortVal = pxPortInp ? pxPortInp.value : (svEls[4] ? svEls[4].textContent.trim() : '—');
+
+  var stats = [
+    { val: svEls[0] ? svEls[0].textContent.trim() : '—', lbl:'Resolución',  cls:'cyan'  },
+    { val: svEls[1] ? svEls[1].textContent.trim() : '—', lbl:'Paneles',     cls:''      },
+    { val: svEls[2] ? svEls[2].textContent.trim() : '—', lbl:'Px / panel',  cls:''      },
+    { val: svEls[3] ? svEls[3].textContent.trim() : '—', lbl:'Cables',      cls:'green' },
+    { val: pxPortVal,                                     lbl:'Px / puerto', cls:'amber' },
+    { val: pitchVal,                                      lbl:'Pitch',       cls:''      },
   ];
 
-  function applyIcons() {
-    TAB_CONFIG.forEach(function (cfg) {
-      var btn = document.getElementById(cfg.id);
-      if (!btn) return;
-      btn.innerHTML =
-        cfg.svg +
-        '<span style="font-size:6.5px;letter-spacing:0.04em;text-transform:uppercase;line-height:1">' +
-        cfg.label +
-        "</span>";
-    });
+  var bar = document.createElement('div');
+  bar.id = 'rd-stats-bar';
+  bar.innerHTML = stats.map(function(s) {
+    return '<div class="rd-stat"><span class="rd-stat-val ' + s.cls + '">' + s.val +
+           '</span><span class="rd-stat-lbl">' + s.lbl + '</span></div>';
+  }).join('');
+
+  // Insertar en .map-area antes del .toolbar
+  var mapArea = document.querySelector('.map-area');
+  var toolbar = mapArea ? mapArea.querySelector('.toolbar') : document.querySelector('.toolbar');
+  if (toolbar && toolbar.parentElement) {
+    toolbar.parentElement.insertBefore(bar, toolbar);
   }
+}
 
-  /* ── 2. Separadores entre grupos de tabs ─────────────────────
-     Grupo A: Pantallas, Config, Proyecto, Puertos, Exportar
-     Grupo B: Proc., AI  (herramientas técnicas)
-     Grupo C: Guardados, Elec., Colores, Calc, Próx.
-  ──────────────────────────────────────────────────────────── */
-  function applySeparators() {
-    // Limpiar separadores previos por si se llama más de una vez
-    document.querySelectorAll(".sb-sep, .sb-spacer").forEach(function (el) {
-      el.remove();
-    });
+function watchStats() {
+  var target = document.querySelector('.stat-grid');
+  if (!target) return;
+  new MutationObserver(buildStatsBar).observe(target, { childList:true, subtree:true, characterData:true });
+}
 
-    function mkSep() {
-      var d = document.createElement("div");
-      d.className = "sb-sep";
-      return d;
+/* ── Init ────────────────────────────────────────────────────── */
+function run() {
+  applyIcons();
+  applySeparators();
+  applyBadge();
+  buildStatsBar();
+  watchStats();
+}
+
+function init() {
+  var app = document.getElementById('s-app');
+  if (app && app.classList.contains('active')) {
+    setTimeout(run, 150);
+    return;
+  }
+  new MutationObserver(function(_, obs) {
+    var a = document.getElementById('s-app');
+    if (a && a.classList.contains('active')) {
+      obs.disconnect();
+      setTimeout(run, 150);
     }
-    function mkSpacer() {
-      var d = document.createElement("div");
-      d.className = "sb-spacer";
-      return d;
-    }
+  }).observe(document.body, { attributes:true, subtree:true, attributeFilter:['class'] });
+}
 
-    // Sep después de Exportar (sbt-exp)
-    var expBtn = document.getElementById("sbt-exp");
-    if (expBtn) expBtn.after(mkSep());
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', init)
+  : init();
 
-    // Spacer + sep antes de Guardados (sbt-saves) → los últimos al fondo
-    var savesBtn = document.getElementById("sbt-saves");
-    if (savesBtn) {
-      savesBtn.before(mkSep());
-      savesBtn.before(mkSpacer());
-    }
-  }
-
-  /* ── 3. Badge de nombre de proyecto en el centro del topbar ──
-     Lee el nombre del proyecto del input #cf-prj-name (si existe)
-     o usa el título del proyecto actual.
-  ──────────────────────────────────────────────────────────── */
-  function applyProjectBadge() {
-    // Eliminar badge anterior si existe
-    var prev = document.getElementById("rd-proj-badge");
-    if (prev) prev.remove();
-
-    var topbar = document.querySelector(".topbar");
-    if (!topbar) return;
-
-    // Intentar leer nombre del proyecto
-    var nameInput = document.getElementById("cf-prj-title") || document.getElementById("cf-prj-name");
-    var projectName = nameInput ? (nameInput.value || "Sin título") : "Mi proyecto";
-
-    var badge = document.createElement("div");
-    badge.id = "rd-proj-badge";
-    badge.innerHTML =
-      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>' +
-      '<b id="rd-proj-name">' + projectName + "</b>" +
-      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
-    topbar.appendChild(badge);
-
-    // Sincronizar badge con cambios en el input del proyecto
-    if (nameInput) {
-      nameInput.addEventListener("input", function () {
-        var nameEl = document.getElementById("rd-proj-name");
-        if (nameEl) nameEl.textContent = nameInput.value || "Sin título";
-      });
-    }
-  }
-
-  /* ── 4. Barra de estadísticas sobre el canvas ────────────────
-     Los valores se leen dinámicamente de los elementos del DOM.
-     La función updateStats() se llama al inicio y puede
-     conectarse a cualquier evento de cambio de la app.
-  ──────────────────────────────────────────────────────────── */
-  function getStatValue(id, fallback) {
-    var el = document.getElementById(id);
-    if (!el) return fallback;
-    return (el.textContent || el.value || fallback).trim();
-  }
-
-  function buildStatsBar() {
-    // Eliminar barra anterior si existe
-    var prev = document.getElementById("rd-stats-bar");
-    if (prev) prev.remove();
-
-    var bar = document.createElement("div");
-    bar.id = "rd-stats-bar";
-
-    // Definición de stats — ajustar los IDs según el DOM real de la app
-    var STATS = [
-      { id: "stat-res",     fallback: "—",     label: "Resolución", cls: "cyan"  },
-      { id: "stat-panels",  fallback: "—",     label: "Paneles",    cls: ""      },
-      { id: "stat-pxpanel", fallback: "—",     label: "Px / panel", cls: ""      },
-      { id: "stat-pxport",  fallback: "—",     label: "Px / puerto",cls: "amber" },
-      { id: "stat-cables",  fallback: "—",     label: "Cables",     cls: "green" },
-      { id: "cf-pitch",     fallback: "P3.9",  label: "Pitch",      cls: ""      },
-    ];
-
-    // Leer resolución y paneles desde el área de estadísticas existente
-    var svEls = document.querySelectorAll(".sv");
-    var slEls = document.querySelectorAll(".sl");
-    var dynamicStats = [];
-    svEls.forEach(function (sv, i) {
-      var lbl = slEls[i] ? slEls[i].textContent.trim() : "";
-      var val = sv.textContent.trim();
-      if (val && lbl) dynamicStats.push({ val: val, lbl: lbl });
-    });
-
-    // Si hay stats dinámicos del panel, usarlos; si no, los fallbacks
-    var statsToRender = dynamicStats.length > 0
-      ? dynamicStats.slice(0, 6)
-      : [
-          { val: "—", lbl: "Resolución"  },
-          { val: "—", lbl: "Paneles"     },
-          { val: "—", lbl: "Px / panel"  },
-          { val: "—", lbl: "Px / puerto" },
-          { val: "—", lbl: "Cables"      },
-          { val: "—", lbl: "Pitch"       },
-        ];
-
-    // Colores semánticos por posición
-    var colorMap = { 0: "cyan", 3: "amber", 4: "green" };
-
-    bar.innerHTML = statsToRender
-      .map(function (s, i) {
-        var cls = colorMap[i] || "";
-        return (
-          '<div class="rd-stat">' +
-          '<span class="rd-stat-val ' + cls + '">' + s.val + "</span>" +
-          '<span class="rd-stat-lbl">' + s.lbl + "</span>" +
-          "</div>"
-        );
-      })
-      .join("");
-
-    // Insertar antes del .toolbar
-    var toolbar = document.querySelector(".toolbar");
-    if (toolbar && toolbar.parentElement) {
-      toolbar.parentElement.insertBefore(bar, toolbar);
-    }
-  }
-
-  /* ── 5. Observador de cambios para mantener stats actualizados
-     Escucha cambios en el pane de estadísticas y actualiza la
-     barra superior automáticamente.
-  ──────────────────────────────────────────────────────────── */
-  function watchStats() {
-    var statGrid = document.querySelector(".stat-grid");
-    if (!statGrid) return;
-
-    var observer = new MutationObserver(function () {
-      buildStatsBar();
-    });
-    observer.observe(statGrid, { childList: true, subtree: true, characterData: true });
-  }
-
-  /* ── Init ────────────────────────────────────────────────────
-     Espera a que el DOM del app (no del login) esté visible.
-     #s-app es el contenedor principal post-login.
-  ──────────────────────────────────────────────────────────── */
-  function init() {
-    var appScreen = document.getElementById("s-app");
-    if (!appScreen || !appScreen.classList.contains("active")) {
-      // Todavía en pantalla de login — observar hasta que aparezca
-      var loginObserver = new MutationObserver(function () {
-        if (appScreen && appScreen.classList.contains("active")) {
-          loginObserver.disconnect();
-          run();
-        }
-      });
-      loginObserver.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["class"] });
-      return;
-    }
-    run();
-  }
-
-  function run() {
-    applyIcons();
-    applySeparators();
-    applyProjectBadge();
-    buildStatsBar();
-    watchStats();
-  }
-
-  // Ejecutar cuando el DOM esté listo
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
 })();
