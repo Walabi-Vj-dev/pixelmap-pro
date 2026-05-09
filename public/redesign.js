@@ -123,45 +123,37 @@ styleEl.textContent = `
 .sv.err  { color:var(--red) !important; }
 .sl { font-size:8.5px !important; text-transform:uppercase !important; letter-spacing:.06em !important; color:var(--txt3) !important; margin-top:2px !important; }
 
-/* ── Mobile (<640px): sidebar es drawer superpuesto, NO empuja el mapa ── */
-@media (max-width: 639px) {
-  /* Respetar el drawer original: position fixed, transform oculto */
-  #sidebar {
+/* ── Mobile y tablet (<1024px): sidebar es drawer, NO empuja el mapa ── */
+@media (max-width: 1023px) {
+  /* Sidebar vuelve a position:fixed para que flote sobre el mapa */
+  html body #sidebar {
     position: fixed !important;
+    top: var(--topbar) !important;
+    left: 0 !important;
+    height: calc(100% - var(--topbar)) !important;
+    z-index: 50 !important;
+    transform: translateX(-100%) !important;
+    flex-direction: row !important;
     width: min(340px, 92vw) !important;
     min-width: unset !important;
-    flex-direction: row !important;
   }
-  .sb-tabs {
+  html body #sidebar.open {
+    transform: translateX(0) !important;
+  }
+  html body .sb-tabs {
     width: 46px !important;
     min-width: 46px !important;
-    flex-shrink: 0 !important;
   }
-  .sb-pane {
+  html body .sb-pane {
     width: calc(min(340px, 92vw) - 46px) !important;
     min-width: unset !important;
     max-width: unset !important;
     flex: 1 !important;
   }
-  /* El mapa NO se ve afectado porque el sidebar está en position:fixed */
-  .map-area {
+  /* El mapa ocupa todo el ancho — el sidebar flota encima */
+  html body .map-area {
     width: 100% !important;
-    margin-left: 0 !important;
-  }
-}
-
-/* ── Tablet (640–1023px): drawer fixed con layout de íconos ── */
-@media (min-width: 640px) and (max-width: 1023px) {
-  #sidebar {
-    position: fixed !important;
-    width: calc(var(--sb-tabs-w) + var(--sb-pane-w)) !important;
-    min-width: unset !important;
-    flex-direction: row !important;
-  }
-  .sb-pane {
-    width: var(--sb-pane-w) !important;
-    min-width: var(--sb-pane-w) !important;
-    max-width: var(--sb-pane-w) !important;
+    min-width: 0 !important;
   }
 }
 `;
