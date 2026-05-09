@@ -1,0 +1,286 @@
+/* =============================================================
+   PixelMap Pro — Rediseño de interfaz
+   Archivo: redesign.css
+   Instrucciones: agregar este <link> en el <head> del HTML,
+   DESPUÉS de todos los estilos existentes:
+   <link rel="stylesheet" href="redesign.css">
+   ============================================================= */
+
+/* ── Variables actualizadas ─────────────────────────────────── */
+:root {
+  --sidebar: 336px;   /* 58px tabs + 278px pane */
+  --sb-tabs-w: 58px;
+  --sb-pane-w: 278px;
+}
+
+/* ── Sidebar: layout horizontal (tabs | pane) ────────────────── */
+#sidebar {
+  flex-direction: row !important;
+  width: var(--sidebar) !important;
+  min-width: var(--sidebar) !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+/* Columna de íconos */
+.sb-tabs {
+  flex-direction: column !important;
+  width: var(--sb-tabs-w) !important;
+  min-width: var(--sb-tabs-w) !important;
+  flex-shrink: 0 !important;
+  border-bottom: none !important;
+  border-right: 1px solid var(--b1) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  padding: 8px 0 !important;
+  gap: 2px !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+.sb-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Cada botón de sección */
+.sb-tab {
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  flex: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-left: 2px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 4px 2px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  font-size: 7px !important;
+  letter-spacing: 0.04em !important;
+  cursor: pointer !important;
+  transition: background 0.15s, color 0.15s, border-left-color 0.15s !important;
+  overflow: visible !important;
+  position: relative !important;
+  white-space: nowrap !important;
+}
+.sb-tab:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--txt2) !important;
+  border-left-color: transparent !important;
+}
+.sb-tab.active {
+  background: rgba(0, 212, 255, 0.1) !important;
+  color: var(--cyan) !important;
+  border-bottom-color: transparent !important;
+  border-left-color: var(--cyan) !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+/* SVG dentro de cada tab */
+.sb-tab svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  color: inherit !important;
+}
+
+/* Separador visual entre grupos de tabs */
+.sb-sep {
+  width: 26px;
+  height: 1px;
+  background: var(--b1);
+  margin: 5px auto;
+  flex-shrink: 0;
+}
+
+/* Spacer que empuja items al fondo */
+.sb-spacer {
+  flex: 1;
+  min-height: 4px;
+}
+
+/* Panel de contenido: ancho fijo igual al máximo medido */
+.sb-pane {
+  display: none !important;
+  width: var(--sb-pane-w) !important;
+  min-width: var(--sb-pane-w) !important;
+  max-width: var(--sb-pane-w) !important;
+  flex-shrink: 0 !important;
+  overflow: hidden auto !important;
+  box-sizing: border-box !important;
+}
+.sb-pane.active {
+  display: flex !important;
+}
+
+/* ── Topbar: badge de proyecto centrado ──────────────────────── */
+.topbar {
+  position: relative !important;
+}
+
+#rd-proj-badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  border-radius: 7px;
+  padding: 5px 13px;
+  font-size: 12px;
+  color: var(--txt2);
+  cursor: default;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+  z-index: 1;
+}
+#rd-proj-badge b {
+  color: var(--txt);
+  font-weight: 500;
+}
+
+/* ── Barra de estadísticas sobre el canvas ───────────────────── */
+#rd-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  height: 46px;
+  flex-shrink: 0;
+  background: var(--s1);
+  border-bottom: 1px solid var(--b1);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#rd-stats-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.rd-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 10px;
+  height: 34px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+.rd-stat-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1;
+}
+.rd-stat-val.cyan  { color: var(--cyan); }
+.rd-stat-val.amber { color: var(--gold); }
+.rd-stat-val.green { color: var(--green); }
+
+.rd-stat-lbl {
+  font-size: 8px;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-top: 3px;
+}
+
+/* ── Ocultar map-header (reemplazado por stats bar) ──────────── */
+.map-header {
+  display: none !important;
+}
+
+/* ── Infobar inferior ────────────────────────────────────────── */
+#infobar,
+.infobar {
+  height: 28px !important;
+  flex-shrink: 0 !important;
+  background: var(--s1) !important;
+  border-top: 1px solid var(--b1) !important;
+  font-size: 10px !important;
+  color: var(--txt3) !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 14px !important;
+  gap: 16px !important;
+}
+
+/* ── Lista de pantallas (scr-tabs-bar) ───────────────────────── */
+#scr-tabs-bar {
+  background: var(--s1) !important;
+  border-bottom: 1px solid var(--b1) !important;
+  padding: 6px 8px !important;
+}
+.scr-tab {
+  border-radius: 7px !important;
+  border: 1px solid var(--b1) !important;
+  background: var(--s2) !important;
+  font-size: 10px !important;
+  padding: 4px 9px !important;
+  color: var(--txt2) !important;
+  height: auto !important;
+}
+.scr-tab.active {
+  border-color: rgba(0, 212, 255, 0.4) !important;
+  background: rgba(0, 212, 255, 0.08) !important;
+  color: var(--cyan) !important;
+}
+
+/* ── Stat cards del panel ────────────────────────────────────── */
+.stat-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+}
+.stat {
+  background: var(--s2) !important;
+  border: 1px solid var(--b1) !important;
+  border-radius: 7px !important;
+  padding: 8px 10px !important;
+}
+.sv {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--cyan) !important;
+}
+.sv.ok  { color: var(--green) !important; }
+.sv.warn { color: var(--gold) !important; }
+.sv.err  { color: var(--red) !important; }
+.sl {
+  font-size: 8.5px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--txt3) !important;
+  margin-top: 2px !important;
+}
+
+/* ── Inputs y labels del panel ───────────────────────────────── */
+.fg input,
+.fg select,
+.fg2 input,
+.fg2 select {
+  font-size: 12px !important;
+  padding: 5px 8px !important;
+  border-radius: 6px !important;
+  box-sizing: border-box !important;
+}
+.fg label,
+.fg2 label {
+  font-size: 9px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+}
+.cp-h {
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
